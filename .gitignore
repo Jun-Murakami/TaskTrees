@@ -6,10 +6,12 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+vite.config.ts.timestamp-*
 
 node_modules
 dist
 dist-ssr
+.firebase
 *.local
 
 # Editor directories and files
@@ -17,6 +19,7 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+.firebase/*
 *.suo
 *.ntvs*
 *.njsproj

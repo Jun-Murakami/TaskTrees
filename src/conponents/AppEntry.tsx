@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import AppMain from './AppMain';
 import { TreeItem, TreesList } from './Tree/types.ts';
 import { useAppStateSync } from '../hooks/useAppStateSync';
