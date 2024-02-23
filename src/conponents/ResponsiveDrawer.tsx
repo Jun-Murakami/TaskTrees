@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { TreesList } from './Tree/types';
-import { SettingsModal } from './SettingsModal';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -14,7 +13,6 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
-import ConstructionIcon from '@mui/icons-material/Construction';
 
 const drawerWidth = 240;
 
@@ -27,7 +25,6 @@ interface DrawerProps {
 
 export default function ResponsiveDrawer({ handleCreateNewTree, treesList, currentTree, handleListClick }: DrawerProps) {
   const [drawserState, setDrawerState] = useState(false);
-  const [openSettingsModal, setOpenSettingsModal] = useState(false);
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
@@ -40,9 +37,6 @@ export default function ResponsiveDrawer({ handleCreateNewTree, treesList, curre
 
     setDrawerState(open);
   };
-
-  const handleSettingsModalOpen = () => setOpenSettingsModal(true);
-  const handleSettingsModalClose = () => setOpenSettingsModal(false);
 
   const drawerItems = (
     <div>
@@ -83,29 +77,6 @@ export default function ResponsiveDrawer({ handleCreateNewTree, treesList, curre
               </ListItemButton>
             </ListItem>
           ))}
-      </List>
-      <Divider />
-      <List>
-        <ListItem disablePadding>
-          <ListItemButton
-            sx={{
-              '& .MuiListItemIcon-root': {
-                minWidth: 0,
-                marginRight: 1,
-              },
-            }}
-            onClick={() => {
-              handleSettingsModalOpen();
-              setDrawerState(false);
-            }}
-          >
-            <ListItemIcon>
-              <ConstructionIcon />
-            </ListItemIcon>
-            <ListItemText secondary='ツリーの設定' />
-          </ListItemButton>
-          <SettingsModal openSettingsModal={openSettingsModal} handleSettingsModalClose={handleSettingsModalClose} />
-        </ListItem>
       </List>
     </div>
   );

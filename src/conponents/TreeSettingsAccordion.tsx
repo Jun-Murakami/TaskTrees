@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material';
 import {
   Accordion,
@@ -27,6 +27,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { useInputDialogStore } from '../store/dialogStore';
 import { useDialogStore } from '../store/dialogStore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getAuth } from 'firebase/auth';
 
 interface TreeSettingsAccordionProps {
   currentTree: string | null;
@@ -36,7 +37,7 @@ interface TreeSettingsAccordionProps {
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
   isExpanded: boolean;
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
-  membersEmails: string[] | null;
+  currentTreeMembers: { uid: string; email: string }[] | null;
   deleteTree: (treeId: string) => void;
 }
 
@@ -48,7 +49,7 @@ export function TreeSettingsAccordion({
   setTreesList,
   isExpanded,
   setIsExpanded,
-  membersEmails,
+  currentTreeMembers,
   deleteTree,
 }: TreeSettingsAccordionProps) {
   const [editedTreeName, setEditedTreeName] = useState<string | null>(currentTreeName || '');
@@ -81,7 +82,9 @@ export function TreeSettingsAccordion({
     }
   };
 
+  // メンバーの追加
   const handleAddUserToTree = async () => {
+    if (!currentTree) return;
     const email = await showInputDialog(
       '追加する編集メンバーのメールアドレスを入力してください',
       'Add Member',
@@ -93,10 +96,44 @@ export function TreeSettingsAccordion({
     const functions = getFunctions();
     const addUserToTreeCallable = httpsCallable(functions, 'addUserToTree');
     try {
-      const result = await addUserToTreeCallable({ email, currentTree });
+      const result = await addUserToTreeCallable({ email, treeId: currentTree });
       return result.data;
     } catch (error) {
-      await showDialog('メンバーの追加に失敗しました。' + error, 'Error');
+      await showDialog('メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。' + error, 'Error');
+    }
+  };
+
+  // メンバーの削除
+  const handleDeleteUserFromTree = async (uid: string, email: string) => {
+    if (!currentTree) return;
+    const user = getAuth().currentUser;
+    let result;
+    if (currentTreeMembers && currentTreeMembers.length === 1) {
+      await showDialog('最後のメンバーを削除することはできません。', 'Information');
+      return;
+    }
+    if (user && user.uid === uid) {
+      result = await showDialog(
+        '自分自身を削除すると、このツリーにアクセスできなくなります。実行しますか？',
+        'Confirmation Required',
+        true
+      );
+    } else {
+      result = await showDialog(
+        `メンバー' ${email} 'をこのツリーの編集メンバーから削除します。実行しますか？`,
+        'Confirmation Required',
+        true
+      );
+    }
+    if (result) {
+      const functions = getFunctions();
+      const removeUserFromTreeCallable = httpsCallable(functions, 'removeUserFromTree');
+      try {
+        const result = await removeUserFromTreeCallable({ treeId: currentTree, userId: uid });
+        return result.data;
+      } catch (error) {
+        await showDialog('メンバーの削除に失敗しました。' + error, 'Error');
+      }
     }
   };
 
@@ -129,6 +166,11 @@ export function TreeSettingsAccordion({
           size='small'
           value={editedTreeName || ''}
           onChange={(e) => handleTreeNameChange?.(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && editedTreeName) {
+              handleButtonClick();
+            }
+          }}
           InputProps={{
             endAdornment: (
               <InputAdornment position='end'>
@@ -142,30 +184,33 @@ export function TreeSettingsAccordion({
         <Typography variant='body1' sx={{ marginTop: 4, ml: 2, textAlign: 'left' }}>
           編集が許可されているメンバー
         </Typography>
-        <Divider />
-        {membersEmails && (
+        {currentTreeMembers && (
           <List>
-            {membersEmails.map((email, index) => (
-              <ListItem key={index} disablePadding>
+            {currentTreeMembers.map((member, index) => (
+              <React.Fragment key={index}>
                 <Divider />
-                <ListItemText secondary={email} sx={{ width: '100%', ml: 2 }} />
-                <ListItemButton
-                  sx={{
-                    '& .MuiListItemIcon-root': {
-                      minWidth: 0,
-                      width: 24,
-                      marginX: 1,
-                    },
-                  }}
-                >
-                  <ListItemIcon>
-                    <HighlightOffIcon />
-                  </ListItemIcon>
-                </ListItemButton>
-              </ListItem>
+                <ListItem disablePadding>
+                  <ListItemText secondary={member.email} sx={{ width: '100%', ml: 2 }} />
+                  <ListItemButton
+                    sx={{
+                      '& .MuiListItemIcon-root': {
+                        minWidth: 0,
+                        width: 24,
+                        marginX: 1,
+                      },
+                    }}
+                  >
+                    <ListItemIcon>
+                      <HighlightOffIcon onClick={() => handleDeleteUserFromTree(member.uid, member.email)} />
+                    </ListItemIcon>
+                  </ListItemButton>
+                </ListItem>
+              </React.Fragment>
             ))}
+            <Divider />
           </List>
         )}
+
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
           <Button variant={'outlined'} sx={{ mr: 2 }} startIcon={<AddIcon />} color='inherit' onClick={handleAddUserToTree}>
             メンバーの追加

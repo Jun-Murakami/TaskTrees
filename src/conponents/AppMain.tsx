@@ -6,8 +6,8 @@ import { SortableTree } from './Tree/SortableTree';
 import type { TreeItem, TreesList } from './Tree/types';
 import SettingsMenu from './SettingsMenu';
 import { FormControlLabel, Switch, Button, Box, Typography, Grid } from '@mui/material';
-
 import AddIcon from '@mui/icons-material/Add';
+import { useDialogStore } from '../store/dialogStore';
 
 interface AppProps {
   items: TreeItem[];
@@ -25,7 +25,7 @@ interface AppProps {
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
   isExpanded: boolean;
   setIsExpanded: Dispatch<SetStateAction<boolean>>;
-  membersEmails: string[] | null;
+  currentTreeMembers: { uid: string; email: string }[] | null;
   deleteTree: (treeId: string) => void;
 }
 
@@ -45,11 +45,12 @@ function AppMain({
   setTreesList,
   isExpanded,
   setIsExpanded,
-  membersEmails,
+  currentTreeMembers,
   deleteTree,
 }: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const showDialog = useDialogStore((state) => state.showDialog);
 
   // 選択したアイテムのIDをセットする
   const handleSelect = (id: UniqueIdentifier) => {
@@ -140,7 +141,7 @@ function AppMain({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
-      console.error('ファイルが選択されていません。');
+      showDialog('ファイルが選択されていません。', 'Information');
       return;
     }
 
@@ -150,16 +151,16 @@ function AppMain({
       try {
         const appState = JSON.parse(text as string);
         if (!isValidAppState(appState)) {
-          alert('無効なファイル形式です。');
+          showDialog('無効なファイル形式です。', 'Error');
           return;
         } else {
           setItems(appState.items);
           setHideDoneItems(appState.hideDoneItems);
           setDarkMode(appState.darkMode);
-          alert('ファイルが正常に読み込まれました。');
+          showDialog('ファイルが正常に読み込まれました。', 'Information');
         }
       } catch (error) {
-        alert('ファイルの読み込みに失敗しました。');
+        showDialog('ファイルの読み込みに失敗しました。', 'Error');
       }
     };
     reader.readAsText(file);
@@ -219,7 +220,7 @@ function AppMain({
               position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
               top: isScrolled ? 0 : 'auto', // スクロール時は上部に固定
               left: isScrolled ? '50%' : 'auto', // スクロール時は左端に固定
-              transform: isScrolled ? 'translateX(-50%)' : 'none', // スクロール時はX軸方向に-50%移動して中央寄せ
+              transform: isScrolled ? 'translateX(calc(-50% + 120px))' : 'none', // スクロール時はX軸方向に-50%移動して中央寄せからさらに右に240pxずらす
               zIndex: isScrolled ? 1000 : 'auto', // スクロール時は他の要素より前面に
               width: isScrolled ? '100%' : 'auto', // スクロール時は幅を100%に
             }}
@@ -260,7 +261,7 @@ function AppMain({
             setTreesList={setTreesList}
             isExpanded={isExpanded}
             setIsExpanded={setIsExpanded}
-            membersEmails={membersEmails}
+            currentTreeMembers={currentTreeMembers}
             deleteTree={deleteTree}
           />
         )}

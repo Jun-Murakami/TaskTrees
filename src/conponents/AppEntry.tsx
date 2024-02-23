@@ -3,15 +3,13 @@ import AppMain from './AppMain';
 import { TreeItem, TreesList } from './Tree/types.ts';
 import { useAppStateSync } from '../hooks/useAppStateSync';
 import { useTreeManagement } from '../hooks/useTreeManagement';
-import { initialItems } from '../conponents/Tree/mock';
+import { useAuth } from '../hooks/useAuth';
 import { ModalDialog } from '../conponents/ModalDialog';
 import { InputDialog } from '../conponents/InputDialog';
 import ResponsiveDrawer from './ResponsiveDrawer';
 import { theme, darkTheme } from './mui_theme';
 import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getDatabase, remove, ref, push, set } from 'firebase/database';
 import { useDialogStore } from '../store/dialogStore';
 import { useInputDialogStore } from '../store/dialogStore';
 
@@ -22,60 +20,29 @@ export default function AppEntry() {
   const [treesList, setTreesList] = useState<TreesList>(null);
   const [currentTree, setCurrentTree] = useState<string | null>(null);
   const [currentTreeName, setCurrentTreeName] = useState<string | null>(null);
-  const [currentTreeMembers, setCurrentTreeMembers] = useState<string[] | null>(null);
+  const [currentTreeMembers, setCurrentTreeMembers] = useState<{ uid: string; email: string }[] | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [isWaitingForDelete, setIsWaitingForDelete] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [membersEmails, setMembersEmails] = useState<string[] | null>(null);
 
   const isDialogVisible = useDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
-  const showDialog = useDialogStore((state) => state.showDialog);
 
-  // ログイン状態の監視
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setIsLoggedIn(!!user);
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Googleログイン
-  const handleLogin = () => {
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
-      .then(() => {
-        setIsLoggedIn(true);
-        setMessage(null);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-
-  // ログアウト
-  const handleLogout = () => {
-    const auth = getAuth();
-    signOut(auth)
-      .then(() => {
-        setIsLoggedIn(false);
-        setItems([]);
-        setTreesList(null);
-        setCurrentTree(null);
-        setCurrentTreeName(null);
-        setCurrentTreeMembers(null);
-        if (!isWaitingForDelete) setMessage('ログアウトしました。');
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
+  // 認証状態の監視とログイン、ログアウトを行うカスタムフック
+  const { handleLogin, handleLogout, handleDeleteAccount } = useAuth(
+    setIsLoggedIn,
+    setIsLoading,
+    setMessage,
+    setItems,
+    setTreesList,
+    setCurrentTree,
+    setCurrentTreeName,
+    setCurrentTreeMembers,
+    isWaitingForDelete,
+    setIsWaitingForDelete
+  );
 
   // アプリの状態の読み込みと保存を行うカスタムフック
   useAppStateSync(
@@ -91,7 +58,7 @@ export default function AppEntry() {
   );
 
   //ツリーの状態を同期するカスタムフック
-  const { saveTreesList, saveCurrentTreeName, saveCurrentTreeMembers, deleteTree } = useTreeManagement(
+  const { saveCurrentTreeName, deleteTree, handleCreateNewTree } = useTreeManagement(
     items,
     setItems,
     setMessage,
@@ -103,89 +70,12 @@ export default function AppEntry() {
     setCurrentTreeName,
     setCurrentTreeMembers,
     setTreesList,
-    setMembersEmails
+    setIsExpanded
   );
 
-  // 新しいツリーを作成する
-  const handleCreateNewTree = async () => {
-    // この関数が非同期であることを確認してください
-    const user = getAuth().currentUser;
-    if (!user) {
-      return;
-    }
-    const db = getDatabase();
-    const treesRef = ref(db, 'trees');
-    const newTreeRef = push(treesRef);
-    await set(newTreeRef, {
-      items: initialItems,
-      name: '新しいツリー',
-      members: [user?.uid],
-    });
-    setCurrentTree(newTreeRef.key);
-    setCurrentTreeName('新しいツリー');
-    setCurrentTreeMembers([user?.uid]);
-
-    // 非同期処理を行うための別の関数を定義
-    const updateTreesListAsync = async (key: unknown, prev: TreesList) => {
-      if (typeof key === 'string' || typeof key === 'number') {
-        const newTreesList = { ...prev, [key]: '新しいツリー' };
-        await saveTreesList(newTreesList);
-        return newTreesList;
-      } else {
-        await showDialog('ツリーの作成に失敗しました。キーが無効です。' + key, 'Error');
-        return prev;
-      }
-    };
-
-    setTreesList((prev) => {
-      updateTreesListAsync(newTreeRef.key, prev)
-        .then((newList) => {
-          return newList; // 新しい状態を返す
-        })
-        .catch((error) => {
-          console.error(error);
-          return prev; // エラーが発生した場合、前の状態を返す
-        });
-      return prev; // 非同期処理が完了する前に、一時的に前の状態を返す
-    });
-    setIsExpanded(true);
-  };
-
+  // ツリーのリストから選択されたツリーを表示する
   const handleListClick = (treeId: string) => {
     setCurrentTree(treeId);
-  };
-
-  // アカウント削除
-  const handleDeleteAccount = () => {
-    const user = getAuth().currentUser;
-    if (user) {
-      const db = getDatabase();
-      const appStateRef = ref(db, `users/${user.uid}/appState`);
-      remove(appStateRef)
-        .then(() => {
-          console.log('データが正常に削除されました。');
-        })
-        .catch((error) => {
-          console.error('データの削除中にエラーが発生しました:', error);
-        });
-      user
-        .delete()
-        .then(() => {
-          handleLogout();
-          setMessage('アカウントが削除されました。');
-        })
-        .catch((error) => {
-          if (error instanceof Error) {
-            setMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : ' + error.message);
-          } else {
-            setMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : 不明なエラー');
-          }
-          handleLogout();
-        });
-    } else {
-      setMessage('ユーザーがログインしていません。');
-    }
-    setIsWaitingForDelete(false);
   };
 
   return (
@@ -218,7 +108,7 @@ export default function AppEntry() {
               setTreesList={setTreesList}
               isExpanded={isExpanded}
               setIsExpanded={setIsExpanded}
-              membersEmails={membersEmails}
+              currentTreeMembers={currentTreeMembers}
               deleteTree={deleteTree}
             />
             {isLoading && <CircularProgress sx={{ marginTop: 2 }} />}

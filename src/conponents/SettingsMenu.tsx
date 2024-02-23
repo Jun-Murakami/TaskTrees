@@ -161,7 +161,7 @@ export default function SettingsMenu({
         </Tooltip>
         <Divider />
         <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
-        <Tooltip title='バックアップをアプリに復元' placement='right'>
+        <Tooltip title='バックアップをツリーに復元' placement='right'>
           <MenuItem
             onClick={() => {
               handleUploadClick();
@@ -173,7 +173,7 @@ export default function SettingsMenu({
             Upload
           </MenuItem>
         </Tooltip>
-        <Tooltip title='アプリのデータをバックアップ' placement='right'>
+        <Tooltip title='ツリーのデータをバックアップ' placement='right'>
           <MenuItem
             onClick={() => {
               handleDownloadAppState();
