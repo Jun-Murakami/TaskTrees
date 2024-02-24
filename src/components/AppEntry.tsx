@@ -169,14 +169,12 @@ export default function AppEntry() {
           )}
           <Paper sx={{ maxWidth: 300, margin: 'auto', marginTop: 4 }}>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-              2024.2.24 データの保存先をGoogle Firebaseに変更しました。
+              複数のツリー作成＆複数ユーザーでの共同編集に対応したタスク管理アプリです。
               <br />
               <br />
-              このバージョンでは、ユーザーデータはGoogleのFirebaseサーバに保存されます。 データをユーザーアカウントのGoogle
-              Driveに保存する旧バージョンには<a href='https://task--tree.web.app/'>こちら</a>
-              からアクセスできます。
+              １ツリーのシンプルな個人用バージョンは<a href='https://tasktree-fb.web.app/'>こちら</a>。
               <br />
-              データを移行するには、旧バージョンでログイン後にデータをダウンロードし、 手動でアップロードを行ってください。
+              ツリーデータは相互に移行可能です。
             </Typography>
           </Paper>
           <Typography variant='caption'>
