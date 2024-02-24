@@ -8,17 +8,18 @@ import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
 import ResponsiveDrawer from './ResponsiveDrawer';
 import { theme, darkTheme } from './mui_theme';
-import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper } from '@mui/material';
+import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper, Box } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { useDialogStore } from '../store/dialogStore';
 import { useInputDialogStore } from '../store/dialogStore';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 export default function AppEntry() {
   const [darkMode, setDarkMode] = useState(false);
   const [items, setItems] = useState<TreeItem[]>([]);
   const [hideDoneItems, setHideDoneItems] = useState(false);
   const [treesList, setTreesList] = useState<TreesList>(null);
-  const [currentTree, setCurrentTree] = useState<string | null>(null);
+  const [currentTree, setCurrentTree] = useState<UniqueIdentifier | null>(null);
   const [currentTreeName, setCurrentTreeName] = useState<string | null>(null);
   const [currentTreeMembers, setCurrentTreeMembers] = useState<{ uid: string; email: string }[] | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -76,7 +77,7 @@ export default function AppEntry() {
   );
 
   // ツリーのリストから選択されたツリーを表示する
-  const handleListClick = (treeId: string) => {
+  const handleListClick = (treeId: UniqueIdentifier) => {
     setCurrentTree(treeId);
   };
 
@@ -119,10 +120,15 @@ export default function AppEntry() {
           </>
         ) : (
           <>
-            <Typography sx={{ marginBottom: 4 }} variant='h3'>
+            <Typography sx={{ marginBottom: 0 }} variant='h3'>
               <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
-              TaskTrees<Typography variant='caption'>Team Edition</Typography>
+              TaskTrees
             </Typography>
+            <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
+              <Typography variant='caption' sx={{ width: '100%' }}>
+                Team Edition
+              </Typography>
+            </Box>
             <Typography variant='body2' sx={{ marginY: 4 }}>
               アプリケーションのすべてのデータとアカウント情報が削除されます。この操作は取り消せません。削除しますか？
             </Typography>
@@ -142,11 +148,15 @@ export default function AppEntry() {
         )
       ) : (
         <>
-          <Typography sx={{ marginBottom: 4 }} variant='h3'>
+          <Typography sx={{ marginBottom: 0 }} variant='h3'>
             <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
-            TaskTrees<Typography variant='caption'>Team Edition</Typography>
+            TaskTrees
           </Typography>
-
+          <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
+            <Typography variant='caption' sx={{ width: '100%' }}>
+              Team Edition
+            </Typography>
+          </Box>
           <Button onClick={() => handleLogin()} variant={'contained'}>
             Googleでログイン
           </Button>

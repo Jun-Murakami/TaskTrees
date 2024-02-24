@@ -16,6 +16,7 @@ import {
   Divider,
   Button,
   Box,
+  Stack,
 } from '@mui/material';
 import { TreesList } from '../types/types';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
@@ -28,9 +29,10 @@ import { useInputDialogStore } from '../store/dialogStore';
 import { useDialogStore } from '../store/dialogStore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface TreeSettingsAccordionProps {
-  currentTree: string | null;
+  currentTree: UniqueIdentifier | null;
   currentTreeName: string | null;
   setCurrentTreeName: (name: string) => void;
   saveCurrentTreeName: (name: string) => void;
@@ -70,7 +72,7 @@ export function TreeSettingsAccordion({
       inputRef.current.focus();
       setIsFocused(false);
     }
-  }, [isFocused]);
+  }, [isFocused, setIsFocused]);
 
   const handleTreeNameChange = (e: string) => {
     setEditedTreeName(e);
@@ -110,7 +112,10 @@ export function TreeSettingsAccordion({
     const functions = getFunctions();
     const addUserToTreeCallable = httpsCallable(functions, 'addUserToTree');
     try {
-      const result = await addUserToTreeCallable({ email, treeId: currentTree });
+      const result = await addUserToTreeCallable({
+        email,
+        treeId: currentTree,
+      });
       return result.data;
     } catch (error) {
       await showDialog('メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。' + error, 'Error');
@@ -143,7 +148,10 @@ export function TreeSettingsAccordion({
       const functions = getFunctions();
       const removeUserFromTreeCallable = httpsCallable(functions, 'removeUserFromTree');
       try {
-        const result = await removeUserFromTreeCallable({ treeId: currentTree, userId: uid });
+        const result = await removeUserFromTreeCallable({
+          treeId: currentTree,
+          userId: uid,
+        });
         return result.data;
       } catch (error) {
         await showDialog('メンバーの削除に失敗しました。' + error, 'Error');
@@ -164,77 +172,117 @@ export function TreeSettingsAccordion({
   };
 
   return (
-    <Accordion sx={{ width: '100%', marginBottom: 2 }} expanded={isExpanded} onChange={() => setIsExpanded(!isExpanded)}>
-      <AccordionSummary aria-controls='panel1a-content' id='panel1a-header' expandIcon={<ExpandMoreIcon />}>
-        <Typography sx={{ width: '100%' }}>{currentTreeName}</Typography>
-        <ConstructionIcon sx={{ color: theme.palette.text.secondary, right: 1 }} />
-      </AccordionSummary>
-      <AccordionDetails>
-        <TextField
-          id='outlined-basic'
-          InputLabelProps={{
-            shrink: editedTreeName !== '',
+    <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto' }}>
+      <Accordion
+        sx={{
+          marginBottom: 2,
+          marginTop: 0,
+          '& .MuiPaper-root': {
+            borderRadius: '0 0 8px 8px !important',
+          },
+          borderRadius: '0 0 8px 8px !important',
+        }}
+        expanded={isExpanded}
+        onChange={() => setIsExpanded(!isExpanded)}
+      >
+        <AccordionSummary
+          aria-controls='panel1a-content'
+          id='panel1a-header'
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            '&.Mui-focused, &:hover': {
+              backgroundColor: 'transparent', // アクティブ状態の背景色を変更しない
+            },
+            height: 40,
+            paddingY: '30px',
+            paddingX: 2,
           }}
-          label='Tree Name'
-          fullWidth
-          size='small'
-          value={editedTreeName || ''}
-          onChange={(e) => handleTreeNameChange?.(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && editedTreeName) {
-              handleButtonClick();
-            }
-          }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position='end'>
-                <IconButton sx={{ zIndex: 1200, right: 0 }} onClick={handleButtonClick} disabled={!editedTreeName}>
-                  <SaveAsIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          inputRef={inputRef}
-        />
-        <Typography variant='body1' sx={{ marginTop: 4, ml: 2, textAlign: 'left' }}>
-          編集が許可されているメンバー
-        </Typography>
-        {currentTreeMembers && (
-          <List>
-            {currentTreeMembers.map((member, index) => (
-              <React.Fragment key={index}>
-                <Divider />
-                <ListItem disablePadding>
-                  <ListItemText secondary={member.email} sx={{ width: '100%', ml: 2 }} />
-                  <ListItemButton
-                    sx={{
-                      '& .MuiListItemIcon-root': {
-                        minWidth: 0,
-                        width: 24,
-                        marginX: 1,
-                      },
-                    }}
-                  >
-                    <ListItemIcon>
-                      <HighlightOffIcon onClick={() => handleDeleteUserFromTree(member.uid, member.email)} />
-                    </ListItemIcon>
-                  </ListItemButton>
-                </ListItem>
-              </React.Fragment>
-            ))}
-            <Divider />
-          </List>
-        )}
+        >
+          <Stack direction='row' sx={{ height: 40, width: '100%', margin: '0 auto' }}>
+            <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '28px', height: '28px', marginTop: 5 }} />
+            {isExpanded ? (
+              <TextField
+                id='outlined-basic'
+                InputLabelProps={{
+                  shrink: editedTreeName !== '',
+                }}
+                sx={{ zIndex: 1200, marginTop: 0, marginX: 2 }}
+                label='Tree Name'
+                fullWidth
+                size='small'
+                value={editedTreeName || ''}
+                onChange={(e) => handleTreeNameChange?.(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editedTreeName) {
+                    handleButtonClick();
+                  }
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton sx={{ zIndex: 1200, right: 0 }} onClick={handleButtonClick} disabled={!editedTreeName}>
+                        <SaveAsIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                inputRef={inputRef}
+              />
+            ) : (
+              <Typography sx={{ width: '100%', marginTop: '6px' }}>{currentTreeName}</Typography>
+            )}
+            <ConstructionIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography variant='body1' sx={{ marginTop: 0, ml: 2, textAlign: 'left' }}>
+            編集が許可されているメンバー
+          </Typography>
+          {currentTreeMembers && (
+            <List>
+              {currentTreeMembers.map((member, index) => (
+                <React.Fragment key={index}>
+                  <Divider />
+                  <ListItem disablePadding>
+                    <ListItemText secondary={member.email} sx={{ width: '100%', ml: 2 }} />
+                    <ListItemButton
+                      sx={{
+                        '& .MuiListItemIcon-root': {
+                          minWidth: 0,
+                          width: 24,
+                          marginX: 1,
+                        },
+                      }}
+                    >
+                      <ListItemIcon>
+                        <HighlightOffIcon onClick={() => handleDeleteUserFromTree(member.uid, member.email)} />
+                      </ListItemIcon>
+                    </ListItemButton>
+                  </ListItem>
+                </React.Fragment>
+              ))}
+              <Divider />
+            </List>
+          )}
 
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
-          <Button variant={'outlined'} sx={{ mr: 2 }} startIcon={<AddIcon />} color='inherit' onClick={handleAddUserToTree}>
-            メンバーの追加
-          </Button>
-          <Button variant={'outlined'} startIcon={<DeleteForeverIcon />} color='error' onClick={handleDeleteTree}>
-            ツリーを削除
-          </Button>
-        </Box>
-      </AccordionDetails>
-    </Accordion>
+          <Box
+            sx={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginTop: 2,
+            }}
+          >
+            <Button variant={'outlined'} sx={{ mr: 2 }} startIcon={<AddIcon />} color='inherit' onClick={handleAddUserToTree}>
+              メンバーの追加
+            </Button>
+            <Button variant={'outlined'} startIcon={<DeleteForeverIcon />} color='error' onClick={handleDeleteTree}>
+              ツリーを削除
+            </Button>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+    </Box>
   );
 }

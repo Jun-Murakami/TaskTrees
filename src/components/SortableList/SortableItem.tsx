@@ -4,16 +4,13 @@ import { useSortable, defaultAnimateLayoutChanges } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableSource } from './SortableSource';
 
-import styles from './OverlaySortableItem.module.scss';
+import { TreesListItem } from '../../types/types';
 
-type Item = {
-  id: number;
-  text: string;
-};
+import styles from './OverlaySortableItem.module.scss';
 
 export type SortableItemProps = {
   isPreviewMode: boolean;
-  item: Item;
+  item: TreesListItem;
 };
 
 export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item }) => {

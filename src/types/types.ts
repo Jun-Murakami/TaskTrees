@@ -12,7 +12,7 @@ export interface TreeItem {
 export type TreeItems = TreeItem[];
 
 export type TreesListItem = {
-  id: string;
+  id: UniqueIdentifier;
   name: string;
 };
 

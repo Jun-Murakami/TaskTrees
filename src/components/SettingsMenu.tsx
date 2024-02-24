@@ -8,6 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface SettingsMenuProps {
   darkMode: boolean;
@@ -16,6 +17,7 @@ interface SettingsMenuProps {
   handleDownloadAppState: () => void;
   handleLogout: () => void;
   setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
+  currentTree: UniqueIdentifier | null;
 }
 
 export default function SettingsMenu({
@@ -25,6 +27,7 @@ export default function SettingsMenu({
   handleDownloadAppState,
   handleLogout,
   setIsWaitingForDelete,
+  currentTree,
 }: SettingsMenuProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -159,33 +162,37 @@ export default function SettingsMenu({
             />
           </MenuItem>
         </Tooltip>
-        <Divider />
-        <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
-        <Tooltip title='バックアップをツリーに復元' placement='right'>
-          <MenuItem
-            onClick={() => {
-              handleUploadClick();
-            }}
-          >
-            <ListItemIcon>
-              <UploadIcon fontSize='small' />
-            </ListItemIcon>
-            Upload
-          </MenuItem>
-        </Tooltip>
-        <Tooltip title='ツリーのデータをバックアップ' placement='right'>
-          <MenuItem
-            onClick={() => {
-              handleDownloadAppState();
-              handleClose();
-            }}
-          >
-            <ListItemIcon>
-              <DownloadIcon fontSize='small' />
-            </ListItemIcon>
-            Backup
-          </MenuItem>
-        </Tooltip>
+        {currentTree && (
+          <>
+            <Divider />
+            <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
+            <Tooltip title='バックアップをツリーに復元' placement='right'>
+              <MenuItem
+                onClick={() => {
+                  handleUploadClick();
+                }}
+              >
+                <ListItemIcon>
+                  <UploadIcon fontSize='small' />
+                </ListItemIcon>
+                Upload
+              </MenuItem>
+            </Tooltip>
+            <Tooltip title='ツリーのデータをバックアップ' placement='right'>
+              <MenuItem
+                onClick={() => {
+                  handleDownloadAppState();
+                  handleClose();
+                }}
+              >
+                <ListItemIcon>
+                  <DownloadIcon fontSize='small' />
+                </ListItemIcon>
+                Backup
+              </MenuItem>
+            </Tooltip>
+          </>
+        )}
         <Divider />
         <Tooltip title='ユーザーアカウントの削除' placement='right'>
           <MenuItem

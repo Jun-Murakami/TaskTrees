@@ -1,15 +1,12 @@
 import { FC } from 'react';
 import { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core';
 
+import { TreesListItem } from '../../types/types';
+
 import styles from './OverlaySortableSource.module.scss';
 
-type Item = {
-  id: number;
-  text: string;
-};
-
 export type SortableSourceProps = {
-  item: Item;
+  item: TreesListItem;
   handlerProps?: {
     ref: (element: HTMLElement | null) => void;
     attributes: DraggableAttributes;

@@ -13,14 +13,15 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 const drawerWidth = 240;
 
 interface DrawerProps {
   handleCreateNewTree: () => void;
   treesList: TreesList;
-  currentTree: string | null;
-  handleListClick: (treeId: string) => void;
+  currentTree: UniqueIdentifier | null;
+  handleListClick: (treeId: UniqueIdentifier) => void;
 }
 
 export default function ResponsiveDrawer({ handleCreateNewTree, treesList, currentTree, handleListClick }: DrawerProps) {
@@ -90,12 +91,13 @@ export default function ResponsiveDrawer({ handleCreateNewTree, treesList, curre
         aria-label='open drawer'
         edge='start'
         onClick={toggleDrawer(true)}
+        size='large'
         sx={{
           border: `1px solid ${theme.palette.divider}`,
           display: { sm: 'none' },
           position: 'fixed',
-          bottom: 17,
-          right: 19,
+          bottom: 15,
+          right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.paper,
         }}

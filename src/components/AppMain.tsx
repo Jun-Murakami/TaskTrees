@@ -18,7 +18,7 @@ interface AppProps {
   setDarkMode: Dispatch<SetStateAction<boolean>>;
   handleLogout: () => void;
   setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
-  currentTree: string | null;
+  currentTree: UniqueIdentifier | null;
   currentTreeName: string | null;
   setCurrentTreeName: Dispatch<SetStateAction<string | null>>;
   saveCurrentTreeName: (name: string) => void;
@@ -186,15 +186,24 @@ function AppMain({
       sx={{
         marginLeft: { sm: '240px' }, // smサイズの時だけ左マージンを240pxに設定
         width: { xs: '100%', sm: 'calc(100% - 240px)' }, // smサイズの時だけ幅をResponsiveDrawerの幅を考慮して調整}}
+        minHeight: currentTree !== null ? '100vh' : 'auto',
       }}
     >
-      <Box
-        sx={{
-          maxWidth: '900px', // 最大幅を指定
-          width: '100%', // 横幅いっぱいに広がる
-          margin: '0 auto', // 中央寄せ
-        }}
-      >
+      {currentTree ? (
+        <TreeSettingsAccordion
+          currentTree={currentTree}
+          currentTreeName={currentTreeName}
+          setCurrentTreeName={setCurrentTreeName}
+          saveCurrentTreeName={saveCurrentTreeName}
+          setTreesList={setTreesList}
+          isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
+          currentTreeMembers={currentTreeMembers}
+          deleteTree={deleteTree}
+          isFocused={isFocused}
+          setIsFocused={setIsFocused}
+        />
+      ) : (
         <Typography variant='h3'>
           <img
             src='/TaskTrees.svg'
@@ -203,6 +212,14 @@ function AppMain({
           />
           TaskTrees
         </Typography>
+      )}
+      <Box
+        sx={{
+          maxWidth: '900px', // 最大幅を指定
+          width: '100%', // 横幅いっぱいに広がる
+          margin: '0 auto', // 中央寄せ
+        }}
+      >
         <Grid
           container
           spacing={2}
@@ -211,40 +228,45 @@ function AppMain({
             minWidth: '350px',
             maxWidth: '100%',
             margin: '0 auto',
-            marginTop: { xs: 0, sm: '30px' },
-            marginBottom: '20px',
+            marginTop: { xs: 0, sm: 0 },
+            marginBottom: '30px',
           }}
         >
-          <Grid
-            item
-            xs={12}
-            sm={4}
-            sx={{
-              display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示
-              position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
-              top: isScrolled ? 0 : 'auto', // スクロール時は上部に固定
-              left: isScrolled ? '50%' : 'auto', // スクロール時は左端に固定
-              transform: isScrolled ? 'translateX(calc(-50% + 120px))' : 'none', // スクロール時はX軸方向に-50%移動して中央寄せからさらに右に240pxずらす
-              zIndex: isScrolled ? 1000 : 'auto', // スクロール時は他の要素より前面に
-              width: isScrolled ? '100%' : 'auto', // スクロール時は幅を100%に
-            }}
-          >
-            <Button
-              variant='contained'
-              color='primary'
-              startIcon={<AddIcon />}
-              sx={{ width: '100%', maxWidth: '400px', whiteSpace: 'nowrap' }}
-              onClick={handleAddTask}
-            >
-              タスクを追加
-            </Button>
-          </Grid>
-          <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
-            <FormControlLabel
-              control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
-              label={<Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap' }}>完了を非表示</Typography>}
-            />
-          </Grid>
+          {currentTree && (
+            <>
+              <Grid
+                item
+                xs={12}
+                sm={4}
+                sx={{
+                  display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示
+                  position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
+                  top: isScrolled ? 0 : 'auto', // スクロール時は上部に固定
+                  left: isScrolled ? '50%' : 'auto', // スクロール時は左端に固定
+                  transform: isScrolled ? 'translateX(calc(-50% + 120px))' : 'none', // スクロール時はX軸方向に-50%移動して中央寄せからさらに右に240pxずらす
+                  zIndex: isScrolled ? 1000 : 'auto', // スクロール時は他の要素より前面に
+                  width: isScrolled ? '100%' : 'auto', // スクロール時は幅を100%に
+                }}
+              >
+                <Button
+                  variant='contained'
+                  color='primary'
+                  startIcon={<AddIcon />}
+                  sx={{ width: '100%', maxWidth: '400px', whiteSpace: 'nowrap' }}
+                  onClick={handleAddTask}
+                >
+                  タスクを追加
+                </Button>
+              </Grid>
+
+              <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
+                <FormControlLabel
+                  control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
+                  label={<Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap' }}>完了を非表示</Typography>}
+                />
+              </Grid>
+            </>
+          )}
           <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
             <SettingsMenu
               darkMode={darkMode}
@@ -253,24 +275,10 @@ function AppMain({
               handleDownloadAppState={handleDownloadAppState}
               handleLogout={handleLogout}
               setIsWaitingForDelete={setIsWaitingForDelete}
+              currentTree={currentTree}
             />
           </Grid>
         </Grid>
-        {currentTree && (
-          <TreeSettingsAccordion
-            currentTree={currentTree}
-            currentTreeName={currentTreeName}
-            setCurrentTreeName={setCurrentTreeName}
-            saveCurrentTreeName={saveCurrentTreeName}
-            setTreesList={setTreesList}
-            isExpanded={isExpanded}
-            setIsExpanded={setIsExpanded}
-            currentTreeMembers={currentTreeMembers}
-            deleteTree={deleteTree}
-            isFocused={isFocused}
-            setIsFocused={setIsFocused}
-          />
-        )}
         <SortableTree
           collapsible
           indicator
@@ -281,23 +289,25 @@ function AppMain({
           setItems={setItems}
           onSelect={handleSelect}
         />
-        <Button
-          variant='contained'
-          color='primary'
-          startIcon={<AddIcon />}
-          onClick={handleAddTask}
-          sx={{
-            zIndex: 1000,
-            display: { xs: 'flex', sm: 'none' }, // スマホサイズでのみ表示
-            position: 'fixed',
-            width: '60%', // 幅を40%に設定
-            bottom: 20,
-            left: '50%', // 左端から50%の位置に設定
-            transform: 'translateX(-50%)', // X軸方向に-50%移動して中央寄せ
-          }}
-        >
-          タスク追加
-        </Button>
+        {currentTree && (
+          <Button
+            variant='contained'
+            color='primary'
+            startIcon={<AddIcon />}
+            onClick={handleAddTask}
+            sx={{
+              zIndex: 1000,
+              display: { xs: 'flex', sm: 'none' }, // スマホサイズでのみ表示
+              position: 'fixed',
+              width: '50%', // 幅を40%に設定
+              bottom: 20,
+              left: '50%', // 左端から50%の位置に設定
+              transform: 'translateX(-50%)', // X軸方向に-50%移動して中央寄せ
+            }}
+          >
+            タスク追加
+          </Button>
+        )}
       </Box>
     </Box>
   );
