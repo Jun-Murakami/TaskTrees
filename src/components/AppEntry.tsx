@@ -71,6 +71,7 @@ export default function AppEntry() {
     setCurrentTree,
     setCurrentTreeName,
     setCurrentTreeMembers,
+    treesList,
     setTreesList,
     setIsExpanded,
     setIsFocused

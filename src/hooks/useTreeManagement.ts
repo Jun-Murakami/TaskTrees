@@ -19,6 +19,7 @@ export const useTreeManagement = (
   setCurrentTree: React.Dispatch<React.SetStateAction<UniqueIdentifier | null>>,
   setCurrentTreeName: React.Dispatch<React.SetStateAction<string | null>>,
   setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
+  treesList: TreesList,
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>,
   setIsFocused: React.Dispatch<React.SetStateAction<boolean>>
@@ -211,6 +212,27 @@ export const useTreeManagement = (
     return () => clearTimeout(debounceSave);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, isLoadedItemsFromExternal, handleError]);
+
+
+  // treesListの変更をデータベースに保存
+  useEffect(() => {
+    const debounceSave = setTimeout(() => {
+      const user = getAuth().currentUser;
+      if (!user || !treesList) {
+        return;
+      }
+      try {
+        const db = getDatabase();
+        const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
+        set(userTreeListRef, treesList.map((tree) => tree.id));
+      } catch (error) {
+        handleError(error);
+      }
+    }, 3000); // 3秒のデバウンス
+
+    // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
+    return () => clearTimeout(debounceSave);
+  }, [treesList, handleError]);
 
 
   // 見つからないツリーがあった場合、ユーザーに通知してデータベース側を更新
