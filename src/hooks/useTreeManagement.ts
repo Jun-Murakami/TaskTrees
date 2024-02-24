@@ -6,6 +6,7 @@ import { getAuth, signOut } from 'firebase/auth';
 import { getDatabase, ref, onValue, set, push } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useDialogStore } from '../store/dialogStore';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 export const useTreeManagement = (
   items: TreeItem[],
@@ -14,8 +15,8 @@ export const useTreeManagement = (
   isLoggedIn: boolean,
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  currentTree: string | null,
-  setCurrentTree: React.Dispatch<React.SetStateAction<string | null>>,
+  currentTree: UniqueIdentifier | null,
+  setCurrentTree: React.Dispatch<React.SetStateAction<UniqueIdentifier | null>>,
   setCurrentTreeName: React.Dispatch<React.SetStateAction<string | null>>,
   setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
@@ -83,7 +84,7 @@ export const useTreeManagement = (
             setTreesList(treesListAccumulator); // 全てのプロミスが解決された後に更新
           });
         } else {
-          setTreesList(null); // スナップショットが存在しない場合はnullをセット
+          setTreesList([]); // スナップショットが存在しない場合は空をセット
         }
       });
 
@@ -94,7 +95,7 @@ export const useTreeManagement = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, setTreesList, handleError, showDialog]);
 
-  const prevCurrentTreeRef = useRef<string | null>(null);
+  const prevCurrentTreeRef = useRef<UniqueIdentifier | null>(null);
   const prevItemsRef = useRef<TreeItem[]>([]);
 
   // 現在のツリーIDの監視→変更されたらitemsをデータベースから取得

@@ -12,13 +12,14 @@ import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { useDialogStore } from '../store/dialogStore';
 import { useInputDialogStore } from '../store/dialogStore';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 export default function AppEntry() {
   const [darkMode, setDarkMode] = useState(false);
   const [items, setItems] = useState<TreeItem[]>([]);
   const [hideDoneItems, setHideDoneItems] = useState(false);
-  const [treesList, setTreesList] = useState<TreesList>(null);
-  const [currentTree, setCurrentTree] = useState<string | null>(null);
+  const [treesList, setTreesList] = useState<TreesList>([]);
+  const [currentTree, setCurrentTree] = useState<UniqueIdentifier | null>(null);
   const [currentTreeName, setCurrentTreeName] = useState<string | null>(null);
   const [currentTreeMembers, setCurrentTreeMembers] = useState<{ uid: string; email: string }[] | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -76,7 +77,7 @@ export default function AppEntry() {
   );
 
   // ツリーのリストから選択されたツリーを表示する
-  const handleListClick = (treeId: string) => {
+  const handleListClick = (treeId: UniqueIdentifier) => {
     setCurrentTree(treeId);
   };
 
@@ -91,6 +92,7 @@ export default function AppEntry() {
             <ResponsiveDrawer
               handleCreateNewTree={handleCreateNewTree}
               treesList={treesList}
+              setTreesList={setTreesList}
               currentTree={currentTree}
               handleListClick={handleListClick}
             />

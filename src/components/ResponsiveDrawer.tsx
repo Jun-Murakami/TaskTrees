@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TreesList, TreesListItem } from '../types/types';
+import { TreesList } from '../types/types';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -13,17 +13,26 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
+import { UniqueIdentifier } from '@dnd-kit/core';
+import { SortableList } from './SortableList/SortableList';
 
 const drawerWidth = 240;
 
 interface DrawerProps {
   handleCreateNewTree: () => void;
   treesList: TreesList;
-  currentTree: string | null;
-  handleListClick: (treeId: string) => void;
+  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
+  currentTree: UniqueIdentifier | null;
+  handleListClick: (treeId: UniqueIdentifier) => void;
 }
 
-export default function ResponsiveDrawer({ handleCreateNewTree, treesList, currentTree, handleListClick }: DrawerProps) {
+export default function ResponsiveDrawer({
+  handleCreateNewTree,
+  treesList,
+  setTreesList,
+  currentTree,
+  handleListClick,
+}: DrawerProps) {
   const [drawserState, setDrawerState] = useState(false);
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -63,20 +72,15 @@ export default function ResponsiveDrawer({ handleCreateNewTree, treesList, curre
       </List>
       <Divider />
       <List>
-        {treesList &&
-          treesList.map((item: TreesListItem) => (
-            <ListItem key={item.id} disablePadding>
-              <ListItemButton
-                selected={currentTree === item.id}
-                onClick={() => {
-                  handleListClick(item.id);
-                  setDrawerState(false);
-                }}
-              >
-                <ListItemText secondary={item.name} />
-              </ListItemButton>
-            </ListItem>
-          ))}
+        {treesList && (
+          <SortableList
+            treesList={treesList}
+            setTreesList={setTreesList}
+            currentTree={currentTree}
+            handleListClick={handleListClick}
+            setDrawerState={setDrawerState}
+          />
+        )}
       </List>
     </div>
   );

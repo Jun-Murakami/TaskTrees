@@ -28,9 +28,10 @@ import { useInputDialogStore } from '../store/dialogStore';
 import { useDialogStore } from '../store/dialogStore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface TreeSettingsAccordionProps {
-  currentTree: string | null;
+  currentTree: UniqueIdentifier | null;
   currentTreeName: string | null;
   setCurrentTreeName: (name: string) => void;
   saveCurrentTreeName: (name: string) => void;
@@ -70,7 +71,7 @@ export function TreeSettingsAccordion({
       inputRef.current.focus();
       setIsFocused(false);
     }
-  }, [isFocused]);
+  }, [isFocused, setIsFocused]);
 
   const handleTreeNameChange = (e: string) => {
     setEditedTreeName(e);

@@ -1,37 +1,41 @@
 import { FC } from 'react';
-import { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core';
-
-import styles from './OverlaySortableSource.module.scss';
-
-type Item = {
-  id: number;
-  text: string;
-};
+import { DraggableAttributes, DraggableSyntheticListeners, UniqueIdentifier } from '@dnd-kit/core';
+import { ListItemText, ListItemButton, Button } from '@mui/material';
+import DragHandleIcon from '@mui/icons-material/DragHandle';
+import { TreesListItem } from '../../types/types';
 
 export type SortableSourceProps = {
-  item: Item;
+  item: TreesListItem;
   handlerProps?: {
     ref: (element: HTMLElement | null) => void;
     attributes: DraggableAttributes;
     listeners: DraggableSyntheticListeners;
   };
+  currentTree: UniqueIdentifier | null;
+  handleListClick: (treeId: UniqueIdentifier) => void;
+  setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps }) => {
+export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, currentTree, handleListClick, setDrawerState }) => {
   return (
-    <div className={styles.SourceWrapper}>
-      <div className={styles.Source}>
-        <i
-          ref={handlerProps?.ref}
-          className='mdi mdi-drag'
-          style={{
-            cursor: handlerProps ? 'grab' : 'grabbing',
-          }}
-          {...handlerProps?.attributes}
-          {...handlerProps?.listeners}
-        />
-        <div className={styles.Source__content}>{JSON.stringify(item)}</div>
-      </div>
-    </div>
+    <ListItemButton
+      selected={currentTree === item.id}
+      onClick={() => {
+        handleListClick(item.id);
+        setDrawerState(false);
+      }}
+    >
+      <Button
+        ref={handlerProps?.ref}
+        sx={{
+          cursor: handlerProps ? 'grab' : 'grabbing',
+        }}
+        {...handlerProps?.attributes}
+        {...handlerProps?.listeners}
+      >
+        <DragHandleIcon />
+      </Button>
+      <ListItemText secondary={item.name} />
+    </ListItemButton>
   );
 };

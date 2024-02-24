@@ -18,7 +18,7 @@ interface AppProps {
   setDarkMode: Dispatch<SetStateAction<boolean>>;
   handleLogout: () => void;
   setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
-  currentTree: string | null;
+  currentTree: UniqueIdentifier | null;
   currentTreeName: string | null;
   setCurrentTreeName: Dispatch<SetStateAction<string | null>>;
   saveCurrentTreeName: (name: string) => void;

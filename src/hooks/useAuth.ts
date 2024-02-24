@@ -2,14 +2,15 @@ import { useEffect } from 'react';
 import { TreeItem, TreesList } from '../types/types';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref } from 'firebase/database';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 export const useAuth = (
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setMessage: React.Dispatch<React.SetStateAction<string | null>>,
   setItems: React.Dispatch<React.SetStateAction<TreeItem[]>>,
-  setTreesList: React.Dispatch<React.SetStateAction<TreesList | null>>,
-  setCurrentTree: React.Dispatch<React.SetStateAction<string | null>>,
+  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
+  setCurrentTree: React.Dispatch<React.SetStateAction<UniqueIdentifier | null>>,
   setCurrentTreeName: React.Dispatch<React.SetStateAction<string | null>>,
   setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
   isWaitingForDelete: boolean,
@@ -48,7 +49,7 @@ export const useAuth = (
       .then(() => {
         setIsLoggedIn(false);
         setItems([]);
-        setTreesList(null);
+        setTreesList([]);
         setCurrentTree(null);
         setCurrentTreeName(null);
         setCurrentTreeMembers(null);
@@ -58,6 +59,7 @@ export const useAuth = (
         console.error(error);
       });
   };
+
   // アカウント削除
   const handleDeleteAccount = () => {
     const user = getAuth().currentUser;
