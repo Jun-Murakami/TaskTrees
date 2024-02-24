@@ -9,7 +9,7 @@ export const useAuth = (
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setMessage: React.Dispatch<React.SetStateAction<string | null>>,
   setItems: React.Dispatch<React.SetStateAction<TreeItem[]>>,
-  setTreesList: React.Dispatch<React.SetStateAction<TreesList | null>>,
+  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
   setCurrentTree: React.Dispatch<React.SetStateAction<UniqueIdentifier | null>>,
   setCurrentTreeName: React.Dispatch<React.SetStateAction<string | null>>,
   setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
@@ -49,7 +49,7 @@ export const useAuth = (
       .then(() => {
         setIsLoggedIn(false);
         setItems([]);
-        setTreesList(null);
+        setTreesList([]);
         setCurrentTree(null);
         setCurrentTreeName(null);
         setCurrentTreeMembers(null);

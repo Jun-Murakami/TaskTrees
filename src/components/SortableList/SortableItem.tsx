@@ -1,60 +1,38 @@
 import { FC } from 'react';
-import { clsx } from 'clsx';
 import { useSortable, defaultAnimateLayoutChanges } from '@dnd-kit/sortable';
+import { Box } from '@mui/material';
 import { CSS } from '@dnd-kit/utilities';
+import { UniqueIdentifier } from '@dnd-kit/core';
 import { SortableSource } from './SortableSource';
-
 import { TreesListItem } from '../../types/types';
-
-import styles from './OverlaySortableItem.module.scss';
 
 export type SortableItemProps = {
   isPreviewMode: boolean;
   item: TreesListItem;
+  currentTree: UniqueIdentifier | null;
+  handleListClick: (treeId: UniqueIdentifier) => void;
+  setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item }) => {
-  const {
-    isOver,
-    activeIndex,
-    overIndex,
-    isDragging,
-    isSorting,
-    setNodeRef,
-    transform,
-    transition,
-    setActivatorNodeRef,
-    attributes,
-    listeners,
-  } = useSortable({
+export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, currentTree, handleListClick, setDrawerState }) => {
+  const { isDragging, isSorting, setNodeRef, transform, transition, setActivatorNodeRef, attributes, listeners } = useSortable({
     id: item.id,
     animateLayoutChanges: isPreviewMode ? ({ isSorting }) => !isSorting : defaultAnimateLayoutChanges,
   });
 
   const canTransform = !isPreviewMode || !isSorting;
 
-  /** どっち向きに並び変わるか */
-  const sortDirection = activeIndex > overIndex ? 'before' : activeIndex < overIndex ? 'after' : null;
-
-  /** 挿入先を表示するか */
-  const isShowIndicator = isPreviewMode && isOver && sortDirection != null;
-
   const opacity = isPreviewMode ? 0.5 : 0;
 
+  const itemStyle = {
+    position: 'relative',
+    ...(isDragging ? { opacity } : {}), // opacity が undefined の場合はプロパティ自体を追加しない
+    ...(canTransform && transform ? { transform: CSS.Transform.toString(transform) } : {}),
+    ...(transition ? { transition } : {}),
+  };
+
   return (
-    <div
-      ref={setNodeRef}
-      className={clsx(styles.Item, {
-        [styles._active]: isShowIndicator,
-        [styles._before]: sortDirection === 'before',
-        [styles._after]: sortDirection === 'after',
-      })}
-      style={{
-        opacity: isDragging ? opacity : undefined,
-        transform: canTransform ? CSS.Transform.toString(transform) : undefined,
-        transition,
-      }}
-    >
+    <Box ref={setNodeRef} sx={itemStyle}>
       <SortableSource
         item={item}
         handlerProps={{
@@ -62,7 +40,10 @@ export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item }) => 
           attributes,
           listeners,
         }}
+        currentTree={currentTree}
+        handleListClick={handleListClick}
+        setDrawerState={setDrawerState}
       />
-    </div>
+    </Box>
   );
 };

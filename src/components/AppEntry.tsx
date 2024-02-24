@@ -18,7 +18,7 @@ export default function AppEntry() {
   const [darkMode, setDarkMode] = useState(false);
   const [items, setItems] = useState<TreeItem[]>([]);
   const [hideDoneItems, setHideDoneItems] = useState(false);
-  const [treesList, setTreesList] = useState<TreesList>(null);
+  const [treesList, setTreesList] = useState<TreesList>([]);
   const [currentTree, setCurrentTree] = useState<UniqueIdentifier | null>(null);
   const [currentTreeName, setCurrentTreeName] = useState<string | null>(null);
   const [currentTreeMembers, setCurrentTreeMembers] = useState<{ uid: string; email: string }[] | null>(null);
@@ -92,6 +92,7 @@ export default function AppEntry() {
             <ResponsiveDrawer
               handleCreateNewTree={handleCreateNewTree}
               treesList={treesList}
+              setTreesList={setTreesList}
               currentTree={currentTree}
               handleListClick={handleListClick}
             />

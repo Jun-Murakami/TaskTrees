@@ -16,7 +16,7 @@ export type TreesListItem = {
   name: string;
 };
 
-export type TreesList = TreesListItem[] | null;
+export type TreesList = TreesListItem[];
 
 export interface FlattenedItem extends TreeItem {
   parentId: UniqueIdentifier | null;

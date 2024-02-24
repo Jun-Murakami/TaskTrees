@@ -84,7 +84,7 @@ export const useTreeManagement = (
             setTreesList(treesListAccumulator); // 全てのプロミスが解決された後に更新
           });
         } else {
-          setTreesList(null); // スナップショットが存在しない場合はnullをセット
+          setTreesList([]); // スナップショットが存在しない場合は空をセット
         }
       });
 
