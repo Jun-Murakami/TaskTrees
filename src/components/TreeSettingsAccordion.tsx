@@ -217,7 +217,7 @@ export function TreeSettingsAccordion({
                   shrink: editedTreeName !== '',
                 }}
                 sx={{ zIndex: 1200, marginTop: 0, marginX: 2 }}
-                label='Edit tree name & Press save button. (or Enter)'
+                label='Edit name & press save button. (or Enter)'
                 fullWidth
                 size='small'
                 value={editedTreeName || ''}
