@@ -163,7 +163,7 @@ export default function SettingsMenu({
           </MenuItem>
         </Tooltip>
         {currentTree && (
-          <>
+          <Box>
             <Divider />
             <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
             <Tooltip title='バックアップをツリーに復元' placement='right'>
@@ -191,7 +191,7 @@ export default function SettingsMenu({
                 Backup
               </MenuItem>
             </Tooltip>
-          </>
+          </Box>
         )}
         <Divider />
         <Tooltip title='ユーザーアカウントの削除' placement='right'>

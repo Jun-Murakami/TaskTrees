@@ -66,6 +66,11 @@ function AppMain({
     setHideDoneItems(event.target.checked);
   };
 
+  // ネストされたアイテムからアイテムを検索する
+  const containsItemId = (items: TreeItem[], itemId: UniqueIdentifier): boolean => {
+    return items.some((item) => item.id === itemId || containsItemId(item.children, itemId));
+  };
+
   // ネストされたアイテムにアイテムを追加する
   const addItemToNestedChildren = (items: TreeItem[], parentId: UniqueIdentifier, newItem: TreeItem): TreeItem[] => {
     return items.map((item) => {
@@ -113,8 +118,8 @@ function AppMain({
       }
       setItems(newItems); // 更新されたアイテムの配列をセット
     } else {
-      // 選択したアイテムのidがitemsの中に存在しない場合
-      if (!items.some((item) => item.id === lastSelectedItemId)) {
+      // itemsをchildren内を含めて再帰的に検索し、選択したアイテムのidが存在しない場合はツリーの最初に追加
+      if (!containsItemId(items, lastSelectedItemId)) {
         const newItems = [...items]; // 現在のアイテムのコピーを作成
         newItems.unshift(newTask); // 配列の先頭に追加
         setItems(newItems); // 更新されたアイテムの配列をセット
@@ -142,29 +147,31 @@ function AppMain({
   };
 
   // ファイルを読み込んでアプリの状態を復元する
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
-      showDialog('ファイルが選択されていません。', 'Information');
+      await showDialog('ファイルが選択されていません。', 'Information');
       return;
     }
 
+    const result = await showDialog('現在のツリーは上書きされます。本当に復元しますか？', 'Confirmation Required', true);
+    if (!result) return;
     const reader = new FileReader();
     reader.onload = async (e) => {
       const text = e.target?.result;
       try {
         const appState = JSON.parse(text as string);
         if (!isValidAppState(appState)) {
-          showDialog('無効なファイル形式です。', 'Error');
+          await showDialog('無効なファイル形式です。', 'Error');
           return;
         } else {
           setItems(appState.items);
           setHideDoneItems(appState.hideDoneItems);
           setDarkMode(appState.darkMode);
-          showDialog('ファイルが正常に読み込まれました。', 'Information');
+          await showDialog('ファイルが正常に読み込まれました。', 'Information');
         }
       } catch (error) {
-        showDialog('ファイルの読み込みに失敗しました。', 'Error');
+        await showDialog('ファイルの読み込みに失敗しました。', 'Error');
       }
     };
     reader.readAsText(file);

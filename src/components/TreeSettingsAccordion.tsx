@@ -70,6 +70,7 @@ export function TreeSettingsAccordion({
   useEffect(() => {
     if (isFocused && inputRef.current) {
       inputRef.current.focus();
+      inputRef.current.select();
       setIsFocused(false);
     }
   }, [isFocused, setIsFocused]);
@@ -179,11 +180,20 @@ export function TreeSettingsAccordion({
           marginTop: 0,
           '& .MuiPaper-root': {
             borderRadius: '0 0 8px 8px !important',
+            backgroundColor: 'transparent',
+          },
+          '& .MuiButtonBase-root': {
+            backgroundColor: 'transparent',
           },
           borderRadius: '0 0 8px 8px !important',
         }}
         expanded={isExpanded}
-        onChange={() => setIsExpanded(!isExpanded)}
+        onChange={() => {
+          setIsExpanded(!isExpanded);
+          {
+            !isExpanded && setIsFocused(true);
+          }
+        }}
       >
         <AccordionSummary
           aria-controls='panel1a-content'
@@ -191,10 +201,10 @@ export function TreeSettingsAccordion({
           expandIcon={<ExpandMoreIcon />}
           sx={{
             '&.Mui-focused, &:hover': {
-              backgroundColor: 'transparent', // アクティブ状態の背景色を変更しない
+              backgroundColor: 'transparent',
             },
             height: 40,
-            paddingY: '30px',
+            paddingY: isExpanded ? '60px' : '30px',
             paddingX: 2,
           }}
         >
@@ -207,7 +217,7 @@ export function TreeSettingsAccordion({
                   shrink: editedTreeName !== '',
                 }}
                 sx={{ zIndex: 1200, marginTop: 0, marginX: 2 }}
-                label='Tree Name'
+                label='Edit tree name & Press save button. (or Enter)'
                 fullWidth
                 size='small'
                 value={editedTreeName || ''}
@@ -219,9 +229,17 @@ export function TreeSettingsAccordion({
                   }
                 }}
                 InputProps={{
+                  inputProps: {
+                    style: { textAlign: 'center' },
+                  },
                   endAdornment: (
                     <InputAdornment position='end'>
-                      <IconButton sx={{ zIndex: 1200, right: 0 }} onClick={handleButtonClick} disabled={!editedTreeName}>
+                      <IconButton
+                        sx={{ zIndex: 1200, right: 0 }}
+                        onClick={handleButtonClick}
+                        disabled={!editedTreeName}
+                        color='primary'
+                      >
                         <SaveAsIcon />
                       </IconButton>
                     </InputAdornment>
@@ -236,7 +254,7 @@ export function TreeSettingsAccordion({
           </Stack>
         </AccordionSummary>
         <AccordionDetails>
-          <Typography variant='body1' sx={{ marginTop: 0, ml: 2, textAlign: 'left' }}>
+          <Typography variant='body1' sx={{ marginTop: -1, ml: 2, textAlign: 'left' }}>
             編集が許可されているメンバー
           </Typography>
           {currentTreeMembers && (
@@ -271,7 +289,7 @@ export function TreeSettingsAccordion({
               width: '100%',
               display: 'flex',
               justifyContent: 'flex-end',
-              marginTop: 2,
+              marginTop: 1,
             }}
           >
             <Button variant={'outlined'} sx={{ mr: 2 }} startIcon={<AddIcon />} color='inherit' onClick={handleAddUserToTree}>

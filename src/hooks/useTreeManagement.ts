@@ -25,6 +25,7 @@ export const useTreeManagement = (
   setIsFocused: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const [isLoadedItemsFromExternal, setIsLoadedItemsFromExternal] = useState(false);
+  const [isLoadedTreesListFromExternal, setIsLoadedTreesListFromExternal] = useState(false);
   const [MissingTrees, setMissingTrees] = useState<string[] | null>(null);
   const showDialog = useDialogStore((state) => state.showDialog);
 
@@ -83,9 +84,11 @@ export const useTreeManagement = (
 
           Promise.all(promises).then(async (): Promise<void> => {
             setTreesList(treesListAccumulator); // 全てのプロミスが解決された後に更新
+            setIsLoadedTreesListFromExternal(true);
           });
         } else {
           setTreesList([]); // スナップショットが存在しない場合は空をセット
+          setIsLoadedTreesListFromExternal(true);
         }
       });
 
@@ -211,14 +214,18 @@ export const useTreeManagement = (
     // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
     return () => clearTimeout(debounceSave);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, isLoadedItemsFromExternal, handleError]);
+  }, [items, handleError]);
 
 
   // treesListの変更をデータベースに保存
   useEffect(() => {
     const debounceSave = setTimeout(() => {
       const user = getAuth().currentUser;
-      if (!user || !treesList) {
+      if (!user || treesList.length === 0) {
+        return;
+      }
+      if (isLoadedTreesListFromExternal) {
+        setIsLoadedTreesListFromExternal(false);
         return;
       }
       try {
@@ -232,7 +239,30 @@ export const useTreeManagement = (
 
     // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
     return () => clearTimeout(debounceSave);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [treesList, handleError]);
+
+  // ツリー名の変更を監視→変更されたらツリーリストを更新
+  useEffect(() => {
+    const db = getDatabase();
+    const unsubscribeFunctions = treesList.map(tree => {
+      const treeNameRef = ref(db, `trees/${tree.id}/name`);
+      return onValue(treeNameRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setTreesList((currentTreesList) =>
+            currentTreesList.map((t) =>
+              t.id === tree.id ? { ...t, name: snapshot.val() } : t
+            )
+          );
+          setIsLoadedTreesListFromExternal(true);
+        }
+      });
+    });
+
+    return () => {
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+    };
+  }, [treesList, setTreesList]);
 
 
   // 見つからないツリーがあった場合、ユーザーに通知してデータベース側を更新
@@ -291,7 +321,7 @@ export const useTreeManagement = (
   }, [showDialog]);
 
 
-  //ツリーを削除する
+  //ツリーを削除する関数
   const deleteTree = async (treeId: string) => {
     const user = getAuth().currentUser;
     if (!user) {
@@ -318,7 +348,7 @@ export const useTreeManagement = (
     }
   };
 
-  // 新しいツリーを作成する
+  // 新しいツリーを作成する関数
   const handleCreateNewTree = async () => {
     const user = getAuth().currentUser;
     if (!user) {
@@ -360,7 +390,10 @@ export const useTreeManagement = (
       }
     });
     setIsExpanded(true);
-    setIsFocused(true);
+    // 0.2秒後にフォーカスをセット
+    setTimeout(() => {
+      setIsFocused(true);
+    }, 200);
   };
 
   return { saveCurrentTreeName, deleteTree, handleCreateNewTree };
