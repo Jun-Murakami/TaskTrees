@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
-import { TreeItem, TreesList } from '../conponents/Tree/types';
-import { isTreeItemArray } from '../conponents/Tree/utilities';
-import { initialItems } from '../conponents/Tree/mock';
+import { TreeItem, TreesList } from '../types/types';
+import { isTreeItemArray } from '../components/SortableTree/utilities';
+import { initialItems } from '../components/SortableTree/mock';
 import { getAuth, signOut } from 'firebase/auth';
 import { getDatabase, ref, onValue, set, push } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -19,9 +19,11 @@ export const useTreeManagement = (
   setCurrentTreeName: React.Dispatch<React.SetStateAction<string | null>>,
   setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
-  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>
+  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsFocused: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const [isLoadedItemsFromExternal, setIsLoadedItemsFromExternal] = useState(false);
+  const [MissingTrees, setMissingTrees] = useState<string[] | null>(null);
   const showDialog = useDialogStore((state) => state.showDialog);
 
   // エラーハンドリング
@@ -58,15 +60,18 @@ export const useTreeManagement = (
       const unsubscribe = onValue(treeListRef, (snapshot) => {
         if (snapshot.exists()) {
           const data: string[] = snapshot.val();
-          let treesListAccumulator: TreesList = {}; // 初期化
+          let treesListAccumulator: TreesList = []; // 空の配列で初期化
           const promises = data.map((treeId) =>
             new Promise<void>((resolve) => {
               const treeTitleRef = ref(db, `trees/${treeId}/name`);
               onValue(treeTitleRef, (snapshot) => {
-                if (snapshot.exists()) {
-                  treesListAccumulator = { ...treesListAccumulator, [treeId]: snapshot.val() };
+                if (snapshot.exists() && treesListAccumulator !== null) {
+                  treesListAccumulator = [...treesListAccumulator, { id: treeId, name: snapshot.val() }];
                 }
                 // データが存在しない場合もresolveを呼び出して、次の処理に進む
+                if (!snapshot.exists()) {
+                  setMissingTrees((prev) => prev ? [...prev, treeId] : [treeId]);
+                }
                 resolve();
               }, {
                 onlyOnce: true // リスナーを一回限りにする
@@ -74,11 +79,10 @@ export const useTreeManagement = (
             })
           );
 
-          Promise.all(promises).then(() => {
+          Promise.all(promises).then(async (): Promise<void> => {
             setTreesList(treesListAccumulator); // 全てのプロミスが解決された後に更新
           });
         } else {
-          // console.log('ツリーリストが存在しません。');
           setTreesList(null); // スナップショットが存在しない場合はnullをセット
         }
       });
@@ -87,7 +91,8 @@ export const useTreeManagement = (
     } catch (error) {
       handleError(error);
     }
-  }, [isLoggedIn, setTreesList, handleError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, setTreesList, handleError, showDialog]);
 
   const prevCurrentTreeRef = useRef<string | null>(null);
   const prevItemsRef = useRef<TreeItem[]>([]);
@@ -206,20 +211,30 @@ export const useTreeManagement = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, isLoadedItemsFromExternal, handleError]);
 
-  // treesListの変更をデータベースに保存する関数
-  const saveTreesList = (editedTreesList: TreesList) => {
-    const user = getAuth().currentUser;
-    if (!user || !editedTreesList) {
-      return;
+
+  // 見つからないツリーがあった場合、ユーザーに通知してデータベース側を更新
+  useEffect(() => {
+    const asyncFunc = async () => {
+      if (MissingTrees) {
+        await showDialog('1つ以上のツリーが他のユーザーまたはシステムによって削除されました。\n\n' + MissingTrees, 'Information');
+        const user = getAuth().currentUser;
+        if (!user) {
+          return;
+        }
+        const db = getDatabase();
+        const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
+        onValue(userTreeListRef, async (snapshot) => {
+          if (snapshot.exists()) {
+            const data: string[] = snapshot.val();
+            const newTreeList = data.filter((id) => !MissingTrees.includes(id));
+            await set(userTreeListRef, newTreeList);
+          }
+        }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
+        setMissingTrees(null);
+      }
     }
-    try {
-      const db = getDatabase();
-      const treeListRef = ref(db, `users/${user.uid}/treeList`);
-      set(treeListRef, editedTreesList ? Object.keys(editedTreesList) : []);
-    } catch (error) {
-      handleError(error);
-    }
-  };
+    asyncFunc();
+  }, [MissingTrees, showDialog]);
 
   // currentTreeNameの変更をデータベースに保存する関数
   const saveCurrentTreeName = (editedTreeName: string) => {
@@ -301,31 +316,28 @@ export const useTreeManagement = (
     } else {
       setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
     }
-
-    // 非同期処理を行うための別の関数を定義
-    const updateTreesListAsync = async (key: unknown, prev: TreesList) => {
-      if (typeof key === 'string' || typeof key === 'number') {
-        const newTreesList = { ...prev, [key]: '新しいツリー' };
-        await saveTreesList(newTreesList);
-        return newTreesList;
+    // ツリーリストに新しいツリーを追加
+    const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
+    onValue(userTreeListRef, async (snapshot) => {
+      if (snapshot.exists()) {
+        const data: string[] = snapshot.val();
+        const newTreeList = [...data, newTreeRef.key];
+        await set(userTreeListRef, newTreeList);
       } else {
-        await showDialog('ツリーの作成に失敗しました。キーが無効です。' + key, 'Error');
-        return prev;
+        await set(userTreeListRef, [newTreeRef.key]);
       }
-    };
+    }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
 
-    setTreesList((prev) => {
-      updateTreesListAsync(newTreeRef.key, prev)
-        .then((newList) => {
-          return newList; // 新しい状態を返す
-        })
-        .catch((error) => {
-          console.error(error);
-          return prev; // エラーが発生した場合、前の状態を返す
-        });
-      return prev; // 非同期処理が完了する前に、一時的に前の状態を返す
+    // ツリーリストを更新
+    setTreesList((prevTreesList) => {
+      if (prevTreesList && newTreeRef.key) {
+        return [...prevTreesList, { id: newTreeRef.key, name: '新しいツリー' }];
+      } else {
+        return prevTreesList;
+      }
     });
     setIsExpanded(true);
+    setIsFocused(true);
   };
 
   return { saveCurrentTreeName, deleteTree, handleCreateNewTree };

@@ -20,7 +20,6 @@ import {
   UniqueIdentifier,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
-
 import {
   buildTree,
   flattenTree,
@@ -33,7 +32,7 @@ import {
   findParentItem,
   isDescendantOfTrash,
 } from './utilities';
-import type { FlattenedItem, SensorContext, TreeItems } from './types';
+import type { FlattenedItem, SensorContext, TreeItems } from '../../types/types';
 import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './SortableTreeItem';
 import { CSS } from '@dnd-kit/utilities';
@@ -309,7 +308,7 @@ export function SortableTree({
           return removeItem(currentItems, id);
         } else if (parentItem) {
           // 親アイテムのchildren配列から削除対象のアイテムを削除
-          parentItem.children = parentItem.children.filter((child) => child.id !== id);
+          parentItem.children = parentItem.children.filter((child: { id: UniqueIdentifier }) => child.id !== id);
         }
 
         // アイテムをゴミ箱に移動

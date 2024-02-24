@@ -6,7 +6,7 @@ import {
   DroppableContainer,
 } from '@dnd-kit/core';
 
-import type { SensorContext } from './types';
+import type { SensorContext } from '../../types/types';
 import { getProjection } from './utilities';
 
 const directions: string[] = [

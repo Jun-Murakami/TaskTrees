@@ -1,0 +1,15 @@
+.SourceWrapper {
+  padding: 5px 0;
+}
+
+.Source {
+  display: flex;
+  padding: 10px;
+  border: solid 1px black;
+  background-color: #fff;
+
+  &__content {
+    padding: 0 10px;
+    flex: 1 1 0;
+  }
+}

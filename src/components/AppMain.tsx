@@ -1,9 +1,9 @@
 import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
-import { findMaxId, isDescendantOfTrash, isValidAppState } from './Tree/utilities';
+import { findMaxId, isDescendantOfTrash, isValidAppState } from './SortableTree/utilities';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
-import { SortableTree } from './Tree/SortableTree';
-import type { TreeItem, TreesList } from './Tree/types';
+import { SortableTree } from './SortableTree/SortableTree';
+import type { TreeItem, TreesList } from '../types/types';
 import SettingsMenu from './SettingsMenu';
 import { FormControlLabel, Switch, Button, Box, Typography, Grid } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -27,6 +27,8 @@ interface AppProps {
   setIsExpanded: Dispatch<SetStateAction<boolean>>;
   currentTreeMembers: { uid: string; email: string }[] | null;
   deleteTree: (treeId: string) => void;
+  isFocused: boolean;
+  setIsFocused: Dispatch<SetStateAction<boolean>>;
 }
 
 function AppMain({
@@ -47,6 +49,8 @@ function AppMain({
   setIsExpanded,
   currentTreeMembers,
   deleteTree,
+  isFocused,
+  setIsFocused,
 }: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -263,6 +267,8 @@ function AppMain({
             setIsExpanded={setIsExpanded}
             currentTreeMembers={currentTreeMembers}
             deleteTree={deleteTree}
+            isFocused={isFocused}
+            setIsFocused={setIsFocused}
           />
         )}
         <SortableTree

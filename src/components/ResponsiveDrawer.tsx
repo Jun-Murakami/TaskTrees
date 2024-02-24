@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TreesList } from './Tree/types';
+import { TreesList, TreesListItem } from '../types/types';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -64,16 +64,16 @@ export default function ResponsiveDrawer({ handleCreateNewTree, treesList, curre
       <Divider />
       <List>
         {treesList &&
-          Object.entries(treesList).map(([key, value]) => (
-            <ListItem key={key} disablePadding>
+          treesList.map((item: TreesListItem) => (
+            <ListItem key={item.id} disablePadding>
               <ListItemButton
-                selected={currentTree === key}
+                selected={currentTree === item.id}
                 onClick={() => {
-                  handleListClick(key);
+                  handleListClick(item.id);
                   setDrawerState(false);
                 }}
               >
-                <ListItemText secondary={value} />
+                <ListItemText secondary={item.name} />
               </ListItemButton>
             </ListItem>
           ))}

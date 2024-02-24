@@ -1,4 +1,4 @@
-import { TreeItem } from './types';
+import { TreeItem } from '../../types/types';
 
 export const initialItems: TreeItem[] = [
   {

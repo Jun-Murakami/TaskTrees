@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import AppEntry from './conponents/AppEntry';
+import AppEntry from './components/AppEntry';
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { TreeItem, TreesList } from '../conponents/Tree/types';
+import { TreeItem, TreesList } from '../types/types';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref } from 'firebase/database';
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@mui/material';
 import {
   Accordion,
@@ -17,7 +17,7 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import { TreesList } from './Tree/types';
+import { TreesList } from '../types/types';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -39,6 +39,8 @@ interface TreeSettingsAccordionProps {
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   currentTreeMembers: { uid: string; email: string }[] | null;
   deleteTree: (treeId: string) => void;
+  isFocused: boolean;
+  setIsFocused: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function TreeSettingsAccordion({
@@ -51,6 +53,8 @@ export function TreeSettingsAccordion({
   setIsExpanded,
   currentTreeMembers,
   deleteTree,
+  isFocused,
+  setIsFocused,
 }: TreeSettingsAccordionProps) {
   const [editedTreeName, setEditedTreeName] = useState<string | null>(currentTreeName || '');
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -61,24 +65,34 @@ export function TreeSettingsAccordion({
     setEditedTreeName(currentTreeName);
   }, [currentTree, currentTreeName]);
 
+  useEffect(() => {
+    if (isFocused && inputRef.current) {
+      inputRef.current.focus();
+      setIsFocused(false);
+    }
+  }, [isFocused]);
+
   const handleTreeNameChange = (e: string) => {
     setEditedTreeName(e);
   };
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // ツリー名の変更
   const handleButtonClick = () => {
     if (editedTreeName !== null) {
       setCurrentTreeName(editedTreeName);
       saveCurrentTreeName(editedTreeName);
-      setTreesList((prev) => {
-        if (prev === null) {
-          return null;
-        }
-        return {
-          ...prev,
-          [currentTree as string]: editedTreeName,
-        };
-      });
+      setTreesList(
+        (prev) =>
+          prev &&
+          prev.map((tree) => {
+            if (tree.id === currentTree) {
+              return { ...tree, name: editedTreeName };
+            }
+            return tree;
+          })
+      );
     }
   };
 
@@ -180,6 +194,7 @@ export function TreeSettingsAccordion({
               </InputAdornment>
             ),
           }}
+          inputRef={inputRef}
         />
         <Typography variant='body1' sx={{ marginTop: 4, ml: 2, textAlign: 'left' }}>
           編集が許可されているメンバー

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import AppMain from './AppMain';
-import { TreeItem, TreesList } from './Tree/types.ts';
+import { TreeItem, TreesList } from '../types/types';
 import { useAppStateSync } from '../hooks/useAppStateSync';
 import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useAuth } from '../hooks/useAuth';
-import { ModalDialog } from '../conponents/ModalDialog';
-import { InputDialog } from '../conponents/InputDialog';
+import { ModalDialog } from '../components/ModalDialog';
+import { InputDialog } from '../components/InputDialog';
 import ResponsiveDrawer from './ResponsiveDrawer';
 import { theme, darkTheme } from './mui_theme';
 import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper } from '@mui/material';
@@ -26,6 +26,7 @@ export default function AppEntry() {
   const [message, setMessage] = useState<string | null>(null);
   const [isWaitingForDelete, setIsWaitingForDelete] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const isDialogVisible = useDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
@@ -70,7 +71,8 @@ export default function AppEntry() {
     setCurrentTreeName,
     setCurrentTreeMembers,
     setTreesList,
-    setIsExpanded
+    setIsExpanded,
+    setIsFocused
   );
 
   // ツリーのリストから選択されたツリーを表示する
@@ -110,6 +112,8 @@ export default function AppEntry() {
               setIsExpanded={setIsExpanded}
               currentTreeMembers={currentTreeMembers}
               deleteTree={deleteTree}
+              isFocused={isFocused}
+              setIsFocused={setIsFocused}
             />
             {isLoading && <CircularProgress sx={{ marginTop: 2 }} />}
           </>

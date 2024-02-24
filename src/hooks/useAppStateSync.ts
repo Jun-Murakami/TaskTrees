@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState } from 'react';
-import { TreeItem, AppState } from '../conponents/Tree/types';
-import { isValidAppSettingsState } from '../conponents/Tree/utilities';
+import { TreeItem, AppState } from '../types/types';
+import { isValidAppSettingsState } from '../components/SortableTree/utilities';
 import { getAuth, signOut } from 'firebase/auth';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 

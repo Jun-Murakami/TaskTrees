@@ -11,9 +11,12 @@ export interface TreeItem {
 
 export type TreeItems = TreeItem[];
 
-export type TreesList = {
-  [key: string]: string;
-} | null;
+export type TreesListItem = {
+  id: string;
+  name: string;
+};
+
+export type TreesList = TreesListItem[] | null;
 
 export interface FlattenedItem extends TreeItem {
   parentId: UniqueIdentifier | null;
