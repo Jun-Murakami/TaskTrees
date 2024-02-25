@@ -59,6 +59,7 @@ export default function AppEntry() {
     setIsLoading,
     setMessage,
     setCurrentTree,
+    setCurrentTreeName,
     setCurrentTreeMembers,
     setTreesList,
     setIsExpanded

@@ -3,7 +3,7 @@ import { TreeItem, TreesList, AppState } from '../types/types';
 import { isValidAppSettingsState, isValidAppState } from '../components/SortableTree/utilities';
 import { useDialogStore } from '../store/dialogStore';
 import { getAuth, signOut } from 'firebase/auth';
-import { getDatabase, ref, onValue, set, push } from 'firebase/database';
+import { getDatabase, ref, onValue, set, push, get } from 'firebase/database';
 import { UniqueIdentifier } from '@dnd-kit/core';
 
 export const useAppStateSync = (
@@ -18,6 +18,7 @@ export const useAppStateSync = (
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setMessage: React.Dispatch<React.SetStateAction<string | null>>,
   setCurrentTree: React.Dispatch<React.SetStateAction<UniqueIdentifier | null>>,
+  setCurrentTreeName: React.Dispatch<React.SetStateAction<string | null>>,
   setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>,
@@ -134,17 +135,25 @@ export const useAppStateSync = (
             members: [user?.uid],
           });
 
+          if (!newTreeRef.key) {
+            await showDialog('データベースへの保存に失敗しました。', 'Error');
+            return;
+          }
           // データベースのツリーリストに新しいツリーを追加
           const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
-          onValue(userTreeListRef, async (snapshot) => {
+          try {
+            const snapshot = await get(userTreeListRef);
+            let newTreeList: string[] = [];
             if (snapshot.exists()) {
               const data: string[] = snapshot.val();
-              const newTreeList = [newTreeRef.key, ...data];
-              await set(userTreeListRef, newTreeList);
+              newTreeList = [newTreeRef.key, ...data];
             } else {
-              await set(userTreeListRef, [newTreeRef.key]);
+              newTreeList = [newTreeRef.key];
             }
-          }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
+            await set(userTreeListRef, newTreeList);
+          } catch (error) {
+            await showDialog('データベースのツリーリスト更新に失敗しました。' + error, 'Error');
+          }
 
           // ツリーリストを更新
           setTreesList((prevTreesList) => {
@@ -154,17 +163,19 @@ export const useAppStateSync = (
               return prevTreesList;
             }
           });
-          await showDialog('ファイルが正常に読み込まれました。', 'Information');
+
           if (user.email) {
             setCurrentTreeMembers([{ uid: user.uid, email: user.email }]);
           } else {
             setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
           }
           setCurrentTree(newTreeRef.key);
+          setCurrentTreeName('読み込まれたツリー');
           setItems(appState.items);
           setHideDoneItems(appState.hideDoneItems);
           setDarkMode(appState.darkMode);
           setIsExpanded(false);
+          await showDialog('ファイルが正常に読み込まれました。', 'Information');
         }
       } catch (error) {
         await showDialog('ファイルの読み込みに失敗しました。', 'Error');

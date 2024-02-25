@@ -3,7 +3,7 @@ import { TreeItem, TreesList } from '../types/types';
 import { isTreeItemArray } from '../components/SortableTree/utilities';
 import { initialItems } from '../components/SortableTree/mock';
 import { getAuth, signOut } from 'firebase/auth';
-import { getDatabase, ref, onValue, set, push } from 'firebase/database';
+import { getDatabase, ref, onValue, set, push, get } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useDialogStore } from '../store/dialogStore';
 import { UniqueIdentifier } from '@dnd-kit/core';
@@ -324,7 +324,9 @@ export const useTreeManagement = (
 
 
   //ツリーを削除する関数
-  const deleteTree = async (treeId: string) => {
+  const deleteTree = async (treeId: UniqueIdentifier) => {
+    console.log('treeId:', treeId)
+    console.log('currentTree:', currentTree)
     const user = getAuth().currentUser;
     if (!user) {
       return;
@@ -334,13 +336,14 @@ export const useTreeManagement = (
     try {
       await set(treeRef, null);
       const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
-      onValue(userTreeListRef, async (snapshot) => {
-        if (snapshot.exists()) {
-          const data: string[] = snapshot.val();
-          const newTreeList = data.filter((id) => id !== treeId);
-          await set(userTreeListRef, newTreeList);
-        }
-      }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
+      const snapshot = await get(userTreeListRef);
+      if (snapshot.exists()) {
+        const data: string[] = snapshot.val();
+        console.log('data:', data)
+        const newTreeList = data.filter((id) => id !== treeId);
+        console.log('newTreeList:', newTreeList)
+        await set(userTreeListRef, newTreeList);
+      }
       setCurrentTree(null);
       setCurrentTreeName(null);
       setCurrentTreeMembers(null);
