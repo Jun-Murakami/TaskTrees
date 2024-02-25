@@ -1,3 +1,4 @@
+import { useRef, useEffect, useState } from 'react';
 import { useInputDialogStore } from '../store/dialogStore';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -13,11 +14,18 @@ export function InputDialog() {
   const defaultValue = useInputDialogStore((state) => state.defaultValue);
   const isPassword = useInputDialogStore((state) => state.isPassword);
 
-  let inputValue: string = '';
+  const [inputValue, setInputValue] = useState<string>(''); // テキストフィールドの値を保持するステートを作成
 
-  function setInputValue(value: string) {
-    inputValue = value;
-  }
+  const inputRef = useRef<HTMLInputElement>(null); // テキストフィールドへの参照を作成 // テキストフィールドへの参照を作成
+
+  // コンポーネントがマウントされた後にフォーカスを設定
+  useEffect(() => {
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
+  }, []);
 
   return (
     <Dialog open={useInputDialogStore((state) => state.isDialogVisible)} onClose={hideDialog}>
@@ -26,6 +34,7 @@ export function InputDialog() {
         <DialogContentText>{useInputDialogStore((state) => state.dialogMessage)}</DialogContentText>
         <TextField
           autoFocus
+          inputRef={inputRef}
           margin='dense'
           id={isPassword ? 'filled-password-input' : 'filled-basic'}
           variant='outlined'
@@ -35,6 +44,13 @@ export function InputDialog() {
           fullWidth
           onChange={(e) => {
             setInputValue(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && inputValue !== '') {
+              e.preventDefault(); // デフォルトの挙動をキャンセル
+              resolveDialog?.(inputValue);
+              hideDialog();
+            }
           }}
         />
       </DialogContent>

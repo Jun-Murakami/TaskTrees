@@ -112,6 +112,7 @@ export function TreeSettingsAccordion({
       null,
       false
     );
+    console.log(email);
     if (!email) return;
     const functions = getFunctions();
     const addUserToTreeCallable = httpsCallable(functions, 'addUserToTree');
@@ -183,10 +184,10 @@ export function TreeSettingsAccordion({
           marginTop: 0,
           '& .MuiPaper-root': {
             borderRadius: '0 0 8px 8px !important',
-            backgroundColor: theme.palette.mode === 'light' ? 'transparent' : undefined,
+            backgroundColor: 'transparent !important',
           },
           '& .MuiButtonBase-root': {
-            backgroundColor: 'transparent',
+            backgroundColor: 'transparent !important',
           },
           borderRadius: '0 0 8px 8px !important',
         }}
@@ -208,7 +209,7 @@ export function TreeSettingsAccordion({
           expandIcon={<ExpandMoreIcon />}
           sx={{
             '&.Mui-focused, &:hover': {
-              backgroundColor: 'transparent',
+              backgroundColor: 'transparent !important',
             },
             height: 40,
             paddingY: isExpanded ? '60px' : '30px',
@@ -232,7 +233,7 @@ export function TreeSettingsAccordion({
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && editedTreeName) {
-                    handleSubmit();
+                    setIsExpanded(false);
                   }
                 }}
                 InputProps={{

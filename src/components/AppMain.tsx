@@ -54,6 +54,7 @@ function AppMain({
 }: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isAllowShowTree, setIsAllowShowTree] = useState(true);
   const showDialog = useDialogStore((state) => state.showDialog);
 
   // 選択したアイテムのIDをセットする
@@ -177,6 +178,7 @@ function AppMain({
     reader.readAsText(file);
   };
 
+  // タスク追加ボタンの表示をスクロールに応じて変更する
   useEffect(() => {
     const handleScroll = () => {
       const offset = window.scrollY;
@@ -187,6 +189,17 @@ function AppMain({
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // アコーディオンの展開時にツリーの表示を遅延させる
+  useEffect(() => {
+    if (isExpanded) {
+      setIsAllowShowTree(false);
+    } else {
+      setTimeout(() => {
+        setIsAllowShowTree(true);
+      }, 250);
+    }
+  }, [isExpanded]);
 
   return (
     <Box
@@ -239,7 +252,7 @@ function AppMain({
             marginBottom: '30px',
           }}
         >
-          {currentTree && !isExpanded && (
+          {currentTree && isAllowShowTree && (
             <>
               <Grid
                 item
@@ -274,7 +287,7 @@ function AppMain({
               </Grid>
             </>
           )}
-          {!isExpanded && (
+          {isAllowShowTree && (
             <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
               <SettingsMenu
                 darkMode={darkMode}
@@ -288,7 +301,7 @@ function AppMain({
             </Grid>
           )}
         </Grid>
-        {!isExpanded && (
+        {isAllowShowTree && (
           <SortableTree
             collapsible
             indicator
@@ -300,7 +313,7 @@ function AppMain({
             onSelect={handleSelect}
           />
         )}
-        {currentTree && !isExpanded && (
+        {currentTree && isAllowShowTree && (
           <Button
             variant='contained'
             color='primary'

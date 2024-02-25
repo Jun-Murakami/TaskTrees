@@ -390,10 +390,10 @@ export const useTreeManagement = (
       }
     });
     setIsExpanded(true);
-    // 0.2秒後にフォーカスをセット
+    // 0.3秒後にフォーカスをセット
     setTimeout(() => {
       setIsFocused(true);
-    }, 200);
+    }, 300);
   };
 
   return { saveCurrentTreeName, deleteTree, handleCreateNewTree };
