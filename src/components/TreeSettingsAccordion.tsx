@@ -17,11 +17,12 @@ import {
   Stack,
 } from '@mui/material';
 import { TreesList } from '../types/types';
-import ConstructionIcon from '@mui/icons-material/Construction';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 import { useInputDialogStore } from '../store/dialogStore';
 import { useDialogStore } from '../store/dialogStore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -233,6 +234,7 @@ export function TreeSettingsAccordion({
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && editedTreeName) {
+                    handleSubmit();
                     setIsExpanded(false);
                   }
                 }}
@@ -246,7 +248,11 @@ export function TreeSettingsAccordion({
             ) : (
               <Typography sx={{ width: '100%', marginTop: '6px' }}>{currentTreeName}</Typography>
             )}
-            <ConstructionIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
+            {isExpanded ? (
+              <SaveAsIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
+            ) : (
+              <SettingsIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
+            )}
           </Stack>
         </AccordionSummary>
         <AccordionDetails>

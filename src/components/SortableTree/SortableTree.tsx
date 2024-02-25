@@ -295,33 +295,38 @@ export function SortableTree({
     document.body.style.setProperty('cursor', '');
   }
 
+  // タスクの削除
   function handleRemove(id: UniqueIdentifier) {
     setItems((currentItems) => {
       const itemToRemove = findItemDeep(currentItems, id);
       const trashItem = currentItems.find((item) => item.id === 'trash');
 
       if (itemToRemove && trashItem) {
-        // 親アイテムを見つける
-        const parentItem = findParentItem(currentItems, id);
+        const itemToRemoveCopy = { ...itemToRemove, children: [...itemToRemove.children] }; // アイテムのコピーを作成
 
+        // 親アイテムを見つけ、そのchildrenからアイテムを削除
+        const parentItem = findParentItem(currentItems, id);
         if (isDescendantOfTrash(currentItems, id)) {
           return removeItem(currentItems, id);
         } else if (parentItem) {
-          // 親アイテムのchildren配列から削除対象のアイテムを削除
-          parentItem.children = parentItem.children.filter((child: { id: UniqueIdentifier }) => child.id !== id);
+          parentItem.children = parentItem.children.filter((child) => child.id !== id);
         }
 
         // アイテムをゴミ箱に移動
-        trashItem.children.push(itemToRemove);
+        trashItem.children = [...trashItem.children, itemToRemoveCopy]; // 不変性を保ちながら追加
 
-        // 元のアイテムを削除（ルートレベルでない場合は既に上のステップで処理済み）
-        const filteredItems = parentItem ? currentItems : currentItems.filter((item) => item.id !== id);
-        const updatedTrashItemIndex = filteredItems.findIndex((item) => item.id === 'trash');
-        filteredItems[updatedTrashItemIndex] = trashItem;
-        return [...filteredItems];
+        // 元のアイテムを削除した新しいアイテムリストを作成
+        const newItems = parentItem ? currentItems : currentItems.filter((item) => item.id !== id);
+
+        // ゴミ箱アイテムを更新
+        const updatedItems = newItems.map((item) =>
+          item.id === 'trash' ? { ...trashItem, children: trashItem.children } : item
+        );
+
+        return updatedItems;
       }
 
-      return [...currentItems];
+      return currentItems;
     });
   }
 

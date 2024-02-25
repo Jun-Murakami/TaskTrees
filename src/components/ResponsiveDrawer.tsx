@@ -1,39 +1,60 @@
-import { useState } from 'react';
+import { Dispatch, useState, SetStateAction } from 'react';
 import { TreesList } from '../types/types';
 import { useTheme } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import Divider from '@mui/material/Divider';
-import Drawer from '@mui/material/Drawer';
-import SwipeableDrawer from '@mui/material/SwipeableDrawer';
-import IconButton from '@mui/material/IconButton';
+import {
+  Box,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  SwipeableDrawer,
+  Divider,
+  FormControlLabel,
+  Switch,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { SortableList } from './SortableList/SortableList';
+import { SettingsMenu } from './SettingsMenu';
 import { Typography } from '@mui/material';
 
 const drawerWidth = 240;
 
-interface DrawerProps {
+interface ResponsiveDrawerProps {
   handleCreateNewTree: () => void;
   treesList: TreesList;
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
+  hideDoneItems: boolean;
+  setHideDoneItems: Dispatch<SetStateAction<boolean>>;
   currentTree: UniqueIdentifier | null;
   handleListClick: (treeId: UniqueIdentifier) => void;
+  darkMode: boolean;
+  setDarkMode: Dispatch<SetStateAction<boolean>>;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleDownloadAppState: () => void;
+  handleLogout: () => void;
+  setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function ResponsiveDrawer({
+export function ResponsiveDrawer({
   handleCreateNewTree,
   treesList,
   setTreesList,
+  hideDoneItems,
+  setHideDoneItems,
   currentTree,
   handleListClick,
-}: DrawerProps) {
+  darkMode,
+  setDarkMode,
+  handleFileUpload,
+  handleDownloadAppState,
+  handleLogout,
+  setIsWaitingForDelete,
+}: ResponsiveDrawerProps) {
   const [drawserState, setDrawerState] = useState(false);
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -48,8 +69,13 @@ export default function ResponsiveDrawer({
     setDrawerState(open);
   };
 
+  // 完了したアイテムを非表示にする
+  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setHideDoneItems(event.target.checked);
+  };
+
   const drawerItems = (
-    <div>
+    <>
       <List>
         <ListItem disablePadding>
           <ListItemButton
@@ -72,7 +98,7 @@ export default function ResponsiveDrawer({
         </ListItem>
       </List>
       <Divider />
-      <List>
+      <List sx={{ height: '100%' }}>
         {treesList && (
           <SortableList
             treesList={treesList}
@@ -83,7 +109,28 @@ export default function ResponsiveDrawer({
           />
         )}
       </List>
-    </div>
+      <Divider sx={{ bottom: 0 }} />
+      <List sx={{ bottom: 0 }}>
+        <ListItem disablePadding>
+          <FormControlLabel
+            control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
+            label={<Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap' }}>完了を非表示</Typography>}
+          />
+        </ListItem>
+      </List>
+      <Divider sx={{ bottom: 0 }} />
+      <List sx={{ bottom: 0 }}>
+        <SettingsMenu
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          handleFileUpload={handleFileUpload}
+          handleDownloadAppState={handleDownloadAppState}
+          handleLogout={handleLogout}
+          setIsWaitingForDelete={setIsWaitingForDelete}
+          currentTree={currentTree}
+        />
+      </List>
+    </>
   );
 
   const theme = useTheme();
@@ -122,7 +169,7 @@ export default function ResponsiveDrawer({
       >
         <MenuIcon />
       </IconButton>
-      <Box sx={{ display: 'flex' }}>
+      <Box sx={{ display: 'flex', height: '100%' }}>
         <Box component='nav' sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }} aria-label='mailbox folders'>
           {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
           <SwipeableDrawer

@@ -1,19 +1,16 @@
 import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
-import { findMaxId, isDescendantOfTrash, isValidAppState } from './SortableTree/utilities';
+import { findMaxId, isDescendantOfTrash } from './SortableTree/utilities';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
 import type { TreeItem, TreesList } from '../types/types';
-import SettingsMenu from './SettingsMenu';
-import { FormControlLabel, Switch, Button, Box, Typography, Grid } from '@mui/material';
+import { Button, Box, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { useDialogStore } from '../store/dialogStore';
 
 interface AppProps {
   items: TreeItem[];
   setItems: Dispatch<SetStateAction<TreeItem[]>>;
   hideDoneItems: boolean;
-  setHideDoneItems: Dispatch<SetStateAction<boolean>>;
   darkMode: boolean;
   setDarkMode: Dispatch<SetStateAction<boolean>>;
   handleLogout: () => void;
@@ -35,11 +32,7 @@ function AppMain({
   items,
   setItems,
   hideDoneItems,
-  setHideDoneItems,
   darkMode,
-  setDarkMode,
-  handleLogout,
-  setIsWaitingForDelete,
   currentTree,
   currentTreeName,
   setCurrentTreeName,
@@ -55,16 +48,10 @@ function AppMain({
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAllowShowTree, setIsAllowShowTree] = useState(true);
-  const showDialog = useDialogStore((state) => state.showDialog);
 
   // 選択したアイテムのIDをセットする
   const handleSelect = (id: UniqueIdentifier) => {
     setLastSelectedItemId(id);
-  };
-
-  // 完了したアイテムを非表示にする
-  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setHideDoneItems(event.target.checked);
   };
 
   // ネストされたアイテムからアイテムを検索する
@@ -132,52 +119,6 @@ function AppMain({
     }
   };
 
-  // アプリの状態をJSONファイルとしてダウンロードする
-  const handleDownloadAppState = () => {
-    const appState = { items, hideDoneItems, darkMode };
-    const appStateJSON = JSON.stringify(appState, null, 2); // 読みやすい形式でJSONを整形
-    const blob = new Blob([appStateJSON], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'TaskTree_Backup.json'; // ダウンロードするファイルの名前
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  // ファイルを読み込んでアプリの状態を復元する
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      await showDialog('ファイルが選択されていません。', 'Information');
-      return;
-    }
-
-    const result = await showDialog('現在のツリーは上書きされます。本当に復元しますか？', 'Confirmation Required', true);
-    if (!result) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const text = e.target?.result;
-      try {
-        const appState = JSON.parse(text as string);
-        if (!isValidAppState(appState)) {
-          await showDialog('無効なファイル形式です。', 'Error');
-          return;
-        } else {
-          setItems(appState.items);
-          setHideDoneItems(appState.hideDoneItems);
-          setDarkMode(appState.darkMode);
-          await showDialog('ファイルが正常に読み込まれました。', 'Information');
-        }
-      } catch (error) {
-        await showDialog('ファイルの読み込みに失敗しました。', 'Error');
-      }
-    };
-    reader.readAsText(file);
-  };
-
   // タスク追加ボタンの表示をスクロールに応じて変更する
   useEffect(() => {
     const handleScroll = () => {
@@ -240,67 +181,32 @@ function AppMain({
           margin: '0 auto', // 中央寄せ
         }}
       >
-        <Grid
-          container
-          spacing={2}
-          sx={{
-            width: '80%',
-            minWidth: '350px',
-            maxWidth: '100%',
-            margin: '0 auto',
-            marginTop: { xs: 0, sm: 0 },
-            marginBottom: '30px',
-          }}
-        >
-          {currentTree && isAllowShowTree && (
-            <>
-              <Grid
-                item
-                xs={12}
-                sm={4}
-                sx={{
-                  display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示
-                  position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
-                  top: isScrolled ? 0 : 'auto', // スクロール時は上部に固定
-                  left: isScrolled ? '50%' : 'auto', // スクロール時は左端に固定
-                  transform: isScrolled ? 'translateX(calc(-50% + 120px))' : 'none', // スクロール時はX軸方向に-50%移動して中央寄せからさらに右に240pxずらす
-                  zIndex: isScrolled ? 1000 : 'auto', // スクロール時は他の要素より前面に
-                  width: isScrolled ? '100%' : 'auto', // スクロール時は幅を100%に
-                }}
+        {currentTree && isAllowShowTree && (
+          <Box sx={{ width: '100%', minWidth: '100%', height: '50px' }}>
+            <Box
+              sx={{
+                display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示
+                position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
+                top: isScrolled ? 25 : 'auto', // スクロール時は上部に固定
+                left: '50%', // スクロール時は左端に固定
+                transform: isScrolled ? 'translateX(calc(-50% + 120px))' : 'translateX(calc(-50%))', //X軸方向に-50%移動して中央寄せからさらに右に240pxずらす
+                zIndex: isScrolled ? 1000 : 'auto', // スクロール時は他の要素より前面に
+                width: '80%',
+                maxWidth: '600px',
+              }}
+            >
+              <Button
+                variant='contained'
+                color='primary'
+                startIcon={<AddIcon />}
+                sx={{ width: '100%', maxWidth: '400px', whiteSpace: 'nowrap' }}
+                onClick={handleAddTask}
               >
-                <Button
-                  variant='contained'
-                  color='primary'
-                  startIcon={<AddIcon />}
-                  sx={{ width: '100%', maxWidth: '400px', whiteSpace: 'nowrap' }}
-                  onClick={handleAddTask}
-                >
-                  タスクを追加
-                </Button>
-              </Grid>
-
-              <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
-                <FormControlLabel
-                  control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
-                  label={<Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap' }}>完了を非表示</Typography>}
-                />
-              </Grid>
-            </>
-          )}
-          {isAllowShowTree && (
-            <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
-              <SettingsMenu
-                darkMode={darkMode}
-                setDarkMode={setDarkMode}
-                handleFileUpload={handleFileUpload}
-                handleDownloadAppState={handleDownloadAppState}
-                handleLogout={handleLogout}
-                setIsWaitingForDelete={setIsWaitingForDelete}
-                currentTree={currentTree}
-              />
-            </Grid>
-          )}
-        </Grid>
+                タスクを追加
+              </Button>
+            </Box>
+          </Box>
+        )}
         {isAllowShowTree && (
           <SortableTree
             collapsible

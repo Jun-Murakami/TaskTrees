@@ -6,7 +6,7 @@ import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useAuth } from '../hooks/useAuth';
 import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
-import ResponsiveDrawer from './ResponsiveDrawer';
+import { ResponsiveDrawer } from './ResponsiveDrawer';
 import { theme, darkTheme } from './mui_theme';
 import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper, Box } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -47,7 +47,8 @@ export default function AppEntry() {
   );
 
   // アプリの状態の読み込みと保存を行うカスタムフック
-  useAppStateSync(
+  const { handleDownloadAppState, handleFileUpload } = useAppStateSync(
+    items,
     setItems,
     hideDoneItems,
     setHideDoneItems,
@@ -56,11 +57,15 @@ export default function AppEntry() {
     isLoggedIn,
     setIsLoggedIn,
     setIsLoading,
-    setMessage
+    setMessage,
+    setCurrentTree,
+    setCurrentTreeMembers,
+    setTreesList,
+    setIsExpanded
   );
 
   //ツリーの状態を同期するカスタムフック
-  const { saveCurrentTreeName, deleteTree, handleCreateNewTree } = useTreeManagement(
+  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick } = useTreeManagement(
     items,
     setItems,
     setMessage,
@@ -73,14 +78,10 @@ export default function AppEntry() {
     setCurrentTreeMembers,
     treesList,
     setTreesList,
+    isExpanded,
     setIsExpanded,
     setIsFocused
   );
-
-  // ツリーのリストから選択されたツリーを表示する
-  const handleListClick = (treeId: UniqueIdentifier) => {
-    setCurrentTree(treeId);
-  };
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : theme}>
@@ -94,14 +95,21 @@ export default function AppEntry() {
               handleCreateNewTree={handleCreateNewTree}
               treesList={treesList}
               setTreesList={setTreesList}
+              hideDoneItems={hideDoneItems}
+              setHideDoneItems={setHideDoneItems}
               currentTree={currentTree}
               handleListClick={handleListClick}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
+              handleFileUpload={handleFileUpload}
+              handleDownloadAppState={handleDownloadAppState}
+              handleLogout={handleLogout}
+              setIsWaitingForDelete={setIsWaitingForDelete}
             />
             <AppMain
               items={items}
               setItems={setItems}
               hideDoneItems={hideDoneItems}
-              setHideDoneItems={setHideDoneItems}
               darkMode={darkMode}
               setDarkMode={setDarkMode}
               handleLogout={handleLogout}

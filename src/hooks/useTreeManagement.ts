@@ -21,6 +21,7 @@ export const useTreeManagement = (
   setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
   treesList: TreesList,
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
+  isExpanded: boolean,
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>,
   setIsFocused: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
@@ -219,48 +220,47 @@ export const useTreeManagement = (
 
   // treesListの変更をデータベースに保存
   useEffect(() => {
-    const debounceSave = setTimeout(() => {
-      const user = getAuth().currentUser;
-      if (!user || treesList.length === 0) {
-        return;
-      }
-      if (isLoadedTreesListFromExternal) {
-        setIsLoadedTreesListFromExternal(false);
-        return;
-      }
-      try {
-        const db = getDatabase();
-        const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
-        set(userTreeListRef, treesList.map((tree) => tree.id));
-      } catch (error) {
-        handleError(error);
-      }
-    }, 5000); // 5秒のデバウンス
-
-    // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
-    return () => clearTimeout(debounceSave);
+    const user = getAuth().currentUser;
+    if (!user || treesList.length === 0) {
+      return;
+    }
+    if (isLoadedTreesListFromExternal) {
+      setIsLoadedTreesListFromExternal(false);
+      return;
+    }
+    try {
+      const db = getDatabase();
+      const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
+      set(userTreeListRef, treesList.map((tree) => tree.id));
+    } catch (error) {
+      handleError(error);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [treesList, handleError]);
 
   // ツリー名の変更を監視→変更されたらツリーリストを更新
   useEffect(() => {
     const db = getDatabase();
-    const unsubscribeFunctions = treesList.map(tree => {
+    const unsubscribeTreeNames = treesList.map(tree => {
       const treeNameRef = ref(db, `trees/${tree.id}/name`);
       return onValue(treeNameRef, (snapshot) => {
         if (snapshot.exists()) {
-          setTreesList((currentTreesList) =>
-            currentTreesList.map((t) =>
+          setTreesList((currentTreesList) => {
+            const updatedTreesList = currentTreesList.map((t) =>
               t.id === tree.id ? { ...t, name: snapshot.val() } : t
-            )
-          );
-          setIsLoadedTreesListFromExternal(true);
+            );
+            // 現在のtreesListと更新後のtreesListが異なる場合のみ更新
+            if (JSON.stringify(currentTreesList) !== JSON.stringify(updatedTreesList)) {
+              return updatedTreesList;
+            }
+            return currentTreesList;
+          });
         }
       });
     });
 
     return () => {
-      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+      unsubscribeTreeNames.forEach(unsubscribe => unsubscribe());
     };
   }, [treesList, setTreesList]);
 
@@ -343,6 +343,7 @@ export const useTreeManagement = (
       setCurrentTreeName(null);
       setCurrentTreeMembers(null);
       setItems([]);
+      setIsExpanded(false);
     } catch (error) {
       await showDialog('ツリーの削除に失敗しました。' + error, 'Error');
     }
@@ -369,7 +370,8 @@ export const useTreeManagement = (
     } else {
       setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
     }
-    // ツリーリストに新しいツリーを追加
+
+    // データベースのツリーリストに新しいツリーを追加
     const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
     onValue(userTreeListRef, async (snapshot) => {
       if (snapshot.exists()) {
@@ -390,11 +392,22 @@ export const useTreeManagement = (
       }
     });
     setIsExpanded(true);
-    // 0.3秒後にフォーカスをセット
+    // 0.5秒後にフォーカスをセット
     setTimeout(() => {
       setIsFocused(true);
-    }, 300);
+    }, 500);
   };
 
-  return { saveCurrentTreeName, deleteTree, handleCreateNewTree };
+  // ツリーのリストから選択されたツリーを表示する
+  const handleListClick = (treeId: UniqueIdentifier) => {
+    setCurrentTree(treeId);
+    if (isExpanded) {
+      // 0.5秒後にフォーカスをセット
+      setTimeout(() => {
+        setIsFocused(true);
+      }, 500);
+    }
+  };
+
+  return { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick };
 }

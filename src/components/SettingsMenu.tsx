@@ -1,7 +1,17 @@
 import React, { Dispatch, SetStateAction, useRef } from 'react';
 import { styled } from '@mui/material/styles';
-import { FormControlLabel, Switch, Menu, MenuItem, Box, Divider, Tooltip, Button, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import {
+  FormControlLabel,
+  Switch,
+  Menu,
+  MenuItem,
+  Box,
+  Divider,
+  Tooltip,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+} from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -20,7 +30,7 @@ interface SettingsMenuProps {
   currentTree: UniqueIdentifier | null;
 }
 
-export default function SettingsMenu({
+export function SettingsMenu({
   darkMode,
   setDarkMode,
   handleFileUpload,
@@ -45,8 +55,6 @@ export default function SettingsMenu({
   const handleUploadClick = () => {
     hiddenFileInput.current?.click();
   };
-
-  const theme = useTheme();
 
   const MaterialUISwitch = styled(Switch)(({ theme }) => ({
     width: 62,
@@ -96,21 +104,21 @@ export default function SettingsMenu({
   }));
 
   return (
-    <>
-      <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
-        <Button
-          onClick={handleClick}
-          variant='text'
-          size='small'
-          sx={{ ml: 2, color: theme.palette.text.secondary, margin: '0 auto' }}
-          aria-controls={open ? 'account-menu' : undefined}
-          aria-haspopup='true'
-          aria-expanded={open ? 'true' : undefined}
-          startIcon={<SettingsIcon sx={{ width: 32, height: 32 }} />}
-        >
-          <Typography sx={{ fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Settings</Typography>
-        </Button>
-      </Box>
+    <ListItem disablePadding>
+      <ListItemButton
+        onClick={handleClick}
+        sx={{
+          '& .MuiListItemIcon-root': {
+            minWidth: 0,
+            marginRight: 1,
+          },
+        }}
+      >
+        <ListItemIcon>
+          <SettingsIcon />
+        </ListItemIcon>
+        <ListItemText secondary='設定' />
+      </ListItemButton>
       <Menu
         anchorEl={anchorEl}
         id='account-menu'
@@ -162,22 +170,23 @@ export default function SettingsMenu({
             />
           </MenuItem>
         </Tooltip>
-        {currentTree && (
-          <Box>
-            <Divider />
-            <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
-            <Tooltip title='バックアップをツリーに復元' placement='right'>
-              <MenuItem
-                onClick={() => {
-                  handleUploadClick();
-                }}
-              >
-                <ListItemIcon>
-                  <UploadIcon fontSize='small' />
-                </ListItemIcon>
-                Upload
-              </MenuItem>
-            </Tooltip>
+
+        <Box>
+          <Divider />
+          <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
+          <Tooltip title='バックアップしたデータを復元' placement='right'>
+            <MenuItem
+              onClick={() => {
+                handleUploadClick();
+              }}
+            >
+              <ListItemIcon>
+                <UploadIcon fontSize='small' />
+              </ListItemIcon>
+              Upload
+            </MenuItem>
+          </Tooltip>
+          {currentTree && (
             <Tooltip title='ツリーのデータをバックアップ' placement='right'>
               <MenuItem
                 onClick={() => {
@@ -191,8 +200,9 @@ export default function SettingsMenu({
                 Backup
               </MenuItem>
             </Tooltip>
-          </Box>
-        )}
+          )}
+        </Box>
+
         <Divider />
         <Tooltip title='ユーザーアカウントの削除' placement='right'>
           <MenuItem
@@ -208,6 +218,6 @@ export default function SettingsMenu({
           </MenuItem>
         </Tooltip>
       </Menu>
-    </>
+    </ListItem>
   );
 }
