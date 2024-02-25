@@ -172,8 +172,9 @@ export default function AppEntry() {
               複数のツリー作成＆複数ユーザーでの共同編集に対応したタスク管理アプリです。
               <br />
               <br />
-              １ツリーのシンプルな個人用バージョンは<a href='https://tasktree-fb.web.app/'>こちら</a>。
+              ツリーを共有するには、メンバーがこのアプリに登録している必要があります。
               <br />
+              １ツリーのシンプルな個人用バージョンは<a href='https://tasktree-fb.web.app/'>こちら</a>。
               ツリーデータは相互に移行可能です。
             </Typography>
           </Paper>

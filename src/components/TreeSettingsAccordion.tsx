@@ -6,8 +6,6 @@ import {
   AccordionSummary,
   Typography,
   TextField,
-  IconButton,
-  InputAdornment,
   List,
   ListItem,
   ListItemButton,
@@ -19,7 +17,6 @@ import {
   Stack,
 } from '@mui/material';
 import { TreesList } from '../types/types';
-import SaveAsIcon from '@mui/icons-material/SaveAs';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -63,10 +60,20 @@ export function TreeSettingsAccordion({
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
   const theme = useTheme();
 
+  // TextFieldの値をセット
+  const handleTreeNameChange = (e: string) => {
+    setEditedTreeName(e);
+  };
+
+  // TextFielのRefをセット
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // 新しいツリーが呼び出されたらTextFIeldにツリー名をセット
   useEffect(() => {
     setEditedTreeName(currentTreeName);
   }, [currentTree, currentTreeName]);
 
+  // フォーカスをセット
   useEffect(() => {
     if (isFocused && inputRef.current) {
       inputRef.current.focus();
@@ -75,15 +82,9 @@ export function TreeSettingsAccordion({
     }
   }, [isFocused, setIsFocused]);
 
-  const handleTreeNameChange = (e: string) => {
-    setEditedTreeName(e);
-  };
-
-  const inputRef = useRef<HTMLInputElement>(null);
-
   // ツリー名の変更
-  const handleButtonClick = () => {
-    if (editedTreeName !== null) {
+  const handleSubmit = () => {
+    if (editedTreeName !== null && editedTreeName !== '' && editedTreeName !== currentTreeName) {
       setCurrentTreeName(editedTreeName);
       saveCurrentTreeName(editedTreeName);
       setTreesList(
@@ -96,6 +97,8 @@ export function TreeSettingsAccordion({
             return tree;
           })
       );
+    } else {
+      setEditedTreeName(currentTreeName);
     }
   };
 
@@ -180,7 +183,7 @@ export function TreeSettingsAccordion({
           marginTop: 0,
           '& .MuiPaper-root': {
             borderRadius: '0 0 8px 8px !important',
-            backgroundColor: 'transparent',
+            backgroundColor: theme.palette.mode === 'light' ? 'transparent' : undefined,
           },
           '& .MuiButtonBase-root': {
             backgroundColor: 'transparent',
@@ -189,10 +192,14 @@ export function TreeSettingsAccordion({
         }}
         expanded={isExpanded}
         onChange={() => {
-          setIsExpanded(!isExpanded);
           {
-            !isExpanded && setIsFocused(true);
+            if (!isExpanded) {
+              setIsFocused(true);
+            } else {
+              handleSubmit();
+            }
           }
+          setIsExpanded(!isExpanded);
         }}
       >
         <AccordionSummary
@@ -217,7 +224,7 @@ export function TreeSettingsAccordion({
                   shrink: editedTreeName !== '',
                 }}
                 sx={{ zIndex: 1200, marginTop: 0, marginX: 2 }}
-                label='Edit name & press save button. (or Enter)'
+                label='Tree Name'
                 fullWidth
                 size='small'
                 value={editedTreeName || ''}
@@ -225,25 +232,13 @@ export function TreeSettingsAccordion({
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && editedTreeName) {
-                    handleButtonClick();
+                    handleSubmit();
                   }
                 }}
                 InputProps={{
                   inputProps: {
                     style: { textAlign: 'center' },
                   },
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <IconButton
-                        sx={{ zIndex: 1200, right: 0 }}
-                        onClick={handleButtonClick}
-                        disabled={!editedTreeName}
-                        color='primary'
-                      >
-                        <SaveAsIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
                 }}
                 inputRef={inputRef}
               />

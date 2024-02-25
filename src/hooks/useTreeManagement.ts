@@ -235,7 +235,7 @@ export const useTreeManagement = (
       } catch (error) {
         handleError(error);
       }
-    }, 3000); // 3秒のデバウンス
+    }, 5000); // 5秒のデバウンス
 
     // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
     return () => clearTimeout(debounceSave);

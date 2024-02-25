@@ -239,7 +239,7 @@ function AppMain({
             marginBottom: '30px',
           }}
         >
-          {currentTree && (
+          {currentTree && !isExpanded && (
             <>
               <Grid
                 item
@@ -274,29 +274,33 @@ function AppMain({
               </Grid>
             </>
           )}
-          <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
-            <SettingsMenu
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
-              handleFileUpload={handleFileUpload}
-              handleDownloadAppState={handleDownloadAppState}
-              handleLogout={handleLogout}
-              setIsWaitingForDelete={setIsWaitingForDelete}
-              currentTree={currentTree}
-            />
-          </Grid>
+          {!isExpanded && (
+            <Grid item xs={6} sm={4} sx={{ width: '100%', margin: '0 auto' }}>
+              <SettingsMenu
+                darkMode={darkMode}
+                setDarkMode={setDarkMode}
+                handleFileUpload={handleFileUpload}
+                handleDownloadAppState={handleDownloadAppState}
+                handleLogout={handleLogout}
+                setIsWaitingForDelete={setIsWaitingForDelete}
+                currentTree={currentTree}
+              />
+            </Grid>
+          )}
         </Grid>
-        <SortableTree
-          collapsible
-          indicator
-          removable
-          hideDoneItems={hideDoneItems}
-          items={items}
-          darkMode={darkMode}
-          setItems={setItems}
-          onSelect={handleSelect}
-        />
-        {currentTree && (
+        {!isExpanded && (
+          <SortableTree
+            collapsible
+            indicator
+            removable
+            hideDoneItems={hideDoneItems}
+            items={items}
+            darkMode={darkMode}
+            setItems={setItems}
+            onSelect={handleSelect}
+          />
+        )}
+        {currentTree && !isExpanded && (
           <Button
             variant='contained'
             color='primary'
