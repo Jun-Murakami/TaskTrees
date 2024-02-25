@@ -26,6 +26,7 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, cu
         handleListClick(item.id);
         setDrawerState(false);
       }}
+      sx={{ opacity: 1 }}
     >
       <Button
         ref={handlerProps?.ref}

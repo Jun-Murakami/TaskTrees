@@ -1,8 +1,8 @@
 import { FC, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { DndContext, DragOverlay, UniqueIdentifier, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import { SortableSource } from './SortableSource';
@@ -23,7 +23,6 @@ export const SortableList: FC<SortableListProps> = ({
   setTreesList,
   currentTree,
   handleListClick,
-  drawerState,
   setDrawerState,
 }) => {
   const isPreviewMode = false;
@@ -66,18 +65,24 @@ export const SortableList: FC<SortableListProps> = ({
             />
           ))}
         </SortableContext>
-        <DragOverlay>
-          {activeItem && (
-            <Box sx={{ right: drawerState ? '0px !important' : 'auto', backgroundColor: theme.palette.primary.light }}>
+        {createPortal(
+          <DragOverlay
+            style={{
+              backgroundColor: theme.palette.action.focus,
+            }}
+            zIndex={1500}
+          >
+            {activeItem && (
               <SortableSource
                 item={activeItem}
                 currentTree={currentTree}
                 handleListClick={handleListClick}
                 setDrawerState={setDrawerState}
               />
-            </Box>
-          )}
-        </DragOverlay>
+            )}
+          </DragOverlay>,
+          document.body
+        )}
       </DndContext>
     </>
   );
