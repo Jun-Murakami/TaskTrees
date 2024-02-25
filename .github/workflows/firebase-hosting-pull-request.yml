@@ -16,6 +16,15 @@ jobs:
       - name: Install Dependencies
         run: npm install
       - run: npm run build
+        env:
+          VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
+          VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
+          VITE_DATABASE_URL: ${{ secrets.VITE_DATABASE_URL }}
+          VITE_PROJECT_ID: ${{ secrets.VITE_PROJECT_ID }}
+          VITE_STORAGE_BUCKET: ${{ secrets.VITE_STORAGE_BUCKET }}
+          VITE_MESSAGE_SENDER_ID: ${{ secrets.VITE_MESSAGE_SENDER_ID }}
+          VITE_APP_ID: ${{ secrets.VITE_APP_ID }}
+          VITE_MEASUREMENT_ID: ${{ secrets.VITE_MEASUREMENT_ID }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
