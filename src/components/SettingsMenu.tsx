@@ -5,7 +5,6 @@ import {
   Switch,
   Menu,
   MenuItem,
-  Box,
   Divider,
   Tooltip,
   ListItem,
@@ -126,84 +125,37 @@ export function SettingsMenu({
         onClose={handleClose}
         sx={{
           elevation: 0,
-          sx: {
-            overflow: 'visible',
-            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-            mt: 1.5,
-            '& .MuiAvatar-root': {
-              width: 32,
-              height: 32,
-              ml: -0.5,
-              mr: 1,
-            },
-            '&::before': {
-              content: '""',
-              display: 'block',
-              position: 'absolute',
-              top: 0,
-              right: 14,
-              width: 10,
-              height: 10,
-              bgcolor: 'background.paper',
-              transform: 'translateY(-50%) rotate(45deg)',
-              zIndex: 0,
-            },
+          overflow: 'visible',
+          width: '240px', // 修正: ネストされたsxを削除し、直接プロパティを指定
+          bottom: 10,
+          '& .MuiAvatar-root': {
+            width: 32,
+            height: 32,
+            ml: -0.5,
+            mr: 1,
+          },
+          '&::before': {
+            content: '""',
+            display: 'block',
+            position: 'absolute',
+            top: 0,
+            right: 14,
+            width: 10,
+            height: 10,
+            bgcolor: 'background.paper',
+            transform: 'translateY(-50%) rotate(45deg)',
+            zIndex: 0,
           },
         }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
       >
-        <Tooltip title='アプリからログアウト' placement='right'>
-          <MenuItem onClick={handleLogout}>
-            <ListItemIcon>
-              <LogoutIcon fontSize='small' />
-            </ListItemIcon>
-            Logout
-          </MenuItem>
-        </Tooltip>
-        <Divider />
-        <Tooltip title='表示モードの切り替え' placement='right'>
-          <MenuItem>
-            <FormControlLabel
-              control={<MaterialUISwitch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />}
-              label={`${darkMode ? 'Dark Mode' : 'Light Mode'}`}
-            />
-          </MenuItem>
-        </Tooltip>
-
-        <Box>
-          <Divider />
-          <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
-          <Tooltip title='バックアップしたデータを復元' placement='right'>
-            <MenuItem
-              onClick={() => {
-                handleUploadClick();
-              }}
-            >
-              <ListItemIcon>
-                <UploadIcon fontSize='small' />
-              </ListItemIcon>
-              Upload
-            </MenuItem>
-          </Tooltip>
-          {currentTree && (
-            <Tooltip title='ツリーのデータをバックアップ' placement='right'>
-              <MenuItem
-                onClick={() => {
-                  handleDownloadAppState();
-                  handleClose();
-                }}
-              >
-                <ListItemIcon>
-                  <DownloadIcon fontSize='small' />
-                </ListItemIcon>
-                Backup
-              </MenuItem>
-            </Tooltip>
-          )}
-        </Box>
-
-        <Divider />
         <Tooltip title='ユーザーアカウントの削除' placement='right'>
           <MenuItem
             onClick={() => {
@@ -215,6 +167,53 @@ export function SettingsMenu({
               <DeleteForeverIcon fontSize='small' />
             </ListItemIcon>
             Delete Account
+          </MenuItem>
+        </Tooltip>
+        <Divider />
+        <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
+        <Tooltip title='バックアップしたデータを復元' placement='right'>
+          <MenuItem
+            onClick={() => {
+              handleUploadClick();
+            }}
+          >
+            <ListItemIcon>
+              <UploadIcon fontSize='small' />
+            </ListItemIcon>
+            Upload
+          </MenuItem>
+        </Tooltip>
+        {currentTree && (
+          <Tooltip title='ツリーのデータをバックアップ' placement='right'>
+            <MenuItem
+              onClick={() => {
+                handleDownloadAppState();
+                handleClose();
+              }}
+            >
+              <ListItemIcon>
+                <DownloadIcon fontSize='small' />
+              </ListItemIcon>
+              Backup
+            </MenuItem>
+          </Tooltip>
+        )}
+        <Divider />
+        <Tooltip title='表示モードの切り替え' placement='right'>
+          <MenuItem>
+            <FormControlLabel
+              control={<MaterialUISwitch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />}
+              label={`${darkMode ? 'Dark Mode' : 'Light Mode'}`}
+            />
+          </MenuItem>
+        </Tooltip>
+        <Divider />
+        <Tooltip title='アプリからログアウト' placement='right'>
+          <MenuItem onClick={handleLogout}>
+            <ListItemIcon>
+              <LogoutIcon fontSize='small' />
+            </ListItemIcon>
+            Logout
           </MenuItem>
         </Tooltip>
       </Menu>

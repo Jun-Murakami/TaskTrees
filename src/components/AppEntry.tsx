@@ -88,6 +88,7 @@ export default function AppEntry() {
       <CssBaseline />
       {isLoggedIn ? (
         !isWaitingForDelete ? (
+          // ログイン後のメイン画面
           <>
             {isDialogVisible && <ModalDialog />}
             {isInputDialogVisible && <InputDialog />}
@@ -129,6 +130,7 @@ export default function AppEntry() {
             {isLoading && <CircularProgress sx={{ marginTop: 2 }} />}
           </>
         ) : (
+          // アカウント削除の確認ダイアログ
           <>
             <Typography sx={{ marginBottom: 0 }} variant='h3'>
               <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
@@ -140,7 +142,7 @@ export default function AppEntry() {
               </Typography>
             </Box>
             <Typography variant='body2' sx={{ marginY: 4 }}>
-              アプリケーションのすべてのデータとアカウント情報が削除されます。この操作は取り消せません。削除しますか？
+              アプリケーションのすべてのデータとアカウント情報が削除されます。この操作は取り消せません。削除を実行しますか？
             </Typography>
             <Button
               onClick={handleDeleteAccount}
@@ -157,6 +159,7 @@ export default function AppEntry() {
           </>
         )
       ) : (
+        // ログイン前の画面
         <>
           <Typography sx={{ marginBottom: 0 }} variant='h3'>
             <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
