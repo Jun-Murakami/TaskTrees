@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { DndContext, DragOverlay, UniqueIdentifier, closestCenter, defaultDropAnimationSideEffects } from '@dnd-kit/core';
+import { DndContext, DragOverlay, UniqueIdentifier, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 
@@ -31,8 +31,8 @@ export const SortableList: FC<SortableListProps> = ({
   return (
     <>
       <DndContext
-        collisionDetection={closestCenter}
-        modifiers={[restrictToVerticalAxis]}
+        collisionDetection={closestCenter} // ドラッグ中の要素の中心を検出
+        modifiers={[restrictToVerticalAxis]} // 縦方向のみの移動に制限
         onDragStart={(event) => {
           setActiveId(event.active.id as number);
         }}
@@ -60,17 +60,7 @@ export const SortableList: FC<SortableListProps> = ({
             />
           ))}
         </SortableContext>
-        <DragOverlay
-          dropAnimation={
-            isPreviewMode
-              ? {
-                  sideEffects: defaultDropAnimationSideEffects({
-                    styles: {},
-                  }),
-                }
-              : undefined
-          }
-        >
+        <DragOverlay>
           {activeItem && (
             <SortableSource
               item={activeItem}

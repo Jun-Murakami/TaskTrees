@@ -74,12 +74,19 @@ export function ResponsiveDrawer({
     if (isSwipe && drawerState) {
       setIsMenuVisible(false);
     } else if (!isSwipe && drawerState) {
-      setIsMenuVisible(true);
+      const setTimer = setTimeout(() => {
+        // drawerStateがfalseになっているかチェック
+        if (!drawerState) {
+          return;
+        }
+        setIsMenuVisible(true);
+      }, 170);
+      return () => clearTimeout(setTimer);
     } else {
       setIsMenuVisible(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSwipe]);
+    // drawerStateを依存配列に追加
+  }, [isSwipe, drawerState]);
 
   const theme = useTheme();
 

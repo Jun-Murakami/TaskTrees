@@ -36,6 +36,8 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, cu
           minWidth: '20px',
           height: '20px',
           mr: '10px',
+          touchAction: 'none',
+          zIndex: 1500,
         }}
         {...handlerProps?.attributes}
         {...handlerProps?.listeners}
