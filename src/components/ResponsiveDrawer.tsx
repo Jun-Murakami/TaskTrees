@@ -15,6 +15,7 @@ import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { SortableList } from './SortableList/SortableList';
+import { Typography } from '@mui/material';
 
 const drawerWidth = 240;
 
@@ -105,6 +106,7 @@ export default function ResponsiveDrawer({
           backgroundColor: theme.palette.background.paper,
         }}
       >
+        {currentTree && <Typography variant='caption'>Open Tree List</Typography>}
         <MenuIcon />
       </IconButton>
       <Box sx={{ display: 'flex' }}>
