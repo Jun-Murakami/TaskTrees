@@ -47,7 +47,6 @@ function AppMain({
 }: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isAllowShowTree, setIsAllowShowTree] = useState(true);
 
   // 選択したアイテムのIDをセットする
   const handleSelect = (id: UniqueIdentifier) => {
@@ -131,17 +130,6 @@ function AppMain({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // アコーディオンの展開時にツリーの表示を遅延させる
-  useEffect(() => {
-    if (isExpanded) {
-      setIsAllowShowTree(false);
-    } else {
-      setTimeout(() => {
-        setIsAllowShowTree(true);
-      }, 250);
-    }
-  }, [isExpanded]);
-
   return (
     <Box
       sx={{
@@ -181,13 +169,13 @@ function AppMain({
           margin: '0 auto', // 中央寄せ
         }}
       >
-        {currentTree && isAllowShowTree && (
-          <Box sx={{ width: '100%', minWidth: '100%', height: { xs: '10px', sm: '50px' } }}>
+        {currentTree && (
+          <Box sx={{ width: '100%', minWidth: '100%', height: { xs: '10px', sm: '50px' }, mb: isExpanded ? 5 : 0.5 }}>
             <Box
               sx={{
                 display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示
                 position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
-                top: isScrolled ? 25 : 'auto', // スクロール時は上部に固定
+                top: isScrolled || isExpanded ? 25 : 'auto', // スクロール時は上部に固定
                 left: '50%', // スクロール時は左端に固定
                 transform: isScrolled ? 'translateX(calc(-50% + 120px))' : 'translateX(calc(-50%))', //X軸方向に-50%移動して中央寄せからさらに右に240pxずらす
                 zIndex: isScrolled ? 1000 : 'auto', // スクロール時は他の要素より前面に
@@ -207,19 +195,17 @@ function AppMain({
             </Box>
           </Box>
         )}
-        {isAllowShowTree && (
-          <SortableTree
-            collapsible
-            indicator
-            removable
-            hideDoneItems={hideDoneItems}
-            items={items}
-            darkMode={darkMode}
-            setItems={setItems}
-            onSelect={handleSelect}
-          />
-        )}
-        {currentTree && isAllowShowTree && (
+        <SortableTree
+          collapsible
+          indicator
+          removable
+          hideDoneItems={hideDoneItems}
+          items={items}
+          darkMode={darkMode}
+          setItems={setItems}
+          onSelect={handleSelect}
+        />
+        {currentTree && (
           <Button
             variant='contained'
             color='primary'

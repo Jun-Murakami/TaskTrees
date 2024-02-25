@@ -68,6 +68,7 @@ export const useTreeManagement = (
           const promises = data.map((treeId) =>
             new Promise<void>((resolve) => {
               const treeTitleRef = ref(db, `trees/${treeId}/name`);
+              // ツリータイトルの変更を監視
               onValue(treeTitleRef, (snapshot) => {
                 if (snapshot.exists() && treesListAccumulator !== null) {
                   treesListAccumulator = [...treesListAccumulator, { id: treeId, name: snapshot.val() }];
@@ -84,12 +85,13 @@ export const useTreeManagement = (
           );
 
           Promise.all(promises).then(async (): Promise<void> => {
-            setTreesList(treesListAccumulator); // 全てのプロミスが解決された後に更新
             setIsLoadedTreesListFromExternal(true);
+            setTreesList(treesListAccumulator); // 全てのプロミスが解決された後に更新
+
           });
         } else {
-          setTreesList([]); // スナップショットが存在しない場合は空をセット
           setIsLoadedTreesListFromExternal(true);
+          setTreesList([]); // スナップショットが存在しない場合は空をセット
         }
       });
 
@@ -132,13 +134,13 @@ export const useTreeManagement = (
             const itemsWithChildren = ensureChildrenProperty(data);
             // 取得したデータがTreeItem[]型であることを確認
             if (isTreeItemArray(itemsWithChildren)) {
+              setIsLoadedItemsFromExternal(true);
+              if (setIsLoading) setIsLoading(false);
               setItems(itemsWithChildren);
               prevItemsRef.current = itemsWithChildren;
             } else {
               throw new Error('取得したデータがTreeItem[]型ではありません。');
             }
-            setIsLoadedItemsFromExternal(true);
-            if (setIsLoading) setIsLoading(false);
           } else {
             // データが存在しない場合にのみinitialItemsを使用
             //setItems(initialItems);
@@ -363,6 +365,25 @@ export const useTreeManagement = (
       name: '新しいツリー',
       members: [user?.uid],
     });
+
+    // データベースのツリーリストに新しいツリーを追加
+    const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
+    onValue(userTreeListRef, async (snapshot) => {
+      if (snapshot.exists()) {
+        const data: string[] = snapshot.val();
+        const newTreeList = [newTreeRef.key, ...data];
+        await set(userTreeListRef, newTreeList);
+      } else {
+        await set(userTreeListRef, [newTreeRef.key]);
+      }
+    }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
+
+    setIsExpanded(true);
+    // 0.5秒後にフォーカスをセット
+    const timerOne = setTimeout(() => {
+      setIsFocused(true);
+    }, 500);
+
     setCurrentTree(newTreeRef.key);
     setCurrentTreeName('新しいツリー');
     if (user.email) {
@@ -371,31 +392,8 @@ export const useTreeManagement = (
       setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
     }
 
-    // データベースのツリーリストに新しいツリーを追加
-    const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
-    onValue(userTreeListRef, async (snapshot) => {
-      if (snapshot.exists()) {
-        const data: string[] = snapshot.val();
-        const newTreeList = [...data, newTreeRef.key];
-        await set(userTreeListRef, newTreeList);
-      } else {
-        await set(userTreeListRef, [newTreeRef.key]);
-      }
-    }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
-
-    // ツリーリストを更新
-    setTreesList((prevTreesList) => {
-      if (prevTreesList && newTreeRef.key) {
-        return [...prevTreesList, { id: newTreeRef.key, name: '新しいツリー' }];
-      } else {
-        return prevTreesList;
-      }
-    });
-    setIsExpanded(true);
-    // 0.5秒後にフォーカスをセット
-    setTimeout(() => {
-      setIsFocused(true);
-    }, 500);
+    //タイマーをクリア
+    return () => clearTimeout(timerOne);
   };
 
   // ツリーのリストから選択されたツリーを表示する
@@ -403,10 +401,14 @@ export const useTreeManagement = (
     setCurrentTree(treeId);
     if (isExpanded) {
       // 0.5秒後にフォーカスをセット
-      setTimeout(() => {
+      const timerTwo = setTimeout(() => {
         setIsFocused(true);
       }, 500);
+      //タイマーをクリア
+      return () => clearTimeout(timerTwo);
     }
+
+
   };
 
   return { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick };

@@ -139,20 +139,22 @@ export const useAppStateSync = (
           onValue(userTreeListRef, async (snapshot) => {
             if (snapshot.exists()) {
               const data: string[] = snapshot.val();
-              const newTreeList = [...data, newTreeRef.key];
+              const newTreeList = [newTreeRef.key, ...data];
               await set(userTreeListRef, newTreeList);
             } else {
               await set(userTreeListRef, [newTreeRef.key]);
             }
           }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
+
           // ツリーリストを更新
           setTreesList((prevTreesList) => {
             if (prevTreesList && newTreeRef.key) {
-              return [...prevTreesList, { id: newTreeRef.key, name: '新しいツリー' }];
+              return [{ id: newTreeRef.key, name: '読み込まれたツリー', ...prevTreesList }];
             } else {
               return prevTreesList;
             }
           });
+          await showDialog('ファイルが正常に読み込まれました。', 'Information');
           if (user.email) {
             setCurrentTreeMembers([{ uid: user.uid, email: user.email }]);
           } else {
@@ -163,7 +165,6 @@ export const useAppStateSync = (
           setHideDoneItems(appState.hideDoneItems);
           setDarkMode(appState.darkMode);
           setIsExpanded(false);
-          await showDialog('ファイルが正常に読み込まれました。', 'Information');
         }
       } catch (error) {
         await showDialog('ファイルの読み込みに失敗しました。', 'Error');
