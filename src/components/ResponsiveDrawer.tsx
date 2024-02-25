@@ -1,4 +1,4 @@
-import { Dispatch, useState, SetStateAction } from 'react';
+import { Dispatch, useState, SetStateAction, useEffect } from 'react';
 import { TreesList } from '../types/types';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -55,7 +55,19 @@ export function ResponsiveDrawer({
   handleLogout,
   setIsWaitingForDelete,
 }: ResponsiveDrawerProps) {
-  const [drawserState, setDrawerState] = useState(false);
+  const [drawerState, setDrawerState] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
+
+  useEffect(() => {
+    if (drawerState) {
+      const setTimer = setTimeout(() => {
+        setIsMenuVisible(true);
+      }, 200);
+      return () => clearTimeout(setTimer);
+    } else {
+      setIsMenuVisible(false);
+    }
+  }, [drawerState]);
 
   const theme = useTheme();
 
@@ -78,28 +90,6 @@ export function ResponsiveDrawer({
 
   const drawerItems = (
     <>
-      <List>
-        <ListItem disablePadding>
-          <ListItemButton
-            sx={{
-              '& .MuiListItemIcon-root': {
-                minWidth: 0,
-                marginRight: 1,
-              },
-            }}
-            onClick={() => {
-              handleCreateNewTree();
-              setDrawerState(false);
-            }}
-          >
-            <ListItemIcon>
-              <AddIcon />
-            </ListItemIcon>
-            <ListItemText secondary='新しいツリーを作成' />
-          </ListItemButton>
-        </ListItem>
-      </List>
-      <Divider />
       <List sx={{ height: '100%' }}>
         {treesList && (
           <SortableList
@@ -111,42 +101,7 @@ export function ResponsiveDrawer({
           />
         )}
       </List>
-      <Box
-        sx={{
-          position: 'fixed',
-          right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
-          left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
-          width: 240,
-          minWidth: 240,
-          bottom: 0,
-        }}
-      >
-        <Divider />
-        <List>
-          <ListItem disablePadding sx={{ pl: 2 }}>
-            <FormControlLabel
-              control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
-              label={
-                <Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap', color: theme.palette.text.secondary }}>
-                  完了タスクを非表示
-                </Typography>
-              }
-            />
-          </ListItem>
-        </List>
-        <Divider />
-        <List>
-          <SettingsMenu
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
-            handleFileUpload={handleFileUpload}
-            handleDownloadAppState={handleDownloadAppState}
-            handleLogout={handleLogout}
-            setIsWaitingForDelete={setIsWaitingForDelete}
-            currentTree={currentTree}
-          />
-        </List>
-      </Box>
+      <Box sx={{ display: { xs: 'block', sm: 'none' }, height: '175px', minHeight: '175px' }} />
     </>
   );
 
@@ -184,13 +139,52 @@ export function ResponsiveDrawer({
       >
         <MenuIcon />
       </IconButton>
-      <Box sx={{ display: 'flex', height: '100%' }}>
-        <Box component='nav' sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }} aria-label='mailbox folders'>
-          {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
+
+      <Box
+        sx={{
+          top: 0,
+          right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
+          left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
+          borderRight: { xs: 0, sm: `1px solid ${theme.palette.divider}` },
+          boxSize: 'border-box',
+          width: 240,
+          minWidth: 240,
+          position: 'fixed',
+          zIndex: 1300,
+          backgroundColor: theme.palette.background.default,
+          ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } }),
+        }}
+      >
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton
+              sx={{
+                '& .MuiListItemIcon-root': {
+                  minWidth: 0,
+                  marginRight: 1,
+                },
+              }}
+              onClick={() => {
+                handleCreateNewTree();
+                setDrawerState(false);
+              }}
+            >
+              <ListItemIcon>
+                <AddIcon />
+              </ListItemIcon>
+              <ListItemText secondary='新しいツリーを作成' />
+            </ListItemButton>
+          </ListItem>
+        </List>
+        <Divider />
+      </Box>
+
+      <Box sx={{ display: 'flex' }}>
+        <Box component='nav' sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
           <SwipeableDrawer
             anchor='right'
             variant='temporary'
-            open={drawserState}
+            open={drawerState}
             onOpen={toggleDrawer(true)}
             onClose={toggleDrawer(false)}
             ModalProps={{
@@ -198,7 +192,12 @@ export function ResponsiveDrawer({
             }}
             sx={{
               display: { xs: 'block', sm: 'none' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+              '& .MuiDrawer-paper': {
+                pt: '60px',
+                pb: '175px',
+                boxSizing: 'border-box',
+                width: drawerWidth,
+              },
             }}
           >
             {drawerItems}
@@ -207,13 +206,61 @@ export function ResponsiveDrawer({
             variant='permanent'
             sx={{
               display: { xs: 'none', sm: 'block' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+              '& .MuiDrawer-paper': {
+                pt: '60px',
+                boxSizing: 'border-box',
+                width: drawerWidth,
+                height: 'calc(100% - 115px)',
+                maxHeight: 'calc(100% - 115px)',
+              },
             }}
             open
           >
             {drawerItems}
           </Drawer>
         </Box>
+      </Box>
+
+      <Box
+        sx={{
+          position: 'fixed',
+          right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
+          left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
+          bottom: 0,
+          width: 240,
+          minWidth: 240,
+          borderRight: { xs: 0, sm: `1px solid ${theme.palette.divider}` },
+          boxSize: 'border-box',
+          zIndex: 1300,
+          backgroundColor: theme.palette.background.default,
+          ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } }),
+        }}
+      >
+        <Divider />
+        <List>
+          <ListItem disablePadding sx={{ pl: 2 }}>
+            <FormControlLabel
+              control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
+              label={
+                <Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap', color: theme.palette.text.secondary }}>
+                  完了タスクを非表示
+                </Typography>
+              }
+            />
+          </ListItem>
+        </List>
+        <Divider />
+        <List>
+          <SettingsMenu
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            handleFileUpload={handleFileUpload}
+            handleDownloadAppState={handleDownloadAppState}
+            handleLogout={handleLogout}
+            setIsWaitingForDelete={setIsWaitingForDelete}
+            currentTree={currentTree}
+          />
+        </List>
       </Box>
     </>
   );
