@@ -3,6 +3,7 @@ import { DndContext, DragOverlay, UniqueIdentifier, closestCenter } from '@dnd-k
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { Box } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 import { SortableSource } from './SortableSource';
 import { SortableItem } from './SortableItem';
@@ -30,6 +31,8 @@ export const SortableList: FC<SortableListProps> = ({
   const [activeId, setActiveId] = useState<number | null>(null);
 
   const activeItem = treesList.find((item) => item.id === activeId?.toString());
+
+  const theme = useTheme();
 
   return (
     <>
@@ -65,7 +68,7 @@ export const SortableList: FC<SortableListProps> = ({
         </SortableContext>
         <DragOverlay>
           {activeItem && (
-            <Box sx={{ right: drawerState ? '0px !important' : 'auto' }}>
+            <Box sx={{ right: drawerState ? '0px !important' : 'auto', backgroundColor: theme.palette.primary.light }}>
               <SortableSource
                 item={activeItem}
                 currentTree={currentTree}
