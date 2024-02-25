@@ -63,7 +63,7 @@ export function ResponsiveDrawer({
     if (drawerState) {
       const setTimer = setTimeout(() => {
         setIsMenuVisible(true);
-      }, 200);
+      }, 170);
       return () => clearTimeout(setTimer);
     } else {
       setIsMenuVisible(false);
