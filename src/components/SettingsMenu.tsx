@@ -126,7 +126,8 @@ export function SettingsMenu({
         sx={{
           elevation: 0,
           overflow: 'visible',
-          width: '240px', // 修正: ネストされたsxを削除し、直接プロパティを指定
+          width: 240,
+          minWidth: 240,
           bottom: 10,
           '& .MuiAvatar-root': {
             width: 32,
@@ -156,7 +157,7 @@ export function SettingsMenu({
           horizontal: 'center',
         }}
       >
-        <Tooltip title='ユーザーアカウントの削除' placement='right'>
+        <Tooltip title='アプリケーションの全データとアカウントの削除' placement='right'>
           <MenuItem
             onClick={() => {
               setIsWaitingForDelete(true);
@@ -166,7 +167,7 @@ export function SettingsMenu({
             <ListItemIcon>
               <DeleteForeverIcon fontSize='small' />
             </ListItemIcon>
-            Delete Account
+            アカウント削除
           </MenuItem>
         </Tooltip>
         <Divider />
@@ -213,7 +214,7 @@ export function SettingsMenu({
             <ListItemIcon>
               <LogoutIcon fontSize='small' />
             </ListItemIcon>
-            Logout
+            ログアウト
           </MenuItem>
         </Tooltip>
       </Menu>

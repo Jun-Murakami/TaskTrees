@@ -118,7 +118,7 @@ export function ResponsiveDrawer({
             control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
             label={
               <Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap', color: theme.palette.text.secondary }}>
-                完了を非表示
+                完了タスクを非表示
               </Typography>
             }
           />
