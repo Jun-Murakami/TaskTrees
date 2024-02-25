@@ -2,6 +2,7 @@ import { FC, useState } from 'react';
 import { DndContext, DragOverlay, UniqueIdentifier, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { Box } from '@mui/material';
 
 import { SortableSource } from './SortableSource';
 import { SortableItem } from './SortableItem';
@@ -12,6 +13,7 @@ interface SortableListProps {
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
   currentTree: UniqueIdentifier | null;
   handleListClick: (treeId: UniqueIdentifier) => void;
+  drawerState: boolean;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -20,6 +22,7 @@ export const SortableList: FC<SortableListProps> = ({
   setTreesList,
   currentTree,
   handleListClick,
+  drawerState,
   setDrawerState,
 }) => {
   const isPreviewMode = false;
@@ -62,12 +65,14 @@ export const SortableList: FC<SortableListProps> = ({
         </SortableContext>
         <DragOverlay>
           {activeItem && (
-            <SortableSource
-              item={activeItem}
-              currentTree={currentTree}
-              handleListClick={handleListClick}
-              setDrawerState={setDrawerState}
-            />
+            <Box sx={{ right: drawerState ? 0 : 'auto' }}>
+              <SortableSource
+                item={activeItem}
+                currentTree={currentTree}
+                handleListClick={handleListClick}
+                setDrawerState={setDrawerState}
+              />
+            </Box>
           )}
         </DragOverlay>
       </DndContext>

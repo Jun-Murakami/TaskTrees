@@ -116,6 +116,7 @@ export function ResponsiveDrawer({
             setTreesList={setTreesList}
             currentTree={currentTree}
             handleListClick={handleListClick}
+            drawerState={drawerState}
             setDrawerState={setDrawerState}
           />
         )}
