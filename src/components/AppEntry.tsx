@@ -169,7 +169,7 @@ export default function AppEntry() {
           )}
           <Paper sx={{ maxWidth: 300, margin: 'auto', marginTop: 4 }}>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-              複数ツリー作成＆複数ユーザーでの共同編集に対応したタスク管理アプリです。
+              複数のツリー作成＆共同編集に対応したタスク管理アプリです。
               <br />
               <br />
               ツリーを共有するには、メンバーがこのアプリに登録している必要があります。
