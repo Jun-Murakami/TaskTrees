@@ -90,6 +90,20 @@ export default function ResponsiveDrawer({
 
   return (
     <>
+      {!currentTree && treesList.length === 0 && (
+        <Typography
+          variant='caption'
+          sx={{
+            display: { sm: 'none' },
+            position: 'fixed',
+            bottom: 30,
+            right: 100,
+            zIndex: 1000,
+          }}
+        >
+          Tap to open the tree list →
+        </Typography>
+      )}
       <IconButton
         color='inherit'
         aria-label='open drawer'
@@ -106,7 +120,6 @@ export default function ResponsiveDrawer({
           backgroundColor: theme.palette.background.paper,
         }}
       >
-        {currentTree && <Typography variant='caption'>Open Tree List</Typography>}
         <MenuIcon />
       </IconButton>
       <Box sx={{ display: 'flex' }}>
