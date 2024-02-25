@@ -65,7 +65,7 @@ export const SortableList: FC<SortableListProps> = ({
         </SortableContext>
         <DragOverlay>
           {activeItem && (
-            <Box sx={{ right: drawerState ? 0 : 'auto' }}>
+            <Box sx={{ right: drawerState ? '0px !important' : 'auto' }}>
               <SortableSource
                 item={activeItem}
                 currentTree={currentTree}
