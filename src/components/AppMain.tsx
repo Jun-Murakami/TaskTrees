@@ -182,7 +182,7 @@ function AppMain({
         }}
       >
         {currentTree && isAllowShowTree && (
-          <Box sx={{ width: '100%', minWidth: '100%', height: '50px' }}>
+          <Box sx={{ width: '100%', minWidth: '100%', height: { xs: '10px', sm: '50px' } }}>
             <Box
               sx={{
                 display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示

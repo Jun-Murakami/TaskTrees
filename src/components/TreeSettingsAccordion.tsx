@@ -195,13 +195,11 @@ export function TreeSettingsAccordion({
         expanded={isExpanded}
         onChange={() => {
           {
-            if (!isExpanded) {
-              setIsFocused(true);
-            } else {
+            if (isExpanded) {
               handleSubmit();
             }
+            setIsExpanded(!isExpanded);
           }
-          setIsExpanded(!isExpanded);
         }}
       >
         <AccordionSummary
