@@ -57,6 +57,7 @@ export function ResponsiveDrawer({
 }: ResponsiveDrawerProps) {
   const [drawerState, setDrawerState] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isSwipe, setIsSwipe] = useState(false);
 
   useEffect(() => {
     if (drawerState) {
@@ -68,6 +69,17 @@ export function ResponsiveDrawer({
       setIsMenuVisible(false);
     }
   }, [drawerState]);
+
+  useEffect(() => {
+    if (isSwipe && drawerState) {
+      setIsMenuVisible(false);
+    } else if (!isSwipe && drawerState) {
+      setIsMenuVisible(true);
+    } else {
+      setIsMenuVisible(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSwipe]);
 
   const theme = useTheme();
 
@@ -199,6 +211,8 @@ export function ResponsiveDrawer({
                 width: drawerWidth,
               },
             }}
+            onTouchStart={() => setIsSwipe(true)}
+            onTouchEnd={() => setIsSwipe(false)}
           >
             {drawerItems}
           </SwipeableDrawer>
