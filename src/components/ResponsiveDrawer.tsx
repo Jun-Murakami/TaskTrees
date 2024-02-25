@@ -57,6 +57,8 @@ export function ResponsiveDrawer({
 }: ResponsiveDrawerProps) {
   const [drawserState, setDrawerState] = useState(false);
 
+  const theme = useTheme();
+
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
       event &&
@@ -111,10 +113,14 @@ export function ResponsiveDrawer({
       </List>
       <Divider sx={{ bottom: 0 }} />
       <List sx={{ bottom: 0 }}>
-        <ListItem disablePadding>
+        <ListItem disablePadding sx={{ pl: 2 }}>
           <FormControlLabel
             control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
-            label={<Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap' }}>完了を非表示</Typography>}
+            label={
+              <Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap', color: theme.palette.text.secondary }}>
+                完了を非表示
+              </Typography>
+            }
           />
         </ListItem>
       </List>
@@ -132,8 +138,6 @@ export function ResponsiveDrawer({
       </List>
     </>
   );
-
-  const theme = useTheme();
 
   return (
     <>
