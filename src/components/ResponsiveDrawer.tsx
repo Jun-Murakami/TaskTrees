@@ -111,31 +111,42 @@ export function ResponsiveDrawer({
           />
         )}
       </List>
-      <Divider sx={{ bottom: 0 }} />
-      <List sx={{ bottom: 0 }}>
-        <ListItem disablePadding sx={{ pl: 2 }}>
-          <FormControlLabel
-            control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
-            label={
-              <Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap', color: theme.palette.text.secondary }}>
-                完了タスクを非表示
-              </Typography>
-            }
+      <Box
+        sx={{
+          position: 'fixed',
+          right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
+          left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
+          width: 240,
+          minWidth: 240,
+          bottom: 0,
+        }}
+      >
+        <Divider />
+        <List>
+          <ListItem disablePadding sx={{ pl: 2 }}>
+            <FormControlLabel
+              control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
+              label={
+                <Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap', color: theme.palette.text.secondary }}>
+                  完了タスクを非表示
+                </Typography>
+              }
+            />
+          </ListItem>
+        </List>
+        <Divider />
+        <List>
+          <SettingsMenu
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            handleFileUpload={handleFileUpload}
+            handleDownloadAppState={handleDownloadAppState}
+            handleLogout={handleLogout}
+            setIsWaitingForDelete={setIsWaitingForDelete}
+            currentTree={currentTree}
           />
-        </ListItem>
-      </List>
-      <Divider sx={{ bottom: 0 }} />
-      <List sx={{ bottom: 0 }}>
-        <SettingsMenu
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-          handleFileUpload={handleFileUpload}
-          handleDownloadAppState={handleDownloadAppState}
-          handleLogout={handleLogout}
-          setIsWaitingForDelete={setIsWaitingForDelete}
-          currentTree={currentTree}
-        />
-      </List>
+        </List>
+      </Box>
     </>
   );
 
