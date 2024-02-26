@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { TreeItem, TreesList } from '../types/types';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref } from 'firebase/database';
 import { UniqueIdentifier } from '@dnd-kit/core';
 
@@ -19,6 +19,8 @@ export const useAuth = (
   // ログイン状態の監視
   useEffect(() => {
     const auth = getAuth();
+    setIsLoading(true);
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
       setIsLoading(false);
@@ -32,7 +34,7 @@ export const useAuth = (
   const handleLogin = () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
+    signInWithRedirect(auth, provider)
       .then(() => {
         setIsLoggedIn(true);
         setMessage(null);

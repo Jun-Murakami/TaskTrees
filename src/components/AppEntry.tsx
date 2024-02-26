@@ -175,14 +175,25 @@ export default function AppEntry() {
               Team Edition
             </Typography>
           </Box>
-          <Button onClick={() => handleLogin()} variant={'contained'}>
-            Googleでログイン
-          </Button>
+          {isLoading ? (
+            <CircularProgress
+              sx={{
+                marginY: 4,
+                display: 'block',
+                marginX: 'auto',
+              }}
+            />
+          ) : (
+            <Button onClick={() => handleLogin()} variant={'contained'}>
+              Googleでログイン
+            </Button>
+          )}
           {message && (
             <Typography variant='body2' sx={{ marginY: 4 }}>
               {message}
             </Typography>
           )}
+
           <Paper sx={{ maxWidth: 300, margin: 'auto', marginTop: 4 }}>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
               複数のツリー作成＆共同編集に対応したタスク管理アプリです。
