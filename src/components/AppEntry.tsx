@@ -129,7 +129,7 @@ export default function AppEntry() {
                   marginTop: 4,
                   display: 'block',
                   position: 'absolute',
-                  left: { xs: '50%', sm: 'calc(50% + 100px)' },
+                  left: { xs: 'calc(50% - 20px)', sm: 'calc(50% + 100px)' },
                 }}
               />
             )}
