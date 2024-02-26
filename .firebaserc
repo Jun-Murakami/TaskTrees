@@ -2,5 +2,18 @@
   "projects": {
     "default": "tasktrees-fb",
     "test": "tasktrees-test"
-  }
+  },
+  "targets": {
+    "tasktrees-fb": {
+      "hosting": {
+        "test": [
+          "tasktrees-test"
+        ],
+        "production": [
+          "tasktrees-fb"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
