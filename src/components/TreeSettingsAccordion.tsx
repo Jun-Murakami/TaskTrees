@@ -113,7 +113,6 @@ export function TreeSettingsAccordion({
       null,
       false
     );
-    console.log(email);
     if (!email) return;
     const functions = getFunctions();
     const addUserToTreeCallable = httpsCallable(functions, 'addUserToTree');

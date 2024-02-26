@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { TreeItem, TreesList } from '../types/types';
-import { isTreeItemArray } from '../components/SortableTree/utilities';
+import { isTreeItemArray, isValidAppState } from '../components/SortableTree/utilities';
 import { initialItems } from '../components/SortableTree/mock';
 import { getAuth, signOut } from 'firebase/auth';
 import { getDatabase, ref, onValue, set, push, get } from 'firebase/database';
@@ -27,6 +27,7 @@ export const useTreeManagement = (
 ) => {
   const [isLoadedItemsFromExternal, setIsLoadedItemsFromExternal] = useState(false);
   const [isLoadedTreesListFromExternal, setIsLoadedTreesListFromExternal] = useState(false);
+  const [isUpdatedTreesListFromInternal, setIsUpdatedTreesListFromInternal] = useState(false);
   const [MissingTrees, setMissingTrees] = useState<string[] | null>(null);
   const showDialog = useDialogStore((state) => state.showDialog);
 
@@ -68,7 +69,7 @@ export const useTreeManagement = (
           const promises = data.map((treeId) =>
             new Promise<void>((resolve) => {
               const treeTitleRef = ref(db, `trees/${treeId}/name`);
-              // ツリータイトルの変更を監視
+              // ツリータイトルを取得
               onValue(treeTitleRef, (snapshot) => {
                 if (snapshot.exists() && treesListAccumulator !== null) {
                   treesListAccumulator = [...treesListAccumulator, { id: treeId, name: snapshot.val() }];
@@ -86,6 +87,10 @@ export const useTreeManagement = (
 
           Promise.all(promises).then(async (): Promise<void> => {
             setIsLoadedTreesListFromExternal(true);
+            if (isUpdatedTreesListFromInternal) {
+              setIsUpdatedTreesListFromInternal(false);
+              return;
+            }
             setTreesList(treesListAccumulator); // 全てのプロミスが解決された後に更新
 
           });
@@ -231,6 +236,7 @@ export const useTreeManagement = (
       return;
     }
     try {
+      setIsUpdatedTreesListFromInternal(true);
       const db = getDatabase();
       const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
       set(userTreeListRef, treesList.map((tree) => tree.id));
@@ -280,8 +286,8 @@ export const useTreeManagement = (
         const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
         onValue(userTreeListRef, async (snapshot) => {
           if (snapshot.exists()) {
-            const data: string[] = snapshot.val();
-            const newTreeList = data.filter((id) => !MissingTrees.includes(id));
+            const data: UniqueIdentifier[] = snapshot.val();
+            const newTreeList = data.filter((id) => !MissingTrees.includes(id.toString()));
             await set(userTreeListRef, newTreeList);
           }
         }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
@@ -325,8 +331,6 @@ export const useTreeManagement = (
 
   //ツリーを削除する関数
   const deleteTree = async (treeId: UniqueIdentifier) => {
-    console.log('treeId:', treeId)
-    console.log('currentTree:', currentTree)
     const user = getAuth().currentUser;
     if (!user) {
       return;
@@ -338,10 +342,8 @@ export const useTreeManagement = (
       const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
       const snapshot = await get(userTreeListRef);
       if (snapshot.exists()) {
-        const data: string[] = snapshot.val();
-        console.log('data:', data)
+        const data: UniqueIdentifier[] = snapshot.val();
         const newTreeList = data.filter((id) => id !== treeId);
-        console.log('newTreeList:', newTreeList)
         await set(userTreeListRef, newTreeList);
       }
       setCurrentTree(null);
@@ -371,9 +373,10 @@ export const useTreeManagement = (
 
     // データベースのツリーリストに新しいツリーを追加
     const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
+    setIsUpdatedTreesListFromInternal(true);
     onValue(userTreeListRef, async (snapshot) => {
       if (snapshot.exists()) {
-        const data: string[] = snapshot.val();
+        const data: UniqueIdentifier[] = snapshot.val();
         const newTreeList = [newTreeRef.key, ...data];
         await set(userTreeListRef, newTreeList);
       } else {
@@ -394,6 +397,10 @@ export const useTreeManagement = (
     } else {
       setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
     }
+    if (newTreeRef.key !== null) {
+      setTreesList((prev) => (prev ? [{ id: newTreeRef.key as UniqueIdentifier, name: '新しいツリー' }, ...prev] : [{ id: newTreeRef.key as UniqueIdentifier, name: '新しいツリー' }]));
+    }
+    setItems(initialItems);
 
     //タイマーをクリア
     return () => clearTimeout(timerOne);
@@ -410,9 +417,84 @@ export const useTreeManagement = (
       //タイマーをクリア
       return () => clearTimeout(timerTwo);
     }
-
-
   };
 
-  return { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick };
+  // ファイルを読み込んでアプリの状態を復元する
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const user = getAuth().currentUser;
+    if (!user) {
+      return;
+    }
+
+    const file = event.target.files?.[0];
+    if (!file) {
+      await showDialog('ファイルが選択されていません。', 'Information');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const text = e.target?.result;
+      try {
+        const appState = JSON.parse(text as string);
+        if (!isValidAppState(appState)) {
+          await showDialog('無効なファイル形式です。', 'Error');
+          return;
+        } else {
+          const db = getDatabase();
+          const treesRef = ref(db, 'trees');
+          const newTreeRef = push(treesRef);
+          await set(newTreeRef, {
+            items: appState.items,
+            name: '読み込まれたツリー',
+            members: [user?.uid],
+          });
+
+          if (!newTreeRef.key) {
+            await showDialog('データベースへの保存に失敗しました。', 'Error');
+            return;
+          }
+          // データベースのツリーリストに新しいツリーを追加
+          const userTreeListRef = ref(db, `users/${user.uid}/treeList`);
+          try {
+            const snapshot = await get(userTreeListRef);
+            let newTreeList: UniqueIdentifier[] = [];
+            if (snapshot.exists()) {
+              const data: UniqueIdentifier[] = snapshot.val();
+              newTreeList = [newTreeRef.key, ...data];
+            } else {
+              console.log('ツリーリストが見つかりません。新しいリストを作成します。');
+              newTreeList = [newTreeRef.key];
+            }
+            await set(userTreeListRef, newTreeList);
+          } catch (error) {
+            await showDialog('データベースのツリーリスト更新に失敗しました。' + error, 'Error');
+          }
+
+          if (user.email) {
+            setCurrentTreeMembers([{ uid: user.uid, email: user.email }]);
+          } else {
+            setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
+          }
+          setCurrentTree(newTreeRef.key);
+          setCurrentTreeName('読み込まれたツリー');
+          setItems(appState.items);
+          const result = await showDialog('ファイルが正常に読み込まれました。', 'Information');
+          if (result) {
+            setIsExpanded(true);
+            // 0.7秒後にフォーカスをセット
+            const timerOne = setTimeout(() => {
+              setIsFocused(true);
+            }, 700);
+            return () => clearTimeout(timerOne);
+          }
+        }
+      } catch (error) {
+        await showDialog('ファイルの読み込みに失敗しました。', 'Error');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  return { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload };
 }

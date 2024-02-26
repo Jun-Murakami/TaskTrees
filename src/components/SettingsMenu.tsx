@@ -171,7 +171,16 @@ export function SettingsMenu({
           </MenuItem>
         </Tooltip>
         <Divider />
-        <input type='file' ref={hiddenFileInput} onChange={handleFileUpload} style={{ display: 'none' }} accept='.json' />
+        <input
+          type='file'
+          ref={hiddenFileInput}
+          onChange={(event) => {
+            handleFileUpload(event);
+            handleClose();
+          }}
+          style={{ display: 'none' }}
+          accept='.json'
+        />
         <Tooltip title='バックアップしたデータを復元' placement='right'>
           <MenuItem
             onClick={() => {

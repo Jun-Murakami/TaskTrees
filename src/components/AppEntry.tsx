@@ -47,7 +47,7 @@ export default function AppEntry() {
   );
 
   // アプリの状態の読み込みと保存を行うカスタムフック
-  const { handleDownloadAppState, handleFileUpload } = useAppStateSync(
+  const { handleDownloadAppState } = useAppStateSync(
     items,
     setItems,
     hideDoneItems,
@@ -57,16 +57,11 @@ export default function AppEntry() {
     isLoggedIn,
     setIsLoggedIn,
     setIsLoading,
-    setMessage,
-    setCurrentTree,
-    setCurrentTreeName,
-    setCurrentTreeMembers,
-    setTreesList,
-    setIsExpanded
+    setMessage
   );
 
   //ツリーの状態を同期するカスタムフック
-  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick } = useTreeManagement(
+  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement(
     items,
     setItems,
     setMessage,
