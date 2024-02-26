@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { TreeItem, TreesList } from '../types/types';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref } from 'firebase/database';
 import { UniqueIdentifier } from '@dnd-kit/core';
 
@@ -34,7 +34,7 @@ export const useAuth = (
   const handleLogin = () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
-    signInWithRedirect(auth, provider)
+    signInWithPopup(auth, provider)
       .then(() => {
         setIsLoggedIn(true);
         setMessage(null);
