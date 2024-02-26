@@ -385,10 +385,6 @@ export const useTreeManagement = (
     }, { onlyOnce: true }); // Add { onlyOnce: true } to ensure this listener is invoked once
 
     setIsExpanded(true);
-    // 0.5秒後にフォーカスをセット
-    const timerOne = setTimeout(() => {
-      setIsFocused(true);
-    }, 500);
 
     setCurrentTree(newTreeRef.key);
     setCurrentTreeName('新しいツリー');
@@ -401,6 +397,10 @@ export const useTreeManagement = (
       setTreesList((prev) => (prev ? [{ id: newTreeRef.key as UniqueIdentifier, name: '新しいツリー' }, ...prev] : [{ id: newTreeRef.key as UniqueIdentifier, name: '新しいツリー' }]));
     }
     setItems(initialItems);
+    // 0.5秒後にフォーカスをセット
+    const timerOne = setTimeout(() => {
+      setIsFocused(true);
+    }, 500);
 
     //タイマーをクリア
     return () => clearTimeout(timerOne);
