@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "tasktrees-fb"
+    "default": "tasktrees-fb",
+    "test": "tasktrees-test"
   }
 }
