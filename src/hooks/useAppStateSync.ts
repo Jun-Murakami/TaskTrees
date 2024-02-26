@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { TreeItem, AppState } from '../types/types';
 import { isValidAppSettingsState } from '../components/SortableTree/utilities';
-import { getAuth, signOut } from 'firebase/auth';
+import { signOut, Auth } from 'firebase/auth';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 
 export const useAppStateSync = (
@@ -15,6 +15,7 @@ export const useAppStateSync = (
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setMessage: React.Dispatch<React.SetStateAction<string | null>>,
+  auth: Auth,
 ) => {
   const [isLoadedFromExternal, setIsLoadedFromExternal] = useState(false);
 
@@ -26,14 +27,14 @@ export const useAppStateSync = (
       setMessage('ログアウトしました。不明なエラーが発生しました。');
     }
     setItems([]);
-    signOut(getAuth());
+    signOut(auth);
     setIsLoggedIn(false);
     if (setIsLoading) setIsLoading(false);
-  }, [setMessage, setItems, setIsLoggedIn, setIsLoading]);
+  }, [setMessage, setItems, setIsLoggedIn, setIsLoading, auth]);
 
   // ダークモード、完了済みアイテムの非表示設定の監視
   useEffect(() => {
-    const user = getAuth().currentUser;
+    const user = auth.currentUser;
     if (!user) {
       return;
     }
@@ -53,12 +54,12 @@ export const useAppStateSync = (
     } catch (error) {
       handleError(error);
     }
-  }, [isLoggedIn, handleError, setDarkMode, setHideDoneItems]);
+  }, [isLoggedIn, handleError, setDarkMode, setHideDoneItems, auth]);
 
   // ダークモード、完了済みアイテムの非表示設定の保存
   useEffect(() => {
     const debounceSave = setTimeout(() => {
-      const user = getAuth().currentUser;
+      const user = auth.currentUser;
       if (!user) {
         return;
       }
@@ -79,7 +80,7 @@ export const useAppStateSync = (
 
     // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
     return () => clearTimeout(debounceSave);
-  }, [darkMode, hideDoneItems, isLoadedFromExternal, handleError]);
+  }, [darkMode, hideDoneItems, isLoadedFromExternal, handleError, auth]);
 
   // アプリの状態をJSONファイルとしてダウンロードする
   const handleDownloadAppState = () => {

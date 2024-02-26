@@ -33,7 +33,7 @@ export default function AppEntry() {
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
-  const { handleLogin, handleLogout, handleDeleteAccount } = useAuth(
+  const { handleLogin, handleLogout, handleDeleteAccount, auth } = useAuth(
     setIsLoggedIn,
     setIsLoading,
     setMessage,
@@ -57,7 +57,8 @@ export default function AppEntry() {
     isLoggedIn,
     setIsLoggedIn,
     setIsLoading,
-    setMessage
+    setMessage,
+    auth
   );
 
   //ツリーの状態を同期するカスタムフック
@@ -76,7 +77,8 @@ export default function AppEntry() {
     setTreesList,
     isExpanded,
     setIsExpanded,
-    setIsFocused
+    setIsFocused,
+    auth
   );
 
   return (

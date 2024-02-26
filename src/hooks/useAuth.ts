@@ -1,8 +1,26 @@
 import { useEffect } from 'react';
 import { TreeItem, TreesList } from '../types/types';
+import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref } from 'firebase/database';
 import { UniqueIdentifier } from '@dnd-kit/core';
+
+// Firebaseの設定
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_DATABASE_URL,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGE_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID,
+  measurementId: import.meta.env.VITE_MEASUREMENT_ID,
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+getDatabase(app);
 
 export const useAuth = (
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
@@ -18,7 +36,6 @@ export const useAuth = (
 ) => {
   // ログイン状態の監視
   useEffect(() => {
-    const auth = getAuth();
     setIsLoading(true);
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
@@ -31,8 +48,6 @@ export const useAuth = (
 
   // Googleログイン
   const handleLogin = () => {
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
     signInWithRedirect(auth, provider)
       .then(() => {
         setIsLoggedIn(true);
@@ -45,7 +60,6 @@ export const useAuth = (
 
   // ログアウト
   const handleLogout = () => {
-    const auth = getAuth();
     signOut(auth)
       .then(() => {
         setIsLoggedIn(false);
@@ -63,7 +77,7 @@ export const useAuth = (
 
   // アカウント削除
   const handleDeleteAccount = () => {
-    const user = getAuth().currentUser;
+    const user = auth.currentUser;
     if (user) {
       const db = getDatabase();
       const appStateRef = ref(db, `users/${user.uid}/appState`);
@@ -93,5 +107,5 @@ export const useAuth = (
     }
     setIsWaitingForDelete(false);
   };
-  return { handleLogin, handleLogout, handleDeleteAccount };
+  return { handleLogin, handleLogout, handleDeleteAccount, auth };
 };

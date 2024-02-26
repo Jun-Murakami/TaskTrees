@@ -2,7 +2,7 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import { TreeItem, TreesList } from '../types/types';
 import { isTreeItemArray, isValidAppState } from '../components/SortableTree/utilities';
 import { initialItems } from '../components/SortableTree/mock';
-import { getAuth, signOut } from 'firebase/auth';
+import { Auth, signOut } from 'firebase/auth';
 import { getDatabase, ref, onValue, set, get } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useDialogStore } from '../store/dialogStore';
@@ -23,7 +23,8 @@ export const useTreeManagement = (
   setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
   isExpanded: boolean,
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsFocused: React.Dispatch<React.SetStateAction<boolean>>
+  setIsFocused: React.Dispatch<React.SetStateAction<boolean>>,
+  auth: Auth,
 ) => {
   const [isLoadedItemsFromExternal, setIsLoadedItemsFromExternal] = useState(false);
   const [missingTrees, setMissingTrees] = useState<string[] | null>(null);
@@ -47,10 +48,11 @@ export const useTreeManagement = (
     setCurrentTreeMembers(null);
     setItems([]);
     setIsExpanded(false);
-    signOut(getAuth());
+    signOut(auth);
     setIsLoggedIn(false);
     if (setIsLoading) setIsLoading(false);
-  }, [setMessage, setItems, setIsLoggedIn, setIsLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setMessage, setItems, setIsLoggedIn, setIsLoading, auth]);
 
   // 保存時に削除されたitemsのchildrenプロパティを復元
   function ensureChildrenProperty(items: TreeItem[]): TreeItem[] {
@@ -63,7 +65,7 @@ export const useTreeManagement = (
   // ツリーリストの監視→変更されたらツリーリストを更新 ---------------------------------------------------------------------------
   useEffect(() => {
     try {
-      const user = getAuth().currentUser;
+      const user = auth.currentUser;
       if (!user || !isLoggedIn) {
         return;
       }
@@ -132,6 +134,7 @@ export const useTreeManagement = (
       setIsLoading(false);
       handleError('ツリーリストの監視中にエラーが発生しました' + error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, missingTrees]);
 
 
@@ -162,7 +165,7 @@ export const useTreeManagement = (
       prevCurrentTreeRef.current = currentTree;
 
       try {
-        const user = getAuth().currentUser;
+        const user = auth.currentUser;
         if (!user) {
           throw new Error('ユーザーがログインしていません。');
         }
@@ -254,7 +257,7 @@ export const useTreeManagement = (
   // itemsの変更をデータベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
     const debounceSave = setTimeout(() => {
-      const user = getAuth().currentUser;
+      const user = auth.currentUser;
       if (!user || !currentTree) {
         return;
       }
@@ -279,7 +282,7 @@ export const useTreeManagement = (
 
   // treesListの変更をデータベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    const user = getAuth().currentUser;
+    const user = auth.currentUser;
     if (!user || treesList.length === 0) {
       return;
     }
@@ -335,7 +338,7 @@ export const useTreeManagement = (
       if (missingTrees) {
         isInternalUpdateRef.current = true;
         showDialog('1つ以上のツリーが他のユーザーまたはシステムによって削除されました。' + missingTrees, 'Information');
-        const user = getAuth().currentUser;
+        const user = auth.currentUser;
         if (!user) {
           return;
         }
@@ -352,11 +355,11 @@ export const useTreeManagement = (
       }
     }
     asyncFunc();
-  }, [missingTrees, showDialog]);
+  }, [missingTrees, showDialog, auth]);
 
   // currentTreeNameの変更をデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveCurrentTreeName = (editedTreeName: string) => {
-    const user = getAuth().currentUser;
+    const user = auth.currentUser;
     if (!user || !currentTree) {
       return;
     }
@@ -388,7 +391,7 @@ export const useTreeManagement = (
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = async (treeId: UniqueIdentifier) => {
-    const user = getAuth().currentUser;
+    const user = auth.currentUser;
     if (!user) {
       return;
     }
@@ -447,7 +450,7 @@ export const useTreeManagement = (
 
   // 新しいツリーを作成する関数 ---------------------------------------------------------------------------
   const handleCreateNewTree = async () => {
-    const user = getAuth().currentUser;
+    const user = auth.currentUser;
     if (!user) {
       return;
     }
@@ -503,7 +506,7 @@ export const useTreeManagement = (
 
   // ファイルを読み込んでアプリの状態を復元する ---------------------------------------------------------------------------
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const user = getAuth().currentUser;
+    const user = auth.currentUser;
     if (!user) {
       return;
     }
