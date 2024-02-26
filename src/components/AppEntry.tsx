@@ -123,7 +123,16 @@ export default function AppEntry() {
               isFocused={isFocused}
               setIsFocused={setIsFocused}
             />
-            {isLoading && <CircularProgress sx={{ marginTop: 2 }} />}
+            {isLoading && (
+              <CircularProgress
+                sx={{
+                  marginTop: 4,
+                  display: 'block',
+                  position: 'absolute',
+                  left: { xs: '50%', sm: 'calc(50% + 100px)' },
+                }}
+              />
+            )}
           </>
         ) : (
           // アカウント削除の確認ダイアログ
