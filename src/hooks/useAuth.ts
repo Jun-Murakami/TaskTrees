@@ -20,7 +20,6 @@ export const useAuth = (
   useEffect(() => {
     const auth = getAuth();
     setIsLoading(true);
-
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
       setIsLoading(false);
