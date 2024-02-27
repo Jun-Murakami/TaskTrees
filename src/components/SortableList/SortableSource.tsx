@@ -4,6 +4,7 @@ import { ListItemText, ListItemButton, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { TreesListItem } from '../../types/types';
+import { useTreeStateStore } from '../../store/treeStateStore';
 
 export type SortableSourceProps = {
   item: TreesListItem;
@@ -12,13 +13,14 @@ export type SortableSourceProps = {
     attributes: DraggableAttributes;
     listeners: DraggableSyntheticListeners;
   };
-  currentTree: UniqueIdentifier | null;
   handleListClick: (treeId: UniqueIdentifier) => void;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, currentTree, handleListClick, setDrawerState }) => {
+export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, handleListClick, setDrawerState }) => {
+  const currentTree = useTreeStateStore((state) => state.currentTree);
   const theme = useTheme();
+
   return (
     <ListItemButton
       selected={currentTree === item.id}

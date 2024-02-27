@@ -5,29 +5,32 @@ import { initialItems } from '../components/SortableTree/mock';
 import { Auth, signOut } from 'firebase/auth';
 import { getDatabase, ref, onValue, set, get } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 import { useDialogStore } from '../store/dialogStore';
 import { UniqueIdentifier } from '@dnd-kit/core';
 
-export const useTreeManagement = (
-  items: TreeItem[],
-  setItems: React.Dispatch<React.SetStateAction<TreeItem[]>>,
-  setMessage: React.Dispatch<React.SetStateAction<string | null>>,
-  isLoggedIn: boolean,
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  currentTree: UniqueIdentifier | null,
-  setCurrentTree: React.Dispatch<React.SetStateAction<UniqueIdentifier | null>>,
-  setCurrentTreeName: React.Dispatch<React.SetStateAction<string | null>>,
-  setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
-  treesList: TreesList,
-  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
-  isExpanded: boolean,
-  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsFocused: React.Dispatch<React.SetStateAction<boolean>>,
-  auth: Auth,
-) => {
+export const useTreeManagement = (auth: Auth,) => {
   const [isLoadedItemsFromExternal, setIsLoadedItemsFromExternal] = useState(false);
   const [missingTrees, setMissingTrees] = useState<string[] | null>(null);
+
+  const setSystemMessage = useAppStateStore((state) => state.setSystemMessage);
+  const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
+  const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
+  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
+  const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
+  const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
+  const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
+
+  const items = useTreeStateStore((state) => state.items);
+  const setItems = useTreeStateStore((state) => state.setItems);
+  const treesList = useTreeStateStore((state) => state.treesList);
+  const setTreesList = useTreeStateStore((state) => state.setTreesList);
+  const currentTree = useTreeStateStore((state) => state.currentTree);
+  const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
+  const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
+  const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
+
   const showDialog = useDialogStore((state) => state.showDialog);
 
   // ツリーリストの監視用フラグ
@@ -39,20 +42,20 @@ export const useTreeManagement = (
   // エラーハンドリング ---------------------------------------------------------------------------
   const handleError = useCallback((error: unknown) => {
     if (error instanceof Error) {
-      setMessage('ログアウトしました。 : ' + error.message);
+      setSystemMessage('ログアウトしました。 : ' + error.message);
     } else {
-      setMessage('ログアウトしました。: ' + error);
+      setSystemMessage('ログアウトしました。: ' + error);
     }
     setCurrentTree(null);
     setCurrentTreeName(null);
     setCurrentTreeMembers(null);
     setItems([]);
-    setIsExpanded(false);
+    setIsAccordionExpanded(false);
     signOut(auth);
     setIsLoggedIn(false);
     if (setIsLoading) setIsLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setMessage, setItems, setIsLoggedIn, setIsLoading, auth]);
+  }, [setSystemMessage, setItems, setIsLoggedIn, setIsLoading, auth]);
 
   // 保存時に削除されたitemsのchildrenプロパティを復元
   function ensureChildrenProperty(items: TreeItem[]): TreeItem[] {
@@ -312,16 +315,14 @@ export const useTreeManagement = (
       const treeNameRef = ref(db, `trees/${tree.id}/name`);
       return onValue(treeNameRef, (snapshot) => {
         if (snapshot.exists()) {
-          setTreesList((currentTreesList) => {
-            const updatedTreesList = currentTreesList.map((t) =>
-              t.id === tree.id ? { ...t, name: snapshot.val() } : t
-            );
-            // 現在のtreesListと更新後のtreesListが異なる場合のみ更新
-            if (JSON.stringify(currentTreesList) !== JSON.stringify(updatedTreesList)) {
-              return updatedTreesList;
-            }
-            return currentTreesList;
-          });
+          const currentTreesList = useTreeStateStore.getState().treesList;
+          const updatedTreesList = currentTreesList.map((t) =>
+            t.id === tree.id ? { ...t, name: snapshot.val() as string } : t
+          );
+          // 現在のtreesListと更新後のtreesListが異なる場合のみ更新
+          if (JSON.stringify(currentTreesList) !== JSON.stringify(updatedTreesList)) {
+            setTreesList(updatedTreesList);
+          }
         }
       });
     });
@@ -399,7 +400,7 @@ export const useTreeManagement = (
     setCurrentTreeName(null);
     setCurrentTreeMembers(null);
     setItems([]);
-    setIsExpanded(false);
+    setIsAccordionExpanded(false);
 
     isInternalUpdateRef.current = true;
 
@@ -415,7 +416,8 @@ export const useTreeManagement = (
         const newTreeList = data.filter((id) => id !== treeId);
         await set(userTreeListRef, newTreeList);
       }
-      setTreesList((prev) => prev ? prev.filter((tree) => tree.id !== treeId) : []);
+      const updatedTreesList = treesList ? treesList.filter((tree) => tree.id !== treeId) : [];
+      setTreesList(updatedTreesList);
 
     } catch (error) {
       isInternalUpdateRef.current = false;
@@ -465,10 +467,10 @@ export const useTreeManagement = (
         throw new Error('新しいツリーの作成に失敗しました。');
       }
 
-      setIsExpanded(true);
+      setIsAccordionExpanded(true);
       // 0.5秒後にフォーカスをセット
       const timerOne = setTimeout(() => {
-        setIsFocused(true);
+        setIsFocusedTreeName(true);
       }, 500);
       setIsLoading(false);
       setCurrentTree(newTreeRef as UniqueIdentifier);
@@ -479,7 +481,9 @@ export const useTreeManagement = (
         setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
       }
       if (newTreeRef !== null) {
-        setTreesList((prev) => (prev ? [{ id: newTreeRef as UniqueIdentifier, name: '新しいツリー' }, ...prev] : [{ id: newTreeRef as UniqueIdentifier, name: '新しいツリー' }]));
+        const newTree = { id: newTreeRef as UniqueIdentifier, name: '新しいツリー' };
+        const updatedTreesListWithNewTree = treesList ? [newTree, ...treesList] : [newTree];
+        setTreesList(updatedTreesListWithNewTree);
       }
 
       //タイマーをクリア
@@ -494,10 +498,10 @@ export const useTreeManagement = (
   // ツリーのリストから選択されたツリーを表示する
   const handleListClick = (treeId: UniqueIdentifier) => {
     setCurrentTree(treeId);
-    if (isExpanded) {
+    if (isAccordionExpanded) {
       // 0.5秒後にフォーカスをセット
       const timerTwo = setTimeout(() => {
-        setIsFocused(true);
+        setIsFocusedTreeName(true);
       }, 500);
       //タイマーをクリア
       return () => clearTimeout(timerTwo);
@@ -542,14 +546,16 @@ export const useTreeManagement = (
           }
 
           setCurrentTree(newTreeRef as UniqueIdentifier);
-          setCurrentTreeName('読み込まれたツリー');
-          setTreesList((prev) => (prev ? [{ id: newTreeRef as UniqueIdentifier, name: '読み込まれたツリー' }, ...prev] : [{ id: newTreeRef as UniqueIdentifier, name: '読み込まれたツリー' }]));
+          setCurrentTreeName(treeName);
+          const loadedTreeObject = { id: newTreeRef as UniqueIdentifier, name: treeName };
+          const updatedTreesListWithLoadedTree = treesList ? [loadedTreeObject, ...treesList] : [loadedTreeObject];
+          setTreesList(updatedTreesListWithLoadedTree);
           const result = await showDialog('ファイルが正常に読み込まれました。', 'Information');
           if (result) {
-            setIsExpanded(true);
+            setIsAccordionExpanded(true);
             // 0.7秒後にフォーカスをセット
             const timerTwo = setTimeout(() => {
-              setIsFocused(true);
+              setIsFocusedTreeName(true);
             }, 700);
             return () => clearTimeout(timerTwo);
           }

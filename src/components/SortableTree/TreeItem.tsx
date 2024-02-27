@@ -6,6 +6,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useAppStateStore } from '../../store/appStateStore';
 
 export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
   id?: UniqueIdentifier;
@@ -13,7 +14,6 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   clone?: boolean;
   collapsed?: boolean;
   depth: number;
-  darkMode?: boolean;
   disableInteraction?: boolean;
   disableSelection?: boolean;
   ghost?: boolean;
@@ -39,7 +39,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       childCount,
       clone,
       depth,
-      darkMode,
       disableSelection,
       disableInteraction,
       ghost,
@@ -62,6 +61,8 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
   ) => {
     const theme = useTheme();
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
+
+    const darkMode = useAppStateStore((state) => state.darkMode);
 
     useEffect(() => {
       const timer = setTimeout(() => setIsFocusedOrHovered(false), 300);

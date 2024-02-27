@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { TreeItem, TreesList } from '../types/types';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref } from 'firebase/database';
-import { UniqueIdentifier } from '@dnd-kit/core';
+import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 
 // Firebaseの設定
 const firebaseConfig = {
@@ -22,18 +22,18 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 getDatabase(app);
 
-export const useAuth = (
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  setMessage: React.Dispatch<React.SetStateAction<string | null>>,
-  setItems: React.Dispatch<React.SetStateAction<TreeItem[]>>,
-  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>,
-  setCurrentTree: React.Dispatch<React.SetStateAction<UniqueIdentifier | null>>,
-  setCurrentTreeName: React.Dispatch<React.SetStateAction<string | null>>,
-  setCurrentTreeMembers: React.Dispatch<React.SetStateAction<{ uid: string; email: string }[] | null>>,
-  isWaitingForDelete: boolean,
-  setIsWaitingForDelete: React.Dispatch<React.SetStateAction<boolean>>
-) => {
+export const useAuth = () => {
+  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
+  const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
+  const setSystemMessage = useAppStateStore((state) => state.setSystemMessage);
+  const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete);
+  const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
+  const setItems = useTreeStateStore((state) => state.setItems);
+  const setTreesList = useTreeStateStore((state) => state.setTreesList);
+  const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
+  const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
+  const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
+
   // ログイン状態の監視
   useEffect(() => {
     setIsLoading(true);
@@ -51,7 +51,7 @@ export const useAuth = (
     signInWithPopup(auth, provider)
       .then(() => {
         setIsLoggedIn(true);
-        setMessage(null);
+        setSystemMessage(null);
       })
       .catch((error) => {
         console.error(error);
@@ -68,7 +68,7 @@ export const useAuth = (
         setCurrentTree(null);
         setCurrentTreeName(null);
         setCurrentTreeMembers(null);
-        if (!isWaitingForDelete) setMessage('ログアウトしました。');
+        if (!isWaitingForDelete) setSystemMessage('ログアウトしました。');
       })
       .catch((error) => {
         console.error(error);
@@ -92,18 +92,18 @@ export const useAuth = (
         .delete()
         .then(() => {
           handleLogout();
-          setMessage('アカウントが削除されました。');
+          setSystemMessage('アカウントが削除されました。');
         })
         .catch((error) => {
           if (error instanceof Error) {
-            setMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : ' + error.message);
+            setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : ' + error.message);
           } else {
-            setMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : 不明なエラー');
+            setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : 不明なエラー');
           }
           handleLogout();
         });
     } else {
-      setMessage('ユーザーがログインしていません。');
+      setSystemMessage('ユーザーがログインしていません。');
     }
     setIsWaitingForDelete(false);
   };

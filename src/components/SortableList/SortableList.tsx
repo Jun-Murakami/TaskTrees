@@ -4,27 +4,20 @@ import { DndContext, DragOverlay, UniqueIdentifier, closestCenter } from '@dnd-k
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useTheme } from '@mui/material/styles';
+import { useTreeStateStore } from '../../store/treeStateStore';
 
 import { SortableSource } from './SortableSource';
 import { SortableItem } from './SortableItem';
-import { TreesList } from '../../types/types';
 
 interface SortableListProps {
-  treesList: TreesList;
-  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
-  currentTree: UniqueIdentifier | null;
   handleListClick: (treeId: UniqueIdentifier) => void;
-  drawerState: boolean;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const SortableList: FC<SortableListProps> = ({
-  treesList,
-  setTreesList,
-  currentTree,
-  handleListClick,
-  setDrawerState,
-}) => {
+export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState }) => {
+  const treesList = useTreeStateStore((state) => state.treesList);
+  const setTreesList = useTreeStateStore((state) => state.setTreesList);
+
   const isPreviewMode = false;
 
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -59,7 +52,6 @@ export const SortableList: FC<SortableListProps> = ({
               key={item.id}
               isPreviewMode={isPreviewMode}
               item={item}
-              currentTree={currentTree}
               handleListClick={handleListClick}
               setDrawerState={setDrawerState}
             />
@@ -72,14 +64,7 @@ export const SortableList: FC<SortableListProps> = ({
             }}
             zIndex={1500}
           >
-            {activeItem && (
-              <SortableSource
-                item={activeItem}
-                currentTree={currentTree}
-                handleListClick={handleListClick}
-                setDrawerState={setDrawerState}
-              />
-            )}
+            {activeItem && <SortableSource item={activeItem} handleListClick={handleListClick} setDrawerState={setDrawerState} />}
           </DragOverlay>,
           document.body
         )}
