@@ -1,4 +1,4 @@
-# Task Tree
+# Task Trees
 
 ツリー型で整理可能なタスク管理アプリです。複数のツリー管理＆ツリーの共有機能つきです。  
 [https://tasktree-s.web.app/](https://tasktree-s.web.app/)  
