@@ -1,13 +1,13 @@
 {
   "projects": {
     "default": "tasktrees-fb",
-    "test": "tasktrees-test"
+    "production": "tasktree-s"
   },
   "targets": {
     "tasktrees-fb": {
       "hosting": {
-        "test": [
-          "tasktrees-test"
+        "production": [
+          "tasktree-s"
         ],
         "default": [
           "tasktrees-fb"
