@@ -1,19 +1,6 @@
 {
   "projects": {
-    "default": "tasktrees-fb",
+    "default": "tasktree-fb",
     "production": "tasktree-s"
-  },
-  "targets": {
-    "tasktrees-fb": {
-      "hosting": {
-        "production": [
-          "tasktree-s"
-        ],
-        "default": [
-          "tasktrees-fb"
-        ]
-      }
-    }
-  },
-  "etags": {}
+  }
 }
