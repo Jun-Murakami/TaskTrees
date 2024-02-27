@@ -529,7 +529,13 @@ export const useTreeManagement = (
           return;
         } else {
           isInternalUpdateRef.current = true;
-          const newTreeRef: unknown = await saveNewTree(appState.items, '読み込まれたツリー', { [user?.uid]: true, },);
+          let treeName: string = '';
+          if (!appState.currentTreeName) {
+            treeName = '読み込まれたツリー';
+          } else {
+            treeName = appState.currentTreeName;
+          }
+          const newTreeRef: unknown = await saveNewTree(appState.items, treeName, { [user?.uid]: true, },);
 
           if (!newTreeRef) {
             throw new Error('ツリーのデータベースへの保存に失敗しました。');

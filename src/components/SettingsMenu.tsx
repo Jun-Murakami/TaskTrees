@@ -194,7 +194,7 @@ export function SettingsMenu({
           </MenuItem>
         </Tooltip>
         {currentTree && (
-          <Tooltip title='ツリーのデータをバックアップ' placement='right'>
+          <Tooltip title='現在のツリーのデータをバックアップ' placement='right'>
             <MenuItem
               onClick={() => {
                 handleDownloadAppState();
