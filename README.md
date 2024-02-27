@@ -7,7 +7,7 @@
 データをユーザーアカウントの Google Drive に保存する旧バージョンはこちら  
 https://github.com/Jun-Murakami/TaskTree
 
-<img width="809" alt="スクリーンショット 2024-02-18 23 00 29" src="https://github.com/Jun-Murakami/TaskTree/assets/126404131/f4c15585-3fe0-4e1d-b0c5-d9899d7b263f">
+<img width="948" alt="スクリーンショット 2024-02-27 13 51 47" src="https://github.com/Jun-Murakami/TaskTrees/assets/126404131/fe09581b-d9e7-416a-a8cb-e5cb5ea837d1">
 
 ## プライバシーポリシー
 
