@@ -1,11 +1,10 @@
 # Task Tree
 
-ツリー型のシンプルなタスク管理アプリです。  
+ツリー型で整理可能なタスク管理アプリです。複数のツリー管理＆ツリーの共有機能つきです。
 [https://tasktrees-fb.web.app/](https://tasktrees-fb.web.app/)
 
-このバージョンでは、ユーザーデータは Google の Firebase サーバに保存されます。  
-データをユーザーアカウントの Google Drive に保存する旧バージョンはこちら  
-https://github.com/Jun-Murakami/TaskTree
+シンプルな１ツリーの旧バージョンはこちら
+[https://github.com/Jun-Murakami/TaskTree](https://tasktree-fb.web.app/)
 
 <img width="799" alt="スクリーンショット 2024-02-27 13 53 32" src="https://github.com/Jun-Murakami/TaskTrees/assets/126404131/b65f2b80-9664-4802-aec7-0b336671e283">
 
