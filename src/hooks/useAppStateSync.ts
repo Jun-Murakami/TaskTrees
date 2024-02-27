@@ -11,6 +11,7 @@ export const useAppStateSync = (
   setHideDoneItems: React.Dispatch<React.SetStateAction<boolean>>,
   darkMode: boolean,
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>,
+  currentTreeName: string | null,
   isLoggedIn: boolean,
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
@@ -82,15 +83,30 @@ export const useAppStateSync = (
     return () => clearTimeout(debounceSave);
   }, [darkMode, hideDoneItems, isLoadedFromExternal, handleError, auth]);
 
+  // 現在の日時を取得する
+  function getCurrentDateTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}${month}${day}${hours}${minutes}`;
+  }
+
   // アプリの状態をJSONファイルとしてダウンロードする
   const handleDownloadAppState = () => {
-    const appState = { items, hideDoneItems, darkMode };
+    const appState = { items, hideDoneItems, darkMode, currentTreeName };
     const appStateJSON = JSON.stringify(appState, null, 2); // 読みやすい形式でJSONを整形
     const blob = new Blob([appStateJSON], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'TaskTree_Backup.json'; // ダウンロードするファイルの名前
+    if (!currentTreeName) {
+      link.download = `TaskTree_Backup_${getCurrentDateTime()}.json`;
+    } else {
+      link.download = `TaskTree_${currentTreeName}_Backup_${getCurrentDateTime()}.json`;
+    }
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

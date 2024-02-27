@@ -54,6 +54,7 @@ export default function AppEntry() {
     setHideDoneItems,
     darkMode,
     setDarkMode,
+    currentTreeName,
     isLoggedIn,
     setIsLoggedIn,
     setIsLoading,
