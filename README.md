@@ -1,7 +1,7 @@
 # Task Tree
 
 ツリー型のシンプルなタスク管理アプリです。  
-[https://tasktree-fb.web.app/](https://tasktrees-fb.web.app/)
+[https://tasktrees-fb.web.app/](https://tasktrees-fb.web.app/)
 
 このバージョンでは、ユーザーデータは Google の Firebase サーバに保存されます。  
 データをユーザーアカウントの Google Drive に保存する旧バージョンはこちら  
