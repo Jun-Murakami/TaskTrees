@@ -1,5 +1,4 @@
-import { Dispatch, useState, SetStateAction, useEffect } from 'react';
-import { TreesList } from '../types/types';
+import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
   Box,
@@ -14,50 +13,42 @@ import {
   Divider,
   FormControlLabel,
   Switch,
+  Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 import { SortableList } from './SortableList/SortableList';
 import { SettingsMenu } from './SettingsMenu';
-import { Typography } from '@mui/material';
 
 const drawerWidth = 240;
 
 interface ResponsiveDrawerProps {
   handleCreateNewTree: () => void;
-  treesList: TreesList;
-  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
-  hideDoneItems: boolean;
-  setHideDoneItems: Dispatch<SetStateAction<boolean>>;
-  currentTree: UniqueIdentifier | null;
   handleListClick: (treeId: UniqueIdentifier) => void;
-  darkMode: boolean;
-  setDarkMode: Dispatch<SetStateAction<boolean>>;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDownloadAppState: () => void;
   handleLogout: () => void;
-  setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
 }
 
 export function ResponsiveDrawer({
   handleCreateNewTree,
-  treesList,
-  setTreesList,
-  hideDoneItems,
-  setHideDoneItems,
-  currentTree,
   handleListClick,
-  darkMode,
-  setDarkMode,
   handleFileUpload,
   handleDownloadAppState,
   handleLogout,
-  setIsWaitingForDelete,
 }: ResponsiveDrawerProps) {
   const [drawerState, setDrawerState] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isSwipe, setIsSwipe] = useState(false);
+
+  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
+  const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
+
+  const currentTree = useTreeStateStore((state) => state.currentTree);
+  const treesList = useTreeStateStore((state) => state.treesList);
 
   useEffect(() => {
     if (drawerState) {
@@ -110,16 +101,7 @@ export function ResponsiveDrawer({
   const drawerItems = (
     <>
       <List sx={{ height: '100%' }}>
-        {treesList && (
-          <SortableList
-            treesList={treesList}
-            setTreesList={setTreesList}
-            currentTree={currentTree}
-            handleListClick={handleListClick}
-            drawerState={drawerState}
-            setDrawerState={setDrawerState}
-          />
-        )}
+        {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}
       </List>
       <Box sx={{ display: { xs: 'block', sm: 'none' }, height: '175px', minHeight: '175px' }} />
     </>
@@ -274,13 +256,9 @@ export function ResponsiveDrawer({
         <Divider />
         <List>
           <SettingsMenu
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
             handleFileUpload={handleFileUpload}
             handleDownloadAppState={handleDownloadAppState}
             handleLogout={handleLogout}
-            setIsWaitingForDelete={setIsWaitingForDelete}
-            currentTree={currentTree}
           />
         </List>
       </Box>

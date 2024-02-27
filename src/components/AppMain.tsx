@@ -1,52 +1,28 @@
-import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
-import type { UniqueIdentifier } from '@dnd-kit/core';
+import { useState, useEffect } from 'react';
+import { UniqueIdentifier } from '@dnd-kit/core';
 import { findMaxId, isDescendantOfTrash } from './SortableTree/utilities';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
-import type { TreeItem, TreesList } from '../types/types';
+import { TreeItem } from '../types/types';
+import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 import { Button, Box, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
 interface AppProps {
-  items: TreeItem[];
-  setItems: Dispatch<SetStateAction<TreeItem[]>>;
-  hideDoneItems: boolean;
-  darkMode: boolean;
-  setDarkMode: Dispatch<SetStateAction<boolean>>;
-  handleLogout: () => void;
-  setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
-  currentTree: UniqueIdentifier | null;
-  currentTreeName: string | null;
-  setCurrentTreeName: Dispatch<SetStateAction<string | null>>;
   saveCurrentTreeName: (name: string) => void;
-  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
-  isExpanded: boolean;
-  setIsExpanded: Dispatch<SetStateAction<boolean>>;
-  currentTreeMembers: { uid: string; email: string }[] | null;
   deleteTree: (treeId: string) => void;
-  isFocused: boolean;
-  setIsFocused: Dispatch<SetStateAction<boolean>>;
 }
 
-function AppMain({
-  items,
-  setItems,
-  hideDoneItems,
-  darkMode,
-  currentTree,
-  currentTreeName,
-  setCurrentTreeName,
-  saveCurrentTreeName,
-  setTreesList,
-  isExpanded,
-  setIsExpanded,
-  currentTreeMembers,
-  deleteTree,
-  isFocused,
-  setIsFocused,
-}: AppProps) {
+function AppMain({ saveCurrentTreeName, deleteTree }: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
+
+  const items = useTreeStateStore((state) => state.items);
+  const setItems = useTreeStateStore((state) => state.setItems);
+  const currentTree = useTreeStateStore((state) => state.currentTree);
 
   // 選択したアイテムのIDをセットする
   const handleSelect = (id: UniqueIdentifier) => {
@@ -139,19 +115,7 @@ function AppMain({
       }}
     >
       {currentTree ? (
-        <TreeSettingsAccordion
-          currentTree={currentTree}
-          currentTreeName={currentTreeName}
-          setCurrentTreeName={setCurrentTreeName}
-          saveCurrentTreeName={saveCurrentTreeName}
-          setTreesList={setTreesList}
-          isExpanded={isExpanded}
-          setIsExpanded={setIsExpanded}
-          currentTreeMembers={currentTreeMembers}
-          deleteTree={deleteTree}
-          isFocused={isFocused}
-          setIsFocused={setIsFocused}
-        />
+        <TreeSettingsAccordion saveCurrentTreeName={saveCurrentTreeName} deleteTree={deleteTree} />
       ) : (
         <Typography variant='h3'>
           <img
@@ -170,12 +134,12 @@ function AppMain({
         }}
       >
         {currentTree && (
-          <Box sx={{ width: '100%', minWidth: '100%', height: { xs: '10px', sm: '50px' }, mb: isExpanded ? 5 : 0.5 }}>
+          <Box sx={{ width: '100%', minWidth: '100%', height: { xs: '10px', sm: '50px' }, mb: isAccordionExpanded ? 5 : 0.5 }}>
             <Box
               sx={{
                 display: { xs: 'none', sm: 'block' }, // スマホサイズで非表示
                 position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
-                top: isScrolled || isExpanded ? 25 : 'auto', // スクロール時は上部に固定
+                top: isScrolled || isAccordionExpanded ? 25 : 'auto', // スクロール時は上部に固定
                 left: '50%', // スクロール時は左端に固定
                 transform: isScrolled ? 'translateX(calc(-50% + 120px))' : 'translateX(calc(-50%))', //X軸方向に-50%移動して中央寄せからさらに右に240pxずらす
                 zIndex: isScrolled ? 1000 : 'auto', // スクロール時は他の要素より前面に
@@ -195,16 +159,7 @@ function AppMain({
             </Box>
           </Box>
         )}
-        <SortableTree
-          collapsible
-          indicator
-          removable
-          hideDoneItems={hideDoneItems}
-          items={items}
-          darkMode={darkMode}
-          setItems={setItems}
-          onSelect={handleSelect}
-        />
+        <SortableTree collapsible indicator removable onSelect={handleSelect} />
         {currentTree && (
           <Button
             variant='contained'

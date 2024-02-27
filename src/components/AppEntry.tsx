@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import AppMain from './AppMain';
-import { TreeItem, TreesList } from '../types/types';
 import { useAppStateSync } from '../hooks/useAppStateSync';
 import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useAuth } from '../hooks/useAuth';
@@ -12,75 +10,27 @@ import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { useDialogStore } from '../store/dialogStore';
 import { useInputDialogStore } from '../store/dialogStore';
-import { UniqueIdentifier } from '@dnd-kit/core';
+import { useAppStateStore } from '../store/appStateStore';
 
 export default function AppEntry() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [items, setItems] = useState<TreeItem[]>([]);
-  const [hideDoneItems, setHideDoneItems] = useState(false);
-  const [treesList, setTreesList] = useState<TreesList>([]);
-  const [currentTree, setCurrentTree] = useState<UniqueIdentifier | null>(null);
-  const [currentTreeName, setCurrentTreeName] = useState<string | null>(null);
-  const [currentTreeMembers, setCurrentTreeMembers] = useState<{ uid: string; email: string }[] | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isWaitingForDelete, setIsWaitingForDelete] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+  const darkMode = useAppStateStore((state) => state.darkMode);
+  const isLoading = useAppStateStore((state) => state.isLoading);
+  const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
+  const systemMessage = useAppStateStore((state) => state.systemMessage);
+  const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete);
+  const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
 
   const isDialogVisible = useDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
-  const { handleLogin, handleLogout, handleDeleteAccount, auth } = useAuth(
-    setIsLoggedIn,
-    setIsLoading,
-    setMessage,
-    setItems,
-    setTreesList,
-    setCurrentTree,
-    setCurrentTreeName,
-    setCurrentTreeMembers,
-    isWaitingForDelete,
-    setIsWaitingForDelete
-  );
+  const { handleLogin, handleLogout, handleDeleteAccount, auth } = useAuth();
 
   // アプリの状態の読み込みと保存を行うカスタムフック
-  const { handleDownloadAppState } = useAppStateSync(
-    items,
-    setItems,
-    hideDoneItems,
-    setHideDoneItems,
-    darkMode,
-    setDarkMode,
-    currentTreeName,
-    isLoggedIn,
-    setIsLoggedIn,
-    setIsLoading,
-    setMessage,
-    auth
-  );
+  const { handleDownloadAppState } = useAppStateSync(auth);
 
   //ツリーの状態を同期するカスタムフック
-  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement(
-    items,
-    setItems,
-    setMessage,
-    isLoggedIn,
-    setIsLoggedIn,
-    setIsLoading,
-    currentTree,
-    setCurrentTree,
-    setCurrentTreeName,
-    setCurrentTreeMembers,
-    treesList,
-    setTreesList,
-    isExpanded,
-    setIsExpanded,
-    setIsFocused,
-    auth
-  );
+  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement(auth);
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : theme}>
@@ -93,39 +43,12 @@ export default function AppEntry() {
             {isInputDialogVisible && <InputDialog />}
             <ResponsiveDrawer
               handleCreateNewTree={handleCreateNewTree}
-              treesList={treesList}
-              setTreesList={setTreesList}
-              hideDoneItems={hideDoneItems}
-              setHideDoneItems={setHideDoneItems}
-              currentTree={currentTree}
               handleListClick={handleListClick}
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
               handleFileUpload={handleFileUpload}
               handleDownloadAppState={handleDownloadAppState}
               handleLogout={handleLogout}
-              setIsWaitingForDelete={setIsWaitingForDelete}
             />
-            <AppMain
-              items={items}
-              setItems={setItems}
-              hideDoneItems={hideDoneItems}
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
-              handleLogout={handleLogout}
-              setIsWaitingForDelete={setIsWaitingForDelete}
-              currentTree={currentTree}
-              currentTreeName={currentTreeName}
-              setCurrentTreeName={setCurrentTreeName}
-              saveCurrentTreeName={saveCurrentTreeName}
-              setTreesList={setTreesList}
-              isExpanded={isExpanded}
-              setIsExpanded={setIsExpanded}
-              currentTreeMembers={currentTreeMembers}
-              deleteTree={deleteTree}
-              isFocused={isFocused}
-              setIsFocused={setIsFocused}
-            />
+            <AppMain saveCurrentTreeName={saveCurrentTreeName} deleteTree={deleteTree} />
             {isLoading && (
               <CircularProgress
                 sx={{
@@ -191,9 +114,9 @@ export default function AppEntry() {
               Googleでログイン
             </Button>
           )}
-          {message && (
+          {systemMessage && (
             <Typography variant='body2' sx={{ marginY: 4 }}>
-              {message}
+              {systemMessage}
             </Typography>
           )}
 

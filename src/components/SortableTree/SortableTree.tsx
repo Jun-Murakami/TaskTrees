@@ -36,6 +36,7 @@ import type { FlattenedItem, SensorContext, TreeItems } from '../../types/types'
 import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './SortableTreeItem';
 import { CSS } from '@dnd-kit/utilities';
+import { useTreeStateStore } from '../../store/treeStateStore';
 
 const measuring = {
   droppable: {
@@ -67,10 +68,7 @@ const dropAnimationConfig: DropAnimation = {
 };
 
 interface SortableTreeProps {
-  items: TreeItems;
-  setItems: React.Dispatch<React.SetStateAction<TreeItems>>;
   collapsible?: boolean;
-  darkMode?: boolean;
   defaultItems?: TreeItems;
   indentationWidth?: number;
   indicator?: boolean;
@@ -80,10 +78,7 @@ interface SortableTreeProps {
 }
 
 export function SortableTree({
-  items,
-  setItems,
   collapsible,
-  darkMode,
   indicator = false,
   indentationWidth = 30,
   removable,
@@ -97,6 +92,9 @@ export function SortableTree({
     parentId: UniqueIdentifier | null;
     overId: UniqueIdentifier;
   } | null>(null);
+
+  const items = useTreeStateStore((state) => state.items);
+  const setItems = useTreeStateStore((state) => state.setItems);
 
   const flattenedItems = useMemo(() => {
     const flattenedTree = flattenTree(items);
@@ -149,9 +147,8 @@ export function SortableTree({
   };
 
   function handleValueChange(id: UniqueIdentifier, newValue: string) {
-    setItems((prevItems) => {
-      return setProperty(prevItems, id, 'value', () => newValue);
-    });
+    const newItems = setProperty(items, id, 'value', () => newValue);
+    setItems(newItems);
   }
 
   function updateChildrenDone(items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems {
@@ -172,12 +169,11 @@ export function SortableTree({
   }
 
   function handleDoneChange(id: UniqueIdentifier, done: boolean) {
-    setItems((prevItems) => {
-      // アイテム自体のdone状態を更新
-      const updatedItems = setProperty(prevItems, id, 'done', () => done);
-      // 子要素のdone状態も更新
-      return updateChildrenDone(updatedItems, id, done);
-    });
+    // アイテム自体のdone状態を更新
+    const updatedItems = setProperty(items, id, 'done', () => done);
+    // 子要素のdone状態も更新
+    const newItems = updateChildrenDone(updatedItems, id, done);
+    setItems(newItems);
   }
 
   return (
@@ -202,7 +198,6 @@ export function SortableTree({
               value={value.toString()}
               done={done}
               depth={id === activeId && projected ? projected.depth : depth}
-              darkMode={darkMode}
               indentationWidth={indentationWidth}
               indicator={indicator}
               collapsed={Boolean(collapsed && children.length)}
@@ -219,7 +214,6 @@ export function SortableTree({
               <SortableTreeItem
                 id={activeId}
                 depth={activeItem.depth}
-                darkMode={darkMode}
                 clone
                 childCount={getChildCount(items, activeId) + 1}
                 value={activeItem.value.toString()}
@@ -261,11 +255,6 @@ export function SortableTree({
 
   function handleDragEnd({ active, over }: DragEndEvent) {
     resetState();
-    if (over?.id === 'trash') {
-      // ゴミ箱以外にドロップしようとした場合は、状態をリセットして処理を終了
-      resetState();
-      return;
-    }
     if (projected && over) {
       const { depth, parentId } = projected;
       const clonedItems: FlattenedItem[] = JSON.parse(JSON.stringify(flattenTree(items)));
@@ -297,45 +286,39 @@ export function SortableTree({
 
   // タスクの削除
   function handleRemove(id: UniqueIdentifier) {
-    setItems((currentItems) => {
-      const itemToRemove = findItemDeep(currentItems, id);
-      const trashItem = currentItems.find((item) => item.id === 'trash');
+    const currentItems = items;
+    const itemToRemove = findItemDeep(currentItems, id);
+    const trashItem = currentItems.find((item) => item.id === 'trash');
 
-      if (itemToRemove && trashItem) {
-        const itemToRemoveCopy = { ...itemToRemove, children: [...itemToRemove.children] }; // アイテムのコピーを作成
+    if (itemToRemove && trashItem) {
+      const itemToRemoveCopy = { ...itemToRemove, children: [...itemToRemove.children] }; // アイテムのコピーを作成
 
-        // 親アイテムを見つけ、そのchildrenからアイテムを削除
-        const parentItem = findParentItem(currentItems, id);
-        if (isDescendantOfTrash(currentItems, id)) {
-          return removeItem(currentItems, id);
-        } else if (parentItem) {
-          parentItem.children = parentItem.children.filter((child) => child.id !== id);
-        }
-
-        // アイテムをゴミ箱に移動
-        trashItem.children = [...trashItem.children, itemToRemoveCopy]; // 不変性を保ちながら追加
-
-        // 元のアイテムを削除した新しいアイテムリストを作成
-        const newItems = parentItem ? currentItems : currentItems.filter((item) => item.id !== id);
-
-        // ゴミ箱アイテムを更新
-        const updatedItems = newItems.map((item) =>
-          item.id === 'trash' ? { ...trashItem, children: trashItem.children } : item
-        );
-
-        return updatedItems;
+      // 親アイテムを見つけ、そのchildrenからアイテムを削除
+      const parentItem = findParentItem(currentItems, id);
+      if (isDescendantOfTrash(currentItems, id)) {
+        return removeItem(currentItems, id);
+      } else if (parentItem) {
+        parentItem.children = parentItem.children.filter((child) => child.id !== id);
       }
 
-      return currentItems;
-    });
+      // アイテムをゴミ箱に移動
+      trashItem.children = [...trashItem.children, itemToRemoveCopy]; // 不変性を保ちながら追加
+
+      // 元のアイテムを削除した新しいアイテムリストを作成
+      const newItems = parentItem ? currentItems : currentItems.filter((item) => item.id !== id);
+
+      // ゴミ箱アイテムを更新
+      const updatedItems = newItems.map((item) => (item.id === 'trash' ? { ...trashItem, children: trashItem.children } : item));
+
+      setItems(updatedItems);
+    }
   }
 
   function handleCollapse(id: UniqueIdentifier) {
-    setItems((items) =>
-      setProperty(items, id, 'collapsed', (value) => {
-        return !value;
-      })
-    );
+    const newItems = setProperty(items, id, 'collapsed', (value) => {
+      return !value;
+    });
+    setItems(newItems);
   }
 
   function getMovementAnnouncement(eventName: string, activeId: UniqueIdentifier, overId?: UniqueIdentifier) {

@@ -9,12 +9,11 @@ import { TreesListItem } from '../../types/types';
 export type SortableItemProps = {
   isPreviewMode: boolean;
   item: TreesListItem;
-  currentTree: UniqueIdentifier | null;
   handleListClick: (treeId: UniqueIdentifier) => void;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, currentTree, handleListClick, setDrawerState }) => {
+export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, handleListClick, setDrawerState }) => {
   const { isDragging, isSorting, setNodeRef, transform, transition, setActivatorNodeRef, attributes, listeners } = useSortable({
     id: item.id,
     animateLayoutChanges: isPreviewMode ? ({ isSorting }) => !isSorting : defaultAnimateLayoutChanges,
@@ -40,7 +39,6 @@ export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, curre
           attributes,
           listeners,
         }}
-        currentTree={currentTree}
         handleListClick={handleListClick}
         setDrawerState={setDrawerState}
       />

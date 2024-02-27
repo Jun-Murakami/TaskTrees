@@ -16,7 +16,6 @@ import {
   Box,
   Stack,
 } from '@mui/material';
-import { TreesList } from '../types/types';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -27,38 +26,32 @@ import { useInputDialogStore } from '../store/dialogStore';
 import { useDialogStore } from '../store/dialogStore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
-import { UniqueIdentifier } from '@dnd-kit/core';
+import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 
 interface TreeSettingsAccordionProps {
-  currentTree: UniqueIdentifier | null;
-  currentTreeName: string | null;
-  setCurrentTreeName: (name: string) => void;
   saveCurrentTreeName: (name: string) => void;
-  setTreesList: React.Dispatch<React.SetStateAction<TreesList>>;
-  isExpanded: boolean;
-  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
-  currentTreeMembers: { uid: string; email: string }[] | null;
   deleteTree: (treeId: string) => void;
-  isFocused: boolean;
-  setIsFocused: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function TreeSettingsAccordion({
-  currentTree,
-  currentTreeName,
-  setCurrentTreeName,
-  saveCurrentTreeName,
-  setTreesList,
-  isExpanded,
-  setIsExpanded,
-  currentTreeMembers,
-  deleteTree,
-  isFocused,
-  setIsFocused,
-}: TreeSettingsAccordionProps) {
+export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeSettingsAccordionProps) {
+  const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
+  const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
+  const isFocusedTreeName = useAppStateStore((state) => state.isFocusedTreeName);
+  const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
+
+  const treesList = useTreeStateStore((state) => state.treesList);
+  const setTreesList = useTreeStateStore((state) => state.setTreesList);
+  const currentTree = useTreeStateStore((state) => state.currentTree);
+  const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
+  const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
+  const currentTreeMembers = useTreeStateStore((state) => state.currentTreeMembers);
+
   const [editedTreeName, setEditedTreeName] = useState<string | null>(currentTreeName || '');
+
   const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
+
   const theme = useTheme();
 
   // TextFieldの値をセット
@@ -76,28 +69,27 @@ export function TreeSettingsAccordion({
 
   // フォーカスをセット
   useEffect(() => {
-    if (isFocused && inputRef.current) {
+    if (isFocusedTreeName && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
-      setIsFocused(false);
+      setIsFocusedTreeName(false);
     }
-  }, [isFocused, setIsFocused]);
+  }, [isFocusedTreeName, setIsFocusedTreeName]);
 
   // ツリー名の変更
   const handleSubmit = () => {
     if (editedTreeName !== null && editedTreeName !== '' && editedTreeName !== currentTreeName) {
       setCurrentTreeName(editedTreeName);
       saveCurrentTreeName(editedTreeName);
-      setTreesList(
-        (prev) =>
-          prev &&
-          prev.map((tree) => {
-            if (tree.id === currentTree) {
-              return { ...tree, name: editedTreeName };
-            }
-            return tree;
-          })
-      );
+      if (treesList) {
+        const newList = treesList.map((tree) => {
+          if (tree.id === currentTree) {
+            return { ...tree, name: editedTreeName };
+          }
+          return tree;
+        });
+        setTreesList(newList);
+      }
     } else {
       setEditedTreeName(currentTreeName);
     }
@@ -191,13 +183,13 @@ export function TreeSettingsAccordion({
           },
           borderRadius: '0 0 8px 8px !important',
         }}
-        expanded={isExpanded}
+        expanded={isAccordionExpanded}
         onChange={() => {
           {
-            if (isExpanded) {
+            if (isAccordionExpanded) {
               handleSubmit();
             }
-            setIsExpanded(!isExpanded);
+            setIsAccordionExpanded(!isAccordionExpanded);
           }
         }}
       >
@@ -210,13 +202,13 @@ export function TreeSettingsAccordion({
               backgroundColor: 'transparent !important',
             },
             height: 40,
-            paddingY: isExpanded ? '60px' : '30px',
+            paddingY: isAccordionExpanded ? '60px' : '30px',
             paddingX: 2,
           }}
         >
           <Stack direction='row' sx={{ height: 40, width: '100%', margin: '0 auto' }}>
             <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '28px', height: '28px', marginTop: 5 }} />
-            {isExpanded ? (
+            {isAccordionExpanded ? (
               <TextField
                 id='outlined-basic'
                 InputLabelProps={{
@@ -232,7 +224,7 @@ export function TreeSettingsAccordion({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && editedTreeName) {
                     handleSubmit();
-                    setIsExpanded(false);
+                    setIsAccordionExpanded(false);
                   }
                 }}
                 InputProps={{
@@ -245,7 +237,7 @@ export function TreeSettingsAccordion({
             ) : (
               <Typography sx={{ width: '100%', marginTop: '6px' }}>{currentTreeName}</Typography>
             )}
-            {isExpanded ? (
+            {isAccordionExpanded ? (
               <SaveAsIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
             ) : (
               <SettingsIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />

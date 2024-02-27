@@ -1,37 +1,42 @@
 import { useEffect, useCallback, useState } from 'react';
-import { TreeItem, AppState } from '../types/types';
+import { AppState } from '../types/types';
 import { isValidAppSettingsState } from '../components/SortableTree/utilities';
 import { signOut, Auth } from 'firebase/auth';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 
 export const useAppStateSync = (
-  items: TreeItem[],
-  setItems: React.Dispatch<React.SetStateAction<TreeItem[]>>,
-  hideDoneItems: boolean,
-  setHideDoneItems: React.Dispatch<React.SetStateAction<boolean>>,
-  darkMode: boolean,
-  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>,
-  currentTreeName: string | null,
-  isLoggedIn: boolean,
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  setMessage: React.Dispatch<React.SetStateAction<string | null>>,
   auth: Auth,
 ) => {
   const [isLoadedFromExternal, setIsLoadedFromExternal] = useState(false);
 
+  const darkMode = useAppStateStore((state) => state.darkMode);
+  const setDarkMode = useAppStateStore((state) => state.setDarkMode);
+  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
+  const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
+  const setSystemMessage = useAppStateStore((state) => state.setSystemMessage);
+  const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
+  const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
+  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
+
+  const items = useTreeStateStore((state) => state.items);
+  const setItems = useTreeStateStore((state) => state.setItems);
+  const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
+
+
   // エラーハンドリング
   const handleError = useCallback((error: unknown) => {
     if (error instanceof Error) {
-      setMessage('ログアウトしました。 : ' + error.message);
+      setSystemMessage('ログアウトしました。 : ' + error.message);
     } else {
-      setMessage('ログアウトしました。不明なエラーが発生しました。');
+      setSystemMessage('ログアウトしました。不明なエラーが発生しました。');
     }
     setItems([]);
     signOut(auth);
     setIsLoggedIn(false);
     if (setIsLoading) setIsLoading(false);
-  }, [setMessage, setItems, setIsLoggedIn, setIsLoading, auth]);
+  }, [setSystemMessage, setItems, setIsLoggedIn, setIsLoading, auth]);
 
   // ダークモード、完了済みアイテムの非表示設定の監視
   useEffect(() => {

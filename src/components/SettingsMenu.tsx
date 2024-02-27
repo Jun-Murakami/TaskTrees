@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useRef } from 'react';
+import React, { useRef } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   FormControlLabel,
@@ -17,28 +17,23 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { UniqueIdentifier } from '@dnd-kit/core';
+import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 
 interface SettingsMenuProps {
-  darkMode: boolean;
-  setDarkMode: Dispatch<SetStateAction<boolean>>;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDownloadAppState: () => void;
   handleLogout: () => void;
-  setIsWaitingForDelete: Dispatch<SetStateAction<boolean>>;
-  currentTree: UniqueIdentifier | null;
 }
 
-export function SettingsMenu({
-  darkMode,
-  setDarkMode,
-  handleFileUpload,
-  handleDownloadAppState,
-  handleLogout,
-  setIsWaitingForDelete,
-  currentTree,
-}: SettingsMenuProps) {
+export function SettingsMenu({ handleFileUpload, handleDownloadAppState, handleLogout }: SettingsMenuProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const darkMode = useAppStateStore((state) => state.darkMode);
+  const setDarkMode = useAppStateStore((state) => state.setDarkMode);
+  const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
+  const currentTree = useTreeStateStore((state) => state.currentTree);
+
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
