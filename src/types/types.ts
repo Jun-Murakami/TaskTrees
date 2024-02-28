@@ -29,8 +29,15 @@ export type SensorContext = MutableRefObject<{
   offset: number;
 }>;
 
+export type Projected = {
+  depth: number;
+  maxDepth: number;
+  minDepth: number;
+  parentId: UniqueIdentifier | null;
+} | null;
+
 export type AppState = {
   items: TreeItem[];
   hideDoneItems: boolean;
   darkMode: boolean;
-}
+};

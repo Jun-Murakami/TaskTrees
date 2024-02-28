@@ -1,10 +1,10 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { createPortal } from 'react-dom';
-import { DndContext, DragOverlay, UniqueIdentifier, closestCenter } from '@dnd-kit/core';
-import { arrayMove, SortableContext } from '@dnd-kit/sortable';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { DragOverlay, UniqueIdentifier } from '@dnd-kit/core';
+import { SortableContext } from '@dnd-kit/sortable';
 import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
+import { useDndStateStore } from '../../store/dndStateStore';
 
 import { SortableSource } from './SortableSource';
 import { SortableItem } from './SortableItem';
@@ -16,48 +16,28 @@ interface SortableListProps {
 
 export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState }) => {
   const treesList = useTreeStateStore((state) => state.treesList);
-  const setTreesList = useTreeStateStore((state) => state.setTreesList);
+  const activeId = useDndStateStore((state) => state.activeListId);
 
   const isPreviewMode = false;
-
-  const [activeId, setActiveId] = useState<number | null>(null);
-
   const activeItem = treesList.find((item) => item.id === activeId?.toString());
 
   const theme = useTheme();
 
   return (
     <>
-      <DndContext
-        collisionDetection={closestCenter} // ドラッグ中の要素の中心を検出
-        modifiers={[restrictToVerticalAxis]} // 縦方向のみの移動に制限
-        onDragStart={(event) => {
-          setActiveId(event.active.id as number);
-        }}
-        onDragEnd={(event) => {
-          setActiveId(null);
-          const { active, over } = event;
-          if (over == null || active.id === over.id) {
-            return;
-          }
-          const oldIndex = treesList.findIndex((item) => item.id === active.id);
-          const newIndex = treesList.findIndex((item) => item.id === over.id);
-          const newItems = arrayMove(treesList, oldIndex, newIndex);
-          setTreesList(newItems);
-        }}
-      >
-        <SortableContext items={treesList}>
-          {treesList.map((item) => (
-            <SortableItem
-              key={item.id}
-              isPreviewMode={isPreviewMode}
-              item={item}
-              handleListClick={handleListClick}
-              setDrawerState={setDrawerState}
-            />
-          ))}
-        </SortableContext>
-        {createPortal(
+      <SortableContext items={treesList}>
+        {treesList.map((item) => (
+          <SortableItem
+            key={item.id}
+            isPreviewMode={isPreviewMode}
+            item={item}
+            handleListClick={handleListClick}
+            setDrawerState={setDrawerState}
+          />
+        ))}
+      </SortableContext>
+      {activeId &&
+        createPortal(
           <DragOverlay
             style={{
               backgroundColor: theme.palette.action.focus,
@@ -68,7 +48,6 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
           </DragOverlay>,
           document.body
         )}
-      </DndContext>
     </>
   );
 };

@@ -1,6 +1,8 @@
 import AppMain from './AppMain';
+import { DndContext, closestCenter, MeasuringStrategy } from '@dnd-kit/core';
 import { useAppStateSync } from '../hooks/useAppStateSync';
 import { useTreeManagement } from '../hooks/useTreeManagement';
+import { useDndContext } from '../hooks/useDndContext';
 import { useAuth } from '../hooks/useAuth';
 import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
@@ -29,8 +31,17 @@ export default function AppEntry() {
   // アプリの状態の読み込みと保存を行うカスタムフック
   const { handleDownloadAppState } = useAppStateSync(auth);
 
-  //ツリーの状態を同期するカスタムフック
+  // ツリーの状態を同期するカスタムフック
   const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement(auth);
+
+  // DndContextの状態を同期するカスタムフック
+  const { handleDragStart, handleDragMove, handleDragOver, handleDragEnd, handleDragCancel, modifiers } = useDndContext();
+
+  const measuring = {
+    droppable: {
+      strategy: MeasuringStrategy.Always,
+    },
+  };
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : theme}>
@@ -38,7 +49,16 @@ export default function AppEntry() {
       {isLoggedIn ? (
         !isWaitingForDelete ? (
           // ログイン後のメイン画面
-          <>
+          <DndContext
+            collisionDetection={closestCenter}
+            measuring={measuring}
+            modifiers={modifiers}
+            onDragStart={handleDragStart}
+            onDragMove={handleDragMove}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
             {isDialogVisible && <ModalDialog />}
             {isInputDialogVisible && <InputDialog />}
             <ResponsiveDrawer
@@ -59,7 +79,7 @@ export default function AppEntry() {
                 }}
               />
             )}
-          </>
+          </DndContext>
         ) : (
           // アカウント削除の確認ダイアログ
           <>
