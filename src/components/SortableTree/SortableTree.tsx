@@ -13,11 +13,10 @@ import {
   findParentItem,
   isDescendantOfTrash,
 } from './utilities';
-import type { TreeItems } from '../../types/types';
+import type { TreeItems, Projected } from '../../types/types';
 import { SortableTreeItem } from './SortableTreeItem';
 import { CSS } from '@dnd-kit/utilities';
 import { useTreeStateStore } from '../../store/treeStateStore';
-import { useDndStateStore } from '../../store/dndStateStore';
 
 const dropAnimationConfig: DropAnimation = {
   keyframes({ transform }) {
@@ -50,6 +49,11 @@ interface SortableTreeProps {
   removable?: boolean;
   hideDoneItems?: boolean;
   onSelect: (id: UniqueIdentifier) => void;
+  activeId: UniqueIdentifier | null;
+  overId: UniqueIdentifier | null;
+  offsetLeft: number;
+  projected: Projected | null;
+  setProjected: (projected: Projected | null) => void;
 }
 
 export function SortableTree({
@@ -59,13 +63,12 @@ export function SortableTree({
   removable,
   hideDoneItems = false,
   onSelect,
+  activeId,
+  overId,
+  offsetLeft,
+  projected,
+  setProjected,
 }: SortableTreeProps) {
-  const activeId = useDndStateStore((state) => state.activeTreeId);
-  const overId = useDndStateStore((state) => state.overTreeId);
-  const offsetLeft = useDndStateStore((state) => state.offsetLeft);
-  const projected = useDndStateStore((state) => state.projected);
-  const setProjected = useDndStateStore((state) => state.setProjected);
-
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
 
@@ -80,10 +83,10 @@ export function SortableTree({
   }, [activeId, items]);
 
   useEffect(() => {
-    const newProjected = activeId && overId ? getProjection(flattenedItems, activeId, overId, offsetLeft, indentationWidth) : null;
+    const newProjected =
+      activeId && overId ? getProjection(flattenedItems, activeId, overId, offsetLeft, indentationWidth) : null;
     setProjected(newProjected);
   }, [activeId, overId, offsetLeft, indentationWidth, flattenedItems, setProjected]);
-
 
   const sortedIds = useMemo(() => flattenedItems.map(({ id }) => id), [flattenedItems]);
   const activeItem = activeId ? flattenedItems.find(({ id }) => id === activeId) : null;

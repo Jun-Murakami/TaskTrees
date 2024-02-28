@@ -31,6 +31,7 @@ interface ResponsiveDrawerProps {
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDownloadAppState: () => void;
   handleLogout: () => void;
+  activeId: UniqueIdentifier | null;
 }
 
 export function ResponsiveDrawer({
@@ -39,6 +40,7 @@ export function ResponsiveDrawer({
   handleFileUpload,
   handleDownloadAppState,
   handleLogout,
+  activeId,
 }: ResponsiveDrawerProps) {
   const [drawerState, setDrawerState] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -101,7 +103,7 @@ export function ResponsiveDrawer({
   const drawerItems = (
     <>
       <List sx={{ height: '100%' }}>
-        {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}
+        {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} activeId={activeId} />}
       </List>
       <Box sx={{ display: { xs: 'block', sm: 'none' }, height: '175px', minHeight: '175px' }} />
     </>
@@ -216,6 +218,7 @@ export function ResponsiveDrawer({
                 width: drawerWidth,
                 height: 'calc(100% - 115px)',
                 maxHeight: 'calc(100% - 115px)',
+                zIndex: 800,
               },
             }}
             open

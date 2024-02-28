@@ -1,23 +1,20 @@
 import { useEffect, useState } from 'react';
-import { DragEndEvent, DragMoveEvent, DragOverEvent, DragStartEvent, Modifiers } from '@dnd-kit/core';
+import { DragEndEvent, DragMoveEvent, DragOverEvent, DragStartEvent, Modifiers, UniqueIdentifier } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { buildTree, flattenTree } from '../components/SortableTree/utilities';
-import type { FlattenedItem } from '../types/types';
-import { useDndStateStore } from '../store/dndStateStore';
+import type { FlattenedItem, Projected } from '../types/types';
 import { useTreeStateStore } from '../store/treeStateStore';
 
 export const useDndContext = () => {
   const [modifiers, setModifiers] = useState<Modifiers | undefined>(undefined);
 
-  const setActiveTreeId = useDndStateStore((state) => state.setActiveTreeId);
-  const activeListId = useDndStateStore((state) => state.activeListId);
-  const setActiveListId = useDndStateStore((state) => state.setActiveListId);
-  const setOverTreeId = useDndStateStore((state) => state.setOverTreeId);
-  const setOverListId = useDndStateStore((state) => state.setOverListId);
+  const [activeListId, setActiveListId] = useState<UniqueIdentifier | null>(null);
+  const [activeTreeId, setActiveTreeId] = useState<UniqueIdentifier | null>(null);
+  const [overTreeId, setOverTreeId] = useState<UniqueIdentifier | null>(null);
+  const [offsetLeft, setOffsetLeft] = useState<number>(0);
+  const [projected, setProjected] = useState<Projected>(null);
 
-  const setOffsetLeft = useDndStateStore((state) => state.setOffsetLeft);
-  const projected = useDndStateStore((state) => state.projected);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const treesList = useTreeStateStore((state) => state.treesList);
@@ -28,14 +25,12 @@ export const useDndContext = () => {
 
     if (!isItemFromTreeList) {
       setActiveListId(null);
-      setOverListId(null);
       setActiveTreeId(activeId);
       setOverTreeId(activeId);
     } else {
       setActiveTreeId(null);
       setOverTreeId(null);
       setActiveListId(activeId);
-      setOverListId(activeId);
     }
 
     document.body.style.setProperty('cursor', 'grabbing');
@@ -52,11 +47,7 @@ export const useDndContext = () => {
     const isItemFromTreeList = treesList.some((item) => item.id === over.id);
 
     if (!isItemFromTreeList) {
-      setOverListId(null);
       setOverTreeId(over.id);
-    } else {
-      setOverTreeId(null);
-      setOverListId(over.id);
     }
   }
 
@@ -93,7 +84,6 @@ export const useDndContext = () => {
 
   function resetState() {
     setOverTreeId(null);
-    setOverListId(null);
     setActiveTreeId(null);
     setActiveListId(null);
     setOffsetLeft(0);
@@ -109,5 +99,5 @@ export const useDndContext = () => {
     }
   }, [activeListId]);
 
-  return { handleDragStart, handleDragMove, handleDragOver, handleDragEnd, handleDragCancel, modifiers };
+  return { handleDragStart, handleDragMove, handleDragOver, handleDragEnd, handleDragCancel, modifiers, activeListId, activeTreeId, overTreeId, offsetLeft, projected, setProjected };
 };

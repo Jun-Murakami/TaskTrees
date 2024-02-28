@@ -4,7 +4,6 @@ import { DragOverlay, UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
-import { useDndStateStore } from '../../store/dndStateStore';
 
 import { SortableSource } from './SortableSource';
 import { SortableItem } from './SortableItem';
@@ -12,11 +11,11 @@ import { SortableItem } from './SortableItem';
 interface SortableListProps {
   handleListClick: (treeId: UniqueIdentifier) => void;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
+  activeId: UniqueIdentifier | null;
 }
 
-export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState }) => {
+export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState, activeId }) => {
   const treesList = useTreeStateStore((state) => state.treesList);
-  const activeId = useDndStateStore((state) => state.activeListId);
 
   const isPreviewMode = false;
   const activeItem = treesList.find((item) => item.id === activeId?.toString());

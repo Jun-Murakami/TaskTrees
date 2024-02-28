@@ -3,7 +3,7 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 import { findMaxId, isDescendantOfTrash } from './SortableTree/utilities';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
-import { TreeItem } from '../types/types';
+import { TreeItem, Projected } from '../types/types';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { Button, Box, Typography } from '@mui/material';
@@ -12,9 +12,14 @@ import AddIcon from '@mui/icons-material/Add';
 interface AppProps {
   saveCurrentTreeName: (name: string) => void;
   deleteTree: (treeId: string) => void;
+  activeId: UniqueIdentifier | null;
+  overId: UniqueIdentifier | null;
+  offsetLeft: number;
+  projected: Projected | null;
+  setProjected: (projected: Projected | null) => void;
 }
 
-function AppMain({ saveCurrentTreeName, deleteTree }: AppProps) {
+function AppMain({ saveCurrentTreeName, deleteTree, activeId, overId, offsetLeft, projected, setProjected }: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -159,7 +164,17 @@ function AppMain({ saveCurrentTreeName, deleteTree }: AppProps) {
             </Box>
           </Box>
         )}
-        <SortableTree collapsible indicator removable onSelect={handleSelect} />
+        <SortableTree
+          collapsible
+          indicator
+          removable
+          onSelect={handleSelect}
+          activeId={activeId}
+          overId={overId}
+          offsetLeft={offsetLeft}
+          projected={projected}
+          setProjected={setProjected}
+        />
         {currentTree && (
           <Button
             variant='contained'

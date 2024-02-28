@@ -103,18 +103,19 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       borderColor: theme.palette.divider,
       boxSizing: 'border-box',
       ...(clone && {
-        zIndex: 1000,
+        zIndex: 1500,
         opacity: 0.9,
         position: 'absolute',
         width: '250px',
         boxShadow: '0px 15px 15px 0 rgba(34, 33, 81, 0.1)',
         '& textarea': {
+          zIndex: 1500,
           overflow: 'hidden',
           whiteSpace: 'nowrap',
         },
       }),
       ...(ghost && {
-        zIndex: -1,
+        zIndex: 15000,
         position: 'relative',
         padding: 0,
         height: '8px',
@@ -164,6 +165,9 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           }),
           ...(id === 'trash' && {
             marginTop: '20px',
+          }),
+          ...(clone && {
+            zIndex: '1500 !important',
           }),
         }}
         {...props}

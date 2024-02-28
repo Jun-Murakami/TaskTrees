@@ -35,7 +35,20 @@ export default function AppEntry() {
   const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement(auth);
 
   // DndContextの状態を同期するカスタムフック
-  const { handleDragStart, handleDragMove, handleDragOver, handleDragEnd, handleDragCancel, modifiers } = useDndContext();
+  const {
+    handleDragStart,
+    handleDragMove,
+    handleDragOver,
+    handleDragEnd,
+    handleDragCancel,
+    modifiers,
+    activeListId,
+    activeTreeId,
+    overTreeId,
+    offsetLeft,
+    projected,
+    setProjected,
+  } = useDndContext();
 
   const measuring = {
     droppable: {
@@ -67,8 +80,17 @@ export default function AppEntry() {
               handleFileUpload={handleFileUpload}
               handleDownloadAppState={handleDownloadAppState}
               handleLogout={handleLogout}
+              activeId={activeListId}
             />
-            <AppMain saveCurrentTreeName={saveCurrentTreeName} deleteTree={deleteTree} />
+            <AppMain
+              saveCurrentTreeName={saveCurrentTreeName}
+              deleteTree={deleteTree}
+              activeId={activeTreeId}
+              overId={overTreeId}
+              offsetLeft={offsetLeft}
+              projected={projected}
+              setProjected={setProjected}
+            />
             {isLoading && (
               <CircularProgress
                 sx={{
