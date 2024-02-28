@@ -83,7 +83,7 @@ export function SortableTree({
   }, [activeId, items]);
 
   useEffect(() => {
-    // activeId、overIdがitemsに含まれているか
+    // activeIdがitemsに含まれているか
     const activeIdExists = activeId && findItemDeep(items, activeId);
     if (activeIdExists) {
       const newProjected =

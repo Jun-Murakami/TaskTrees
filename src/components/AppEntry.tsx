@@ -29,8 +29,17 @@ export default function AppEntry() {
   const { handleLogin, handleLogout, handleDeleteAccount, auth } = useAuth();
 
   // ツリーの状態を同期するカスタムフック
-  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload, items, setItems, treesList } =
-    useTreeManagement(auth);
+  const {
+    saveCurrentTreeName,
+    deleteTree,
+    handleCreateNewTree,
+    handleListClick,
+    handleFileUpload,
+    items,
+    setItems,
+    treesList,
+    setTreesList,
+  } = useTreeManagement(auth);
 
   // アプリの状態の読み込みと保存を行うカスタムフック
   const { handleDownloadAppState } = useAppStateSync(auth, items, setItems);
@@ -49,7 +58,7 @@ export default function AppEntry() {
     offsetLeft,
     projected,
     setProjected,
-  } = useDndContext();
+  } = useDndContext(items, setItems, treesList, setTreesList);
 
   // DndContextの設定
   const measuring = {

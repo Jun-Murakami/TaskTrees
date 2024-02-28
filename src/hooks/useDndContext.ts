@@ -5,7 +5,12 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { buildTree, flattenTree } from '../components/SortableTree/utilities';
 import type { FlattenedItem, Projected, TreeItem, TreesList } from '../types/types';
 
-export const useDndContext = () => {
+export const useDndContext = (
+  items: TreeItem[],
+  setItems: (items: TreeItem[]) => void,
+  treesList: TreesList,
+  setTreesList: (treesList: TreesList) => void
+) => {
   const [modifiers, setModifiers] = useState<Modifiers | undefined>(undefined);
 
   const [activeListId, setActiveListId] = useState<UniqueIdentifier | null>(null);
@@ -13,9 +18,6 @@ export const useDndContext = () => {
   const [overTreeId, setOverTreeId] = useState<UniqueIdentifier | null>(null);
   const [offsetLeft, setOffsetLeft] = useState<number>(0);
   const [projected, setProjected] = useState<Projected>(null);
-
-  const [items, setItems] = useState<TreeItem[]>([]);
-  const [treesList, setTreesList] = useState<TreesList>([]);
 
   // パフォーマンスを比較するためにコメントアウト
   // const items = useTreeStateStore((state) => state.items);
@@ -59,8 +61,13 @@ export const useDndContext = () => {
     if (!active || !over) {
       return;
     }
-    const isItemFromTreeList = treesList.some((item) => item.id === over.id);
-    if (projected && !isItemFromTreeList) {
+    console.log('active', active);
+    console.log('over', over);
+    const isItemFromTreeList = treesList.some((item) => item.id === active.id);
+    const isItemFromTreeListOver = treesList.some((item) => item.id === over.id);
+    console.log('isItemFromTreeList', isItemFromTreeList);
+    console.log('isItemFromTreeListOver', isItemFromTreeListOver);
+    if (projected && !isItemFromTreeList && !isItemFromTreeListOver) {
       const { depth, parentId } = projected;
       const clonedItems: FlattenedItem[] = JSON.parse(JSON.stringify(flattenTree(items)));
       const overIndex = clonedItems.findIndex(({ id }) => id === over.id);
@@ -73,6 +80,8 @@ export const useDndContext = () => {
       const newItems = buildTree(sortedItems);
 
       setItems(newItems);
+    } else if (projected && !isItemFromTreeList && isItemFromTreeListOver) {
+      console.log('drop');
     } else if (isItemFromTreeList) {
       const oldIndex = treesList.findIndex((item) => item.id === active.id);
       const newIndex = treesList.findIndex((item) => item.id === over.id);
