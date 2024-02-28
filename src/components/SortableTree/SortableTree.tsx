@@ -16,7 +16,6 @@ import {
 import type { TreeItems, Projected } from '../../types/types';
 import { SortableTreeItem } from './SortableTreeItem';
 import { CSS } from '@dnd-kit/utilities';
-import { useTreeStateStore } from '../../store/treeStateStore';
 
 const dropAnimationConfig: DropAnimation = {
   keyframes({ transform }) {
@@ -54,6 +53,8 @@ interface SortableTreeProps {
   offsetLeft: number;
   projected: Projected | null;
   setProjected: (projected: Projected | null) => void;
+  items: TreeItems;
+  setItems: (items: TreeItems) => void;
 }
 
 export function SortableTree({
@@ -68,10 +69,9 @@ export function SortableTree({
   offsetLeft,
   projected,
   setProjected,
+  items,
+  setItems,
 }: SortableTreeProps) {
-  const items = useTreeStateStore((state) => state.items);
-  const setItems = useTreeStateStore((state) => state.setItems);
-
   const flattenedItems = useMemo(() => {
     const flattenedTree = flattenTree(items);
     const collapsedItems = flattenedTree.reduce<string[]>(
@@ -83,9 +83,14 @@ export function SortableTree({
   }, [activeId, items]);
 
   useEffect(() => {
-    const newProjected =
-      activeId && overId ? getProjection(flattenedItems, activeId, overId, offsetLeft, indentationWidth) : null;
-    setProjected(newProjected);
+    // activeId、overIdがitemsに含まれているか
+    const activeIdExists = activeId && findItemDeep(items, activeId);
+    if (activeIdExists) {
+      const newProjected =
+        activeId && overId ? getProjection(flattenedItems, activeId, overId, offsetLeft, indentationWidth) : null;
+      setProjected(newProjected);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId, overId, offsetLeft, indentationWidth, flattenedItems, setProjected]);
 
   const sortedIds = useMemo(() => flattenedItems.map(({ id }) => id), [flattenedItems]);

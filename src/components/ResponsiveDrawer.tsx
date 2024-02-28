@@ -18,6 +18,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import type { TreesList } from '../types/types';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { SortableList } from './SortableList/SortableList';
@@ -32,6 +33,7 @@ interface ResponsiveDrawerProps {
   handleDownloadAppState: () => void;
   handleLogout: () => void;
   activeId: UniqueIdentifier | null;
+  treesList: TreesList;
 }
 
 export function ResponsiveDrawer({
@@ -41,6 +43,7 @@ export function ResponsiveDrawer({
   handleDownloadAppState,
   handleLogout,
   activeId,
+  treesList,
 }: ResponsiveDrawerProps) {
   const [drawerState, setDrawerState] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -50,7 +53,6 @@ export function ResponsiveDrawer({
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
 
   const currentTree = useTreeStateStore((state) => state.currentTree);
-  const treesList = useTreeStateStore((state) => state.treesList);
 
   useEffect(() => {
     if (drawerState) {
@@ -103,7 +105,14 @@ export function ResponsiveDrawer({
   const drawerItems = (
     <>
       <List sx={{ height: '100%' }}>
-        {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} activeId={activeId} />}
+        {treesList && (
+          <SortableList
+            handleListClick={handleListClick}
+            setDrawerState={setDrawerState}
+            activeId={activeId}
+            treesList={treesList}
+          />
+        )}
       </List>
       <Box sx={{ display: { xs: 'block', sm: 'none' }, height: '175px', minHeight: '175px' }} />
     </>

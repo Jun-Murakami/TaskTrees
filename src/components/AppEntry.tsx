@@ -28,11 +28,12 @@ export default function AppEntry() {
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
   const { handleLogin, handleLogout, handleDeleteAccount, auth } = useAuth();
 
-  // アプリの状態の読み込みと保存を行うカスタムフック
-  const { handleDownloadAppState } = useAppStateSync(auth);
-
   // ツリーの状態を同期するカスタムフック
-  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement(auth);
+  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload, items, setItems, treesList } =
+    useTreeManagement(auth);
+
+  // アプリの状態の読み込みと保存を行うカスタムフック
+  const { handleDownloadAppState } = useAppStateSync(auth, items, setItems);
 
   // DndContextの状態を同期するカスタムフック
   const {
@@ -50,6 +51,7 @@ export default function AppEntry() {
     setProjected,
   } = useDndContext();
 
+  // DndContextの設定
   const measuring = {
     droppable: {
       strategy: MeasuringStrategy.Always,
@@ -81,6 +83,7 @@ export default function AppEntry() {
               handleDownloadAppState={handleDownloadAppState}
               handleLogout={handleLogout}
               activeId={activeListId}
+              treesList={treesList}
             />
             <AppMain
               saveCurrentTreeName={saveCurrentTreeName}
@@ -90,6 +93,8 @@ export default function AppEntry() {
               offsetLeft={offsetLeft}
               projected={projected}
               setProjected={setProjected}
+              items={items}
+              setItems={setItems}
             />
             {isLoading && (
               <CircularProgress

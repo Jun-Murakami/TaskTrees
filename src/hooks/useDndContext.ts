@@ -3,8 +3,7 @@ import { DragEndEvent, DragMoveEvent, DragOverEvent, DragStartEvent, Modifiers, 
 import { arrayMove } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { buildTree, flattenTree } from '../components/SortableTree/utilities';
-import type { FlattenedItem, Projected } from '../types/types';
-import { useTreeStateStore } from '../store/treeStateStore';
+import type { FlattenedItem, Projected, TreeItem, TreesList } from '../types/types';
 
 export const useDndContext = () => {
   const [modifiers, setModifiers] = useState<Modifiers | undefined>(undefined);
@@ -15,10 +14,14 @@ export const useDndContext = () => {
   const [offsetLeft, setOffsetLeft] = useState<number>(0);
   const [projected, setProjected] = useState<Projected>(null);
 
-  const items = useTreeStateStore((state) => state.items);
-  const setItems = useTreeStateStore((state) => state.setItems);
-  const treesList = useTreeStateStore((state) => state.treesList);
-  const setTreesList = useTreeStateStore((state) => state.setTreesList);
+  const [items, setItems] = useState<TreeItem[]>([]);
+  const [treesList, setTreesList] = useState<TreesList>([]);
+
+  // パフォーマンスを比較するためにコメントアウト
+  // const items = useTreeStateStore((state) => state.items);
+  // const setItems = useTreeStateStore((state) => state.setItems);
+  // const treesList = useTreeStateStore((state) => state.treesList);
+  // const setTreesList = useTreeStateStore((state) => state.setTreesList);
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
     const isItemFromTreeList = treesList.some((item) => item.id === activeId);

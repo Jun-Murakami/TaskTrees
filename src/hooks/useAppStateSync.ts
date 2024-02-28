@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from 'react';
-import { AppState } from '../types/types';
+import { AppState, TreeItems } from '../types/types';
 import { isValidAppSettingsState } from '../components/SortableTree/utilities';
 import { signOut, Auth } from 'firebase/auth';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
@@ -8,6 +8,8 @@ import { useTreeStateStore } from '../store/treeStateStore';
 
 export const useAppStateSync = (
   auth: Auth,
+  items: TreeItems,
+  setItems: (items: TreeItems) => void
 ) => {
   const [isLoadedFromExternal, setIsLoadedFromExternal] = useState(false);
 
@@ -20,8 +22,6 @@ export const useAppStateSync = (
   const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
 
-  const items = useTreeStateStore((state) => state.items);
-  const setItems = useTreeStateStore((state) => state.setItems);
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
 
 

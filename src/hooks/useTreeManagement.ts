@@ -13,6 +13,8 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 export const useTreeManagement = (auth: Auth,) => {
   const [isLoadedItemsFromExternal, setIsLoadedItemsFromExternal] = useState(false);
   const [missingTrees, setMissingTrees] = useState<string[] | null>(null);
+  const [items, setItems] = useState<TreeItem[]>([]);
+  const [treesList, setTreesList] = useState<TreesList>([]);
 
   const setSystemMessage = useAppStateStore((state) => state.setSystemMessage);
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
@@ -22,10 +24,6 @@ export const useTreeManagement = (auth: Auth,) => {
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
   const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
 
-  const items = useTreeStateStore((state) => state.items);
-  const setItems = useTreeStateStore((state) => state.setItems);
-  const treesList = useTreeStateStore((state) => state.treesList);
-  const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
@@ -574,5 +572,5 @@ export const useTreeManagement = (auth: Auth,) => {
     reader.readAsText(file);
   };
 
-  return { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload };
+  return { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload, items, setItems, treesList, setTreesList };
 }

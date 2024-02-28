@@ -17,16 +17,26 @@ interface AppProps {
   offsetLeft: number;
   projected: Projected | null;
   setProjected: (projected: Projected | null) => void;
+  items: TreeItem[];
+  setItems: (items: TreeItem[]) => void;
 }
 
-function AppMain({ saveCurrentTreeName, deleteTree, activeId, overId, offsetLeft, projected, setProjected }: AppProps) {
+function AppMain({
+  saveCurrentTreeName,
+  deleteTree,
+  activeId,
+  overId,
+  offsetLeft,
+  projected,
+  setProjected,
+  items,
+  setItems,
+}: AppProps) {
   const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
 
-  const items = useTreeStateStore((state) => state.items);
-  const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
   // 選択したアイテムのIDをセットする
@@ -174,6 +184,8 @@ function AppMain({ saveCurrentTreeName, deleteTree, activeId, overId, offsetLeft
           offsetLeft={offsetLeft}
           projected={projected}
           setProjected={setProjected}
+          items={items}
+          setItems={setItems}
         />
         {currentTree && (
           <Button
