@@ -13,12 +13,12 @@ import { useInputDialogStore } from '../store/dialogStore';
 import { useAppStateStore } from '../store/appStateStore';
 
 export default function AppEntry() {
-  const darkMode = useAppStateStore((state) => state.darkMode);
-  const isLoading = useAppStateStore((state) => state.isLoading);
-  const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
-  const systemMessage = useAppStateStore((state) => state.systemMessage);
-  const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete);
-  const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
+  const darkMode = useAppStateStore((state) => state.darkMode); // ダークモードの状態
+  const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
+  const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
+  const systemMessage = useAppStateStore((state) => state.systemMessage); // システムメッセージ
+  const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete); // アカウント削除の確認状態
+  const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete); // アカウント削除の確認状態を変更
 
   const isDialogVisible = useDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);

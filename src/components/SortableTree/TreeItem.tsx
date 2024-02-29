@@ -4,9 +4,9 @@ import { useTheme } from '@mui/material/styles';
 import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAppStateStore } from '../../store/appStateStore';
+import { MenuItems } from './MenuItems';
 
 export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
   id?: UniqueIdentifier;
@@ -240,11 +240,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                   setTimeout(() => setIsFocusedOrHovered(false), 300);
                 }}
               />
-              {!clone && onRemove && (
-                <Button sx={{ color: theme.palette.grey[500], ...buttonStyle }} onClick={onRemove}>
-                  <CloseIcon />
-                </Button>
-              )}
+              {!clone && onRemove && <MenuItems onRemove={onRemove} />}
             </>
           ) : (
             <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px' }}> ゴミ箱 </Typography>
