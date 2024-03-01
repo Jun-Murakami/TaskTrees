@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { produce } from 'immer';
 import { createPortal } from 'react-dom';
 import {
   Announcements,
@@ -284,34 +285,25 @@ export function SortableTree({
     document.body.style.setProperty('cursor', '');
   }
 
-  // タスクの削除
   function handleRemove(id: UniqueIdentifier) {
-    const currentItems = items;
-    const itemToRemove = findItemDeep(currentItems, id);
-    const trashItem = currentItems.find((item) => item.id === 'trash');
+    setItems(
+      produce(items, (draftItems: TreeItems) => {
+        const itemToRemove = findItemDeep(draftItems, id);
+        const trashItem = draftItems.find((item) => item.id === 'trash');
+        if (itemToRemove && trashItem) {
+          const itemToRemoveCopy = { ...itemToRemove, children: [...itemToRemove.children] };
 
-    if (itemToRemove && trashItem) {
-      const itemToRemoveCopy = { ...itemToRemove, children: [...itemToRemove.children] }; // アイテムのコピーを作成
+          const parentItem = findParentItem(draftItems, id);
+          if (isDescendantOfTrash(draftItems, id)) {
+            removeItem(draftItems, id);
+          } else if (parentItem) {
+            parentItem.children = parentItem.children.filter((child) => child.id !== id);
+          }
 
-      // 親アイテムを見つけ、そのchildrenからアイテムを削除
-      const parentItem = findParentItem(currentItems, id);
-      if (isDescendantOfTrash(currentItems, id)) {
-        return removeItem(currentItems, id);
-      } else if (parentItem) {
-        parentItem.children = parentItem.children.filter((child) => child.id !== id);
-      }
-
-      // アイテムをゴミ箱に移動
-      trashItem.children = [...trashItem.children, itemToRemoveCopy]; // 不変性を保ちながら追加
-
-      // 元のアイテムを削除した新しいアイテムリストを作成
-      const newItems = parentItem ? currentItems : currentItems.filter((item) => item.id !== id);
-
-      // ゴミ箱アイテムを更新
-      const updatedItems = newItems.map((item) => (item.id === 'trash' ? { ...trashItem, children: trashItem.children } : item));
-
-      setItems(updatedItems);
-    }
+          trashItem.children.push(itemToRemoveCopy);
+        }
+      })
+    );
   }
 
   function handleCollapse(id: UniqueIdentifier) {
