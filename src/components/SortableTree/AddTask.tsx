@@ -10,7 +10,7 @@ interface Props {
   id: UniqueIdentifier;
 }
 
-export function AddTask({ id }: Props) {
+export function AddTask({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, transform, isDragging } = useDraggable({ id });
   const style: CSSProperties = {
     transform: CSS.Translate.toString(transform),
@@ -55,7 +55,13 @@ export function AddTask({ id }: Props) {
             variant='contained'
             color='primary'
             startIcon={<DragHandleIcon />}
-            sx={{ width: '100%', maxWidth: '400px', whiteSpace: 'nowrap', touchAction: 'none' }}
+            sx={{
+              width: '100%',
+              maxWidth: '400px',
+              whiteSpace: 'nowrap',
+              touchAction: 'none',
+              cursor: Props ? 'grab' : 'grabbing',
+            }}
             disabled={isDragging}
           >
             タスクを追加
@@ -74,6 +80,7 @@ export function AddTask({ id }: Props) {
             left: '50%', // 左端から50%の位置に設定
             transform: 'translateX(-50%)', // X軸方向に-50%移動して中央寄せ
             touchAction: 'none',
+            cursor: Props ? 'grab' : 'grabbing',
           }}
           disabled={isDragging}
         >
