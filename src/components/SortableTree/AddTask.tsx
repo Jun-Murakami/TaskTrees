@@ -1,6 +1,5 @@
-import { useState, useEffect, CSSProperties } from 'react';
+import { useState, useEffect } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import { useDraggable } from '@dnd-kit/core';
 import { Box, Button } from '@mui/material';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
@@ -11,10 +10,7 @@ interface Props {
 }
 
 export function AddTask({ id, ...Props }: Props) {
-  const { setNodeRef, listeners, attributes, transform, isDragging } = useDraggable({ id });
-  const style: CSSProperties = {
-    transform: CSS.Translate.toString(transform),
-  };
+  const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
   const [isScrolled, setIsScrolled] = useState(false);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
 
