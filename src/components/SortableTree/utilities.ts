@@ -115,6 +115,27 @@ export function findItem(items: TreeItem[], itemId: UniqueIdentifier) {
   return items.find(({ id }) => id === itemId);
 }
 
+// itemsの中からitemIdを持つアイテムと、そのchildrenに含まれる子、孫アイテムを再帰的に抽出して新しいツリーを作成
+export function extractSubtree(items: TreeItems, itemId: UniqueIdentifier): TreeItem | undefined {
+  const item = findItemDeep(items, itemId);
+  if (!item) {
+    return undefined;
+  }
+
+  const extractChildren = (children: TreeItems): TreeItems => {
+    return children.map(child => ({
+      ...child,
+      children: extractChildren(child.children)
+    }));
+  };
+
+  return {
+    ...item,
+    children: extractChildren(item.children)
+  };
+}
+
+// itemsの中からitemIdを持つアイテムを探す
 export function findItemDeep(
   items: TreeItems,
   itemId: UniqueIdentifier
@@ -138,6 +159,7 @@ export function findItemDeep(
   return undefined;
 }
 
+// itemsの中からitemIdを持つアイテムの親を探す
 export function findParentItem(items: TreeItems, itemId: UniqueIdentifier): TreeItem | undefined {
   for (const item of items) {
     if (item.children.some(child => child.id === itemId)) {
@@ -176,6 +198,14 @@ export function isTreeItemArray(items: unknown): items is TreeItem[] {
     Array.isArray(item.children) &&
     typeof item.value === 'string'
   );
+}
+
+// 保存時に削除されたitemsのchildrenプロパティを復元
+export function ensureChildrenProperty(items: TreeItem[]): TreeItem[] {
+  return items.map(item => ({
+    ...item,
+    children: item.children ? ensureChildrenProperty(item.children) : []
+  }));
 }
 
 export function findMaxId(items: TreeItems, currentMax = 0) {

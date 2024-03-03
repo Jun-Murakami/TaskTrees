@@ -1,51 +1,35 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppState } from '../types/types';
 import { isValidAppSettingsState } from '../components/SortableTree/utilities';
-import { signOut, Auth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { useError } from './useError';
 
-export const useAppStateSync = (
-  auth: Auth,
-) => {
+export const useAppStateSync = () => {
   const [isLoadedFromExternal, setIsLoadedFromExternal] = useState(false);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
-  const setSystemMessage = useAppStateStore((state) => state.setSystemMessage);
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
-  const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
-  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
 
   const items = useTreeStateStore((state) => state.items);
-  const setItems = useTreeStateStore((state) => state.setItems);
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
 
-
   // エラーハンドリング
-  const handleError = useCallback((error: unknown) => {
-    if (error instanceof Error) {
-      setSystemMessage('ログアウトしました。 : ' + error.message);
-    } else {
-      setSystemMessage('ログアウトしました。不明なエラーが発生しました。');
-    }
-    setItems([]);
-    signOut(auth);
-    setIsLoggedIn(false);
-    if (setIsLoading) setIsLoading(false);
-  }, [setSystemMessage, setItems, setIsLoggedIn, setIsLoading, auth]);
+  const { handleError } = useError();
 
-  // ダークモード、完了済みアイテムの非表示設定の監視
+  // ダークモード、完了済みアイテムの非表示設定の監視 ------------------------------------------------
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) {
+    const user = getAuth().currentUser;
+    const db = getDatabase();
+    if (!user || !isLoggedIn || !db) {
       return;
     }
     try {
-      const db = getDatabase();
       const userSettingsRef = ref(db, `users/${user.uid}/settings`);
       onValue(userSettingsRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -60,13 +44,14 @@ export const useAppStateSync = (
     } catch (error) {
       handleError(error);
     }
-  }, [isLoggedIn, handleError, setDarkMode, setHideDoneItems, auth]);
+  }, [isLoggedIn, handleError, setDarkMode, setHideDoneItems]);
 
-  // ダークモード、完了済みアイテムの非表示設定の保存
+  // ダークモード、完了済みアイテムの非表示設定の保存 ------------------------------------------------
   useEffect(() => {
     const debounceSave = setTimeout(() => {
-      const user = auth.currentUser;
-      if (!user) {
+      const user = getAuth().currentUser;
+      const db = getDatabase();
+      if (!user || !db) {
         return;
       }
 
@@ -76,7 +61,6 @@ export const useAppStateSync = (
       }
 
       try {
-        const db = getDatabase();
         const userSettingsRef = ref(db, `users/${user.uid}/settings`);
         set(userSettingsRef, { darkMode, hideDoneItems });
       } catch (error) {
@@ -86,7 +70,7 @@ export const useAppStateSync = (
 
     // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
     return () => clearTimeout(debounceSave);
-  }, [darkMode, hideDoneItems, isLoadedFromExternal, handleError, auth]);
+  }, [darkMode, hideDoneItems, isLoadedFromExternal, handleError]);
 
   // 現在の日時を取得する
   function getCurrentDateTime() {

@@ -76,7 +76,6 @@ export function ResponsiveDrawer({
     } else {
       setIsMenuVisible(false);
     }
-    // drawerStateを依存配列に追加
   }, [isSwipe, drawerState]);
 
   const theme = useTheme();

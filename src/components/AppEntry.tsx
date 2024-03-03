@@ -24,13 +24,13 @@ export default function AppEntry() {
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
-  const { handleLogin, handleLogout, handleDeleteAccount, auth } = useAuth();
+  const { handleLogin, handleLogout, handleDeleteAccount } = useAuth();
 
   // アプリの状態の読み込みと保存を行うカスタムフック
-  const { handleDownloadAppState } = useAppStateSync(auth);
+  const { handleDownloadAppState } = useAppStateSync();
 
   //ツリーの状態を同期するカスタムフック
-  const { saveCurrentTreeName, deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement(auth);
+  const { deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement();
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : theme}>
@@ -48,7 +48,7 @@ export default function AppEntry() {
               handleDownloadAppState={handleDownloadAppState}
               handleLogout={handleLogout}
             />
-            <AppMain saveCurrentTreeName={saveCurrentTreeName} deleteTree={deleteTree} />
+            <AppMain deleteTree={deleteTree} />
             {isLoading && (
               <CircularProgress
                 sx={{

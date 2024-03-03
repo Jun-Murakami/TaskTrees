@@ -1,38 +1,71 @@
-import { useState, MouseEvent } from 'react';
-import { IconButton, Menu, MenuItem, Divider } from '@mui/material';
+import { useState, useRef } from 'react';
+import { UniqueIdentifier } from '@dnd-kit/core';
+import { IconButton, Menu, MenuItem, Divider, Box } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import UndoIcon from '@mui/icons-material/Undo';
+import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
 
 interface MenuItemsProps {
-  onRemove: () => void;
+  id: UniqueIdentifier;
+  currenTreeId: UniqueIdentifier | null;
+  onRemove?: () => void;
+  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
+  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
 }
 
-export function MenuItems({ onRemove }: MenuItemsProps) {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+interface MenuItemsTrashProps {
+  id: UniqueIdentifier;
+  onRemove?: () => void;
+  onRestoreItems?(id: UniqueIdentifier): void;
+}
+
+export function MenuItems({ id, currenTreeId, onRemove, onCopyItems, onMoveItems }: MenuItemsProps) {
+  const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
+  const [openCopyMenu, setOpenCopyMenu] = useState<boolean>(false);
+  const [openMoveMenu, setOpenMoveMenu] = useState<boolean>(false);
+
+  const anchorElParent = useRef<HTMLButtonElement>(null);
+  const anchorElCopy = useRef<HTMLButtonElement>(null);
+  const anchorElMove = useRef<HTMLButtonElement>(null);
 
   const treesList = useTreeStateStore((state) => state.treesList);
+  const treesListWithoutId = treesList.filter((tree) => tree.id !== currenTreeId);
 
-  const open = Boolean(anchorEl);
+  const theme = useTheme();
 
-  const handleClick = (event: MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleParentClick = () => {
+    setOpenParentMenu(!openParentMenu);
+  };
+  const handleCopyClick = () => {
+    setOpenCopyMenu(!openCopyMenu);
+  };
+  const handleMoveClick = () => {
+    setOpenMoveMenu(!openMoveMenu);
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleParentClose = () => {
+    setOpenParentMenu(false);
   };
-
-  const handleUploadClick = () => {};
+  const handleCopyClose = () => {
+    setOpenCopyMenu(false);
+  };
+  const handleMoveClose = () => {
+    setOpenMoveMenu(false);
+  };
 
   return (
     <>
       <IconButton
-        onClick={handleClick}
+        ref={anchorElParent}
+        onClick={handleParentClick}
         sx={{
+          color: theme.palette.grey[500],
           top: 0,
           width: '30px',
           maxWidth: '30px',
@@ -50,45 +83,180 @@ export function MenuItems({ onRemove }: MenuItemsProps) {
         <MoreVertIcon />
       </IconButton>
       <Menu
-        anchorEl={anchorEl}
-        id='menu'
-        open={open}
-        onClose={handleClose}
+        anchorEl={anchorElParent.current}
+        id='menu-item-management-parent'
+        open={openParentMenu}
+        onClose={handleParentClose}
         sx={{
           elevation: 0,
         }}
       >
         <MenuItem
           onClick={() => {
-            onRemove();
-            handleClose();
+            onRemove && onRemove();
+            handleParentClose();
+          }}
+        >
+          <ListItemIcon>
+            <DeleteIcon fontSize='small' />
+          </ListItemIcon>
+          削除
+        </MenuItem>
+        <Divider />
+        <Box ref={anchorElCopy}>
+          <MenuItem
+            onClick={() => {
+              handleCopyClick();
+            }}
+          >
+            <ListItemIcon>
+              <KeyboardDoubleArrowRightIcon fontSize='small' />
+            </ListItemIcon>
+            コピー
+            <Menu
+              anchorEl={anchorElCopy.current}
+              id='menu-item-management-copy'
+              open={openCopyMenu}
+              onClose={() => {
+                handleCopyClose();
+                handleParentClose();
+              }}
+              sx={{
+                elevation: 0,
+              }}
+            >
+              {treesList.map((tree) => (
+                <MenuItem
+                  key={tree.id}
+                  onClick={() => {
+                    onCopyItems && onCopyItems(tree.id, id);
+                    handleCopyClose();
+                    handleParentClose();
+                  }}
+                >
+                  <ListItemIcon>
+                    <KeyboardDoubleArrowRightIcon fontSize='small' />
+                  </ListItemIcon>
+                  {tree.name}
+                </MenuItem>
+              ))}
+            </Menu>
+          </MenuItem>
+        </Box>
+        <Box ref={anchorElMove}>
+          <MenuItem
+            onClick={() => {
+              handleMoveClick();
+            }}
+          >
+            <ListItemIcon>
+              <KeyboardArrowRightIcon fontSize='small' />
+            </ListItemIcon>
+            移動
+            <Menu
+              anchorEl={anchorElMove.current}
+              id='menu-item-management-move'
+              open={openMoveMenu}
+              onClose={() => {
+                handleMoveClose();
+                handleParentClose();
+              }}
+              sx={{
+                elevation: 0,
+              }}
+            >
+              {treesListWithoutId.map((tree) => (
+                <MenuItem
+                  key={tree.id}
+                  onClick={() => {
+                    onMoveItems && onMoveItems(tree.id, id);
+                    handleMoveClose();
+                    handleParentClose();
+                  }}
+                >
+                  <ListItemIcon>
+                    <KeyboardArrowRightIcon fontSize='small' />
+                  </ListItemIcon>
+                  {tree.name}
+                </MenuItem>
+              ))}
+            </Menu>
+          </MenuItem>
+        </Box>
+      </Menu>
+    </>
+  );
+}
+
+export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashProps) {
+  const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
+
+  const anchorElParent = useRef<HTMLButtonElement>(null);
+
+  const theme = useTheme();
+
+  const handleParentClick = () => {
+    setOpenParentMenu(!openParentMenu);
+  };
+
+  const handleParentClose = () => {
+    setOpenParentMenu(false);
+  };
+
+  return (
+    <>
+      <IconButton
+        ref={anchorElParent}
+        onClick={handleParentClick}
+        sx={{
+          color: theme.palette.grey[500],
+          top: 0,
+          width: '30px',
+          maxWidth: '30px',
+          height: '30px',
+          maxHeight: '30px',
+          justifyContent: 'center',
+          '& .MuiListItemIcon-root': {
+            width: '30px',
+            maxWidth: '30px',
+            height: '30px',
+            maxHeight: '30px',
+          },
+        }}
+      >
+        <MoreVertIcon />
+      </IconButton>
+      <Menu
+        anchorEl={anchorElParent.current}
+        id='menu-item-management-parent'
+        open={openParentMenu}
+        onClose={handleParentClose}
+        sx={{
+          elevation: 0,
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            onRemove && onRemove();
+            handleParentClose();
           }}
         >
           <ListItemIcon>
             <DeleteForeverIcon fontSize='small' />
           </ListItemIcon>
-          削除
+          完全に削除
         </MenuItem>
         <Divider />
         <MenuItem
           onClick={() => {
-            handleUploadClick();
+            onRestoreItems && onRestoreItems(id);
+            handleParentClose();
           }}
         >
           <ListItemIcon>
-            <KeyboardDoubleArrowRightIcon fontSize='small' />
+            <UndoIcon fontSize='small' />
           </ListItemIcon>
-          コピー
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleClose();
-          }}
-        >
-          <ListItemIcon>
-            <KeyboardArrowRightIcon fontSize='small' />
-          </ListItemIcon>
-          移動
+          ゴミ箱から戻す
         </MenuItem>
       </Menu>
     </>

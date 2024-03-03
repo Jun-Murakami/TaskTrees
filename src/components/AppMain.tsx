@@ -1,98 +1,32 @@
 import { useState, useEffect } from 'react';
-import { UniqueIdentifier } from '@dnd-kit/core';
-import { findMaxId, isDescendantOfTrash } from './SortableTree/utilities';
+import { Button, Box, Typography } from '@mui/material';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
-import { TreeItem } from '../types/types';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
-import { Button, Box, Typography } from '@mui/material';
+import { useTaskManagement } from '../hooks/useTaskManagement';
 import AddIcon from '@mui/icons-material/Add';
 
 interface AppProps {
-  saveCurrentTreeName: (name: string) => void;
   deleteTree: (treeId: string) => void;
 }
 
-function AppMain({ saveCurrentTreeName, deleteTree }: AppProps) {
-  const [lastSelectedItemId, setLastSelectedItemId] = useState<UniqueIdentifier | null>(null);
+function AppMain({ deleteTree }: AppProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
-
-  const items = useTreeStateStore((state) => state.items);
-  const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
-  // 選択したアイテムのIDをセットする
-  const handleSelect = (id: UniqueIdentifier) => {
-    setLastSelectedItemId(id);
-  };
-
-  // ネストされたアイテムからアイテムを検索する
-  const containsItemId = (items: TreeItem[], itemId: UniqueIdentifier): boolean => {
-    return items.some((item) => item.id === itemId || containsItemId(item.children, itemId));
-  };
-
-  // ネストされたアイテムにアイテムを追加する
-  const addItemToNestedChildren = (items: TreeItem[], parentId: UniqueIdentifier, newItem: TreeItem): TreeItem[] => {
-    return items.map((item) => {
-      if (item.id === parentId) {
-        if (!item.children) {
-          item.children = [];
-        }
-        item.children.push(newItem);
-        return item;
-      } else if (item.children) {
-        item.children = addItemToNestedChildren(item.children, parentId, newItem);
-        return item;
-      }
-      return item;
-    });
-  };
-
-  // タスクを追加する
-  const handleAddTask = () => {
-    const newTaskId = findMaxId(items) + 1;
-    const newTask = {
-      id: newTaskId.toString(),
-      value: '',
-      done: false,
-      children: [],
-    };
-
-    if (
-      lastSelectedItemId === 'trash' ||
-      (lastSelectedItemId !== null && isDescendantOfTrash(items, lastSelectedItemId)) ||
-      lastSelectedItemId === null
-    ) {
-      // ゴミ箱のルートツリーの直前のルートにタスクを追加
-      const newItems = [...items]; // 現在のアイテムのコピーを作成
-      const trashIndex = newItems.findIndex((item) => item.id === 'trash');
-      if (trashIndex > 0) {
-        // ゴミ箱がリストの最初でない場合、ゴミ箱の直前に新しいタスクを挿入
-        newItems.splice(trashIndex, 0, newTask);
-      } else if (trashIndex === 0) {
-        // ゴミ箱がリストの最初の場合、リストの最初に追加
-        newItems.unshift(newTask); // 配列の先頭に追加
-      } else {
-        // ゴミ箱が存在しない場合、何もしない
-        return;
-      }
-      setItems(newItems); // 更新されたアイテムの配列をセット
-    } else {
-      // itemsをchildren内を含めて再帰的に検索し、選択したアイテムのidが存在しない場合はツリーの最初に追加
-      if (!containsItemId(items, lastSelectedItemId)) {
-        const newItems = [...items]; // 現在のアイテムのコピーを作成
-        newItems.unshift(newTask); // 配列の先頭に追加
-        setItems(newItems); // 更新されたアイテムの配列をセット
-      } else {
-        // 選択したアイテムの直下に新しいアイテムを追加
-        const updatedItems = addItemToNestedChildren(items, lastSelectedItemId, newTask);
-        setItems(updatedItems);
-      }
-    }
-  };
+  // タスクを管理するカスタムフック
+  const {
+    handleSelect,
+    handleAddTask,
+    handleRemove,
+    handleValueChange,
+    handleDoneChange,
+    handleCopy,
+    handleMove,
+    handleRestore,
+  } = useTaskManagement();
 
   // タスク追加ボタンの表示をスクロールに応じて変更する
   useEffect(() => {
@@ -100,9 +34,7 @@ function AppMain({ saveCurrentTreeName, deleteTree }: AppProps) {
       const offset = window.scrollY;
       setIsScrolled(offset > 50); // 50px以上スクロールしたらtrueにする
     };
-
     window.addEventListener('scroll', handleScroll);
-
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -115,7 +47,7 @@ function AppMain({ saveCurrentTreeName, deleteTree }: AppProps) {
       }}
     >
       {currentTree ? (
-        <TreeSettingsAccordion saveCurrentTreeName={saveCurrentTreeName} deleteTree={deleteTree} />
+        <TreeSettingsAccordion deleteTree={deleteTree} />
       ) : (
         <Typography variant='h3'>
           <img
@@ -159,7 +91,18 @@ function AppMain({ saveCurrentTreeName, deleteTree }: AppProps) {
             </Box>
           </Box>
         )}
-        <SortableTree collapsible indicator removable onSelect={handleSelect} />
+        <SortableTree
+          collapsible
+          indicator
+          removable
+          onSelect={handleSelect}
+          handleRemove={handleRemove}
+          handleValueChange={handleValueChange}
+          handleDoneChange={handleDoneChange}
+          handleCopy={handleCopy}
+          handleMove={handleMove}
+          handleRestore={handleRestore}
+        />
         {currentTree && (
           <Button
             variant='contained'

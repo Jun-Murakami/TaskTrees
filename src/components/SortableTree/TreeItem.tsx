@@ -1,15 +1,17 @@
 import { forwardRef, HTMLAttributes, useState, useEffect } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
+import { isDescendantOfTrash } from './utilities';
 import { useTheme } from '@mui/material/styles';
 import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAppStateStore } from '../../store/appStateStore';
-import { MenuItems } from './MenuItems';
+import { useTreeStateStore } from '../../store/treeStateStore';
+import { MenuItems, MenuItemsTrash } from './MenuItems';
 
 export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
-  id?: UniqueIdentifier;
+  id: UniqueIdentifier;
   childCount?: number;
   clone?: boolean;
   collapsed?: boolean;
@@ -29,6 +31,9 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   onChange?(value: string): void;
   onChangeDone?(done: boolean): void;
   done?: boolean;
+  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
+  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
+  onRestoreItems?(id: UniqueIdentifier): void;
   onSelect?: (id: UniqueIdentifier) => void;
 }
 
@@ -54,12 +59,17 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       onChange,
       done,
       onChangeDone,
+      onCopyItems,
+      onMoveItems,
+      onRestoreItems,
       onSelect,
       ...props
     },
     ref
   ) => {
     const theme = useTheme();
+    const items = useTreeStateStore((state) => state.items);
+    const currentTree = useTreeStateStore((state) => state.currentTree);
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
 
     const darkMode = useAppStateStore((state) => state.darkMode);
@@ -193,7 +203,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           {onCollapse && (
             <Button
               sx={{
-                color: theme.palette.text.secondary,
+                color: theme.palette.grey[500],
                 ...buttonStyle,
               }}
               onClick={() => {
@@ -240,7 +250,17 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                   setTimeout(() => setIsFocusedOrHovered(false), 300);
                 }}
               />
-              {!clone && onRemove && <MenuItems onRemove={onRemove} />}
+              {!clone && onRemove && !isDescendantOfTrash(items, id) ? (
+                <MenuItems
+                  onRemove={onRemove}
+                  onCopyItems={onCopyItems}
+                  onMoveItems={onMoveItems}
+                  currenTreeId={currentTree}
+                  id={id}
+                />
+              ) : (
+                <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />
+              )}
             </>
           ) : (
             <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px' }}> ゴミ箱 </Typography>

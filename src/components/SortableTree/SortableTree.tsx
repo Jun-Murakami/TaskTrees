@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { produce } from 'immer';
 import { createPortal } from 'react-dom';
 import {
   Announcements,
@@ -21,18 +20,7 @@ import {
   UniqueIdentifier,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import {
-  buildTree,
-  flattenTree,
-  getProjection,
-  getChildCount,
-  removeItem,
-  removeChildrenOf,
-  setProperty,
-  findItemDeep,
-  findParentItem,
-  isDescendantOfTrash,
-} from './utilities';
+import { buildTree, flattenTree, getProjection, getChildCount, removeChildrenOf, setProperty } from './utilities';
 import type { FlattenedItem, SensorContext, TreeItems } from '../../types/types';
 import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './SortableTreeItem';
@@ -76,6 +64,12 @@ interface SortableTreeProps {
   removable?: boolean;
   hideDoneItems?: boolean;
   onSelect: (id: UniqueIdentifier) => void;
+  handleRemove: (id: UniqueIdentifier) => void;
+  handleValueChange: (id: UniqueIdentifier, value: string) => void;
+  handleDoneChange: (id: UniqueIdentifier, done: boolean) => void;
+  handleCopy: (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => void;
+  handleMove: (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => void;
+  handleRestore: (id: UniqueIdentifier) => void;
 }
 
 export function SortableTree({
@@ -85,6 +79,12 @@ export function SortableTree({
   removable,
   hideDoneItems = false,
   onSelect,
+  handleRemove,
+  handleValueChange,
+  handleDoneChange,
+  handleCopy,
+  handleMove,
+  handleRestore,
 }: SortableTreeProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
@@ -147,36 +147,6 @@ export function SortableTree({
     },
   };
 
-  function handleValueChange(id: UniqueIdentifier, newValue: string) {
-    const newItems = setProperty(items, id, 'value', () => newValue);
-    setItems(newItems);
-  }
-
-  function updateChildrenDone(items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems {
-    return items.map((item) => {
-      // アイテム自体かその子孫が対象のIDと一致する場合、done状態を更新
-      if (item.id === targetId) {
-        const updateItemDone = (item: (typeof items)[number]): typeof item => ({
-          ...item,
-          done,
-          children: item.children.map(updateItemDone),
-        });
-        return updateItemDone(item);
-      } else if (item.children) {
-        return { ...item, children: updateChildrenDone(item.children, targetId, done) };
-      }
-      return item;
-    });
-  }
-
-  function handleDoneChange(id: UniqueIdentifier, done: boolean) {
-    // アイテム自体のdone状態を更新
-    const updatedItems = setProperty(items, id, 'done', () => done);
-    // 子要素のdone状態も更新
-    const newItems = updateChildrenDone(updatedItems, id, done);
-    setItems(newItems);
-  }
-
   return (
     <DndContext
       accessibility={{ announcements }}
@@ -203,9 +173,12 @@ export function SortableTree({
               indicator={indicator}
               collapsed={Boolean(collapsed && children.length)}
               onCollapse={collapsible && children.length ? () => handleCollapse(id) : undefined}
-              onRemove={removable ? () => handleRemove(id) : undefined}
+              onRemove={removable ? () => (handleRemove ? handleRemove(id) : undefined) : undefined}
               onChange={(newValue) => handleValueChange(id, newValue)}
               onChangeDone={(done) => handleDoneChange(id, done)}
+              onCopyItems={handleCopy}
+              onMoveItems={handleMove}
+              onRestoreItems={handleRestore}
               onSelect={onSelect}
             />
           ))}
@@ -220,7 +193,6 @@ export function SortableTree({
                 value={activeItem.value.toString()}
                 indentationWidth={indentationWidth}
                 done={activeItem.done}
-                onSelect={onSelect}
               />
             ) : null}
           </DragOverlay>,
@@ -283,27 +255,6 @@ export function SortableTree({
     setCurrentPosition(null);
 
     document.body.style.setProperty('cursor', '');
-  }
-
-  function handleRemove(id: UniqueIdentifier) {
-    setItems(
-      produce(items, (draftItems: TreeItems) => {
-        const itemToRemove = findItemDeep(draftItems, id);
-        const trashItem = draftItems.find((item) => item.id === 'trash');
-        if (itemToRemove && trashItem) {
-          const itemToRemoveCopy = { ...itemToRemove, children: [...itemToRemove.children] };
-
-          const parentItem = findParentItem(draftItems, id);
-          if (isDescendantOfTrash(draftItems, id)) {
-            removeItem(draftItems, id);
-          } else if (parentItem) {
-            parentItem.children = parentItem.children.filter((child) => child.id !== id);
-          }
-
-          trashItem.children.push(itemToRemoveCopy);
-        }
-      })
-    );
   }
 
   function handleCollapse(id: UniqueIdentifier) {
