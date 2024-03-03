@@ -55,7 +55,7 @@ export function AddTask({ id }: Props) {
             variant='contained'
             color='primary'
             startIcon={<DragHandleIcon />}
-            sx={{ width: '100%', maxWidth: '400px', whiteSpace: 'nowrap' }}
+            sx={{ width: '100%', maxWidth: '400px', whiteSpace: 'nowrap', touchAction: 'none' }}
             disabled={isDragging}
           >
             タスクを追加
@@ -73,6 +73,7 @@ export function AddTask({ id }: Props) {
             bottom: 20,
             left: '50%', // 左端から50%の位置に設定
             transform: 'translateX(-50%)', // X軸方向に-50%移動して中央寄せ
+            touchAction: 'none',
           }}
           disabled={isDragging}
         >
