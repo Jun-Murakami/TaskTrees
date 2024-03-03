@@ -132,7 +132,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
         }),
       ...(ghost && {
         zIndex: -1,
-        position: 'relative',
         padding: 0,
         height: '8px',
         borderColor: theme.palette.primary.main,

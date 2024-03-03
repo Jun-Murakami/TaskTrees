@@ -29,64 +29,39 @@ export function AddTask({ id, ...Props }: Props) {
   }, []);
 
   return (
-    <>
-      <Box
-        ref={setNodeRef}
-        style={style}
-        key={id}
-        sx={{ width: '100%', minWidth: '100%', height: { xs: '10px', sm: '50px' }, mb: isAccordionExpanded ? 5 : 0.5 }}
-        {...attributes}
-        {...listeners}
-        {...(transform ? { transform: CSS.Transform.toString(transform) } : {})}
+    <Box
+      key={id}
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      sx={{
+        display: { xs: 'flex', sm: 'block' },
+        position: isScrolled ? 'fixed' : { xs: 'fixed', sm: 'relative' }, // スクロールに応じて位置を固定
+        top: isScrolled || isAccordionExpanded ? { xs: 'auto', sm: 25 } : 'auto', // スクロール時は上部に固定
+        left: '50%',
+        bottom: { xs: 20, sm: 'auto' },
+        transform: isScrolled ? { xs: 'translateX(-50%)', sm: 'translateX(calc(-50% + 120px))' } : 'translateX(-50%)', //X軸方向に-50%移動して中央寄せからさらに右に240pxずらす
+        zIndex: 1300, // スクロール時は他の要素より前面に
+        height: { xs: '40px', sm: '50px' },
+        width: { xs: '50%', sm: '80%' },
+        maxWidth: '600px',
+      }}
+    >
+      <Button
+        variant='contained'
+        color='primary'
+        startIcon={<DragHandleIcon />}
+        sx={{
+          width: '100%',
+          maxWidth: '400px',
+          whiteSpace: 'nowrap',
+          touchAction: 'none',
+          cursor: Props ? 'grab' : 'grabbing',
+        }}
+        disabled={isDragging}
       >
-        <Box
-          sx={{
-            display: isDragging ? 'none' : { xs: 'none', sm: 'block' }, // スマホサイズで非表示
-            position: isScrolled ? 'fixed' : 'relative', // スクロールに応じて位置を固定
-            top: isScrolled || isAccordionExpanded ? 25 : 'auto', // スクロール時は上部に固定
-            left: '50%', // スクロール時は左端に固定
-            transform: isScrolled ? 'translateX(calc(-50% + 120px))' : 'translateX(calc(-50%))', //X軸方向に-50%移動して中央寄せからさらに右に240pxずらす
-            zIndex: 1900, // スクロール時は他の要素より前面に
-            width: '80%',
-            maxWidth: '600px',
-          }}
-        >
-          <Button
-            variant='contained'
-            color='primary'
-            startIcon={<DragHandleIcon />}
-            sx={{
-              width: '100%',
-              maxWidth: '400px',
-              whiteSpace: 'nowrap',
-              touchAction: 'none',
-              cursor: Props ? 'grab' : 'grabbing',
-            }}
-            disabled={isDragging}
-          >
-            タスクを追加
-          </Button>
-        </Box>
-        <Button
-          variant='contained'
-          color='primary'
-          startIcon={<DragHandleIcon />}
-          sx={{
-            zIndex: 1400,
-            display: isDragging ? 'none' : { xs: 'flex', sm: 'none' }, // スマホサイズでのみ表示
-            position: 'fixed',
-            width: '50%', // 幅を40%に設定
-            bottom: 20,
-            left: '50%', // 左端から50%の位置に設定
-            transform: 'translateX(-50%)', // X軸方向に-50%移動して中央寄せ
-            touchAction: 'none',
-            cursor: Props ? 'grab' : 'grabbing',
-          }}
-          disabled={isDragging}
-        >
-          タスク追加
-        </Button>
-      </Box>
-    </>
+        タスクを追加
+      </Button>
+    </Box>
   );
 }

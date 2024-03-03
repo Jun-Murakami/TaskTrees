@@ -238,7 +238,7 @@ export function SortableTree({
 
   function handleDragEnd({ active, over }: DragEndEvent) {
     resetState();
-    if (projected && over) {
+    if (projected && over && over.id !== 'trash') {
       const { depth, parentId } = projected;
       const clonedItems: FlattenedItem[] = JSON.parse(JSON.stringify(flattenTree(items)));
       const overIndex = clonedItems.findIndex(({ id }) => id === over.id);
@@ -269,6 +269,13 @@ export function SortableTree({
         setActiveNewTaskId(newActiveId);
       } else {
         setItems(newItems);
+      }
+    } else {
+      // 新規タスクの場合、新規タスクを削除
+      if (active.id === activeNewTaskId) {
+        setItems(items.filter((item) => item.id !== active.id));
+        const newActiveId = (parseInt(activeNewTaskId.toString()) - 1).toString();
+        setActiveNewTaskId(newActiveId);
       }
     }
   }
