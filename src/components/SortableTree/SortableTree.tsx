@@ -20,12 +20,14 @@ import {
   UniqueIdentifier,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { buildTree, flattenTree, getProjection, getChildCount, removeChildrenOf, setProperty } from './utilities';
+import { buildTree, flattenTree, getProjection, getChildCount, removeChildrenOf, setProperty, findMaxId } from './utilities';
 import type { FlattenedItem, SensorContext, TreeItems } from '../../types/types';
 import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './SortableTreeItem';
+import { AddTask } from './AddTask';
 import { CSS } from '@dnd-kit/utilities';
 import { useTreeStateStore } from '../../store/treeStateStore';
+import { useTaskManagement } from '../../hooks/useTaskManagement';
 
 const measuring = {
   droppable: {
@@ -63,13 +65,6 @@ interface SortableTreeProps {
   indicator?: boolean;
   removable?: boolean;
   hideDoneItems?: boolean;
-  onSelect: (id: UniqueIdentifier) => void;
-  handleRemove: (id: UniqueIdentifier) => void;
-  handleValueChange: (id: UniqueIdentifier, value: string) => void;
-  handleDoneChange: (id: UniqueIdentifier, done: boolean) => void;
-  handleCopy: (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => void;
-  handleMove: (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => void;
-  handleRestore: (id: UniqueIdentifier) => void;
 }
 
 export function SortableTree({
@@ -78,15 +73,9 @@ export function SortableTree({
   indentationWidth = 30,
   removable,
   hideDoneItems = false,
-  onSelect,
-  handleRemove,
-  handleValueChange,
-  handleDoneChange,
-  handleCopy,
-  handleMove,
-  handleRestore,
 }: SortableTreeProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  const [activeNewTaskId, setActiveNewTaskId] = useState<UniqueIdentifier>('-1');
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [offsetLeft, setOffsetLeft] = useState(0);
   const [currentPosition, setCurrentPosition] = useState<{
@@ -96,6 +85,11 @@ export function SortableTree({
 
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
+  const currentTree = useTreeStateStore((state) => state.currentTree);
+
+  // タスクを管理するカスタムフック
+  const { handleSelect, handleRemove, handleValueChange, handleDoneChange, handleCopy, handleMove, handleRestore } =
+    useTaskManagement();
 
   const flattenedItems = useMemo(() => {
     const flattenedTree = flattenTree(items);
@@ -159,6 +153,7 @@ export function SortableTree({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
+      {currentTree && <AddTask id={activeNewTaskId} />}
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
@@ -179,7 +174,7 @@ export function SortableTree({
               onCopyItems={handleCopy}
               onMoveItems={handleMove}
               onRestoreItems={handleRestore}
-              onSelect={onSelect}
+              onSelect={handleSelect}
             />
           ))}
         {createPortal(
@@ -193,6 +188,7 @@ export function SortableTree({
                 value={activeItem.value.toString()}
                 indentationWidth={indentationWidth}
                 done={activeItem.done}
+                isNewTask={activeId === activeNewTaskId}
               />
             ) : null}
           </DragOverlay>,
@@ -203,8 +199,23 @@ export function SortableTree({
   );
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
-    setActiveId(activeId);
-    setOverId(activeId);
+    console.log('activeId', activeId);
+    if (activeId === activeNewTaskId) {
+      const activeNewTaskItem = {
+        id: activeNewTaskId,
+        value: '新しいタスク',
+        done: false,
+        parentId: null,
+        depth: 0,
+        children: [],
+      };
+      setItems([activeNewTaskItem, ...items]);
+      setActiveId(activeNewTaskId);
+      setOverId(activeNewTaskId);
+    } else {
+      setActiveId(activeId);
+      setOverId(activeId);
+    }
 
     const activeItem = flattenedItems.find(({ id }) => id === activeId);
 
@@ -214,7 +225,6 @@ export function SortableTree({
         overId: activeId,
       });
     }
-
     document.body.style.setProperty('cursor', 'grabbing');
   }
 
@@ -240,7 +250,26 @@ export function SortableTree({
       const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
       const newItems = buildTree(sortedItems);
 
-      setItems(newItems);
+      if (active.id === activeNewTaskId) {
+        // newItemsをchildren内も再帰的に検索し-1のIDを持つ新規タスクのIDを最大ID+1に変更
+        const updateItemIdRecursively = (items: TreeItems, targetId: UniqueIdentifier, newId: UniqueIdentifier): TreeItems => {
+          return items.map((item) => {
+            // IDが目的のIDと一致する場合、新しいIDで更新
+            if (item.id === targetId) {
+              return { ...item, id: newId, value: '', children: updateItemIdRecursively(item.children, targetId, newId) };
+            }
+            // 子アイテムも同様に処理
+            return { ...item, children: updateItemIdRecursively(item.children, targetId, newId) };
+          });
+        };
+        const newItemsWithId = updateItemIdRecursively(newItems, activeNewTaskId, (findMaxId(newItems) + 1).toString());
+
+        setItems(newItemsWithId);
+        const newActiveId = (parseInt(activeNewTaskId.toString()) - 1).toString();
+        setActiveNewTaskId(newActiveId);
+      } else {
+        setItems(newItems);
+      }
     }
   }
 

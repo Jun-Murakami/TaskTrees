@@ -1,4 +1,3 @@
-import AppMain from './AppMain';
 import { useAppStateSync } from '../hooks/useAppStateSync';
 import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useAuth } from '../hooks/useAuth';
@@ -8,17 +7,21 @@ import { ResponsiveDrawer } from './ResponsiveDrawer';
 import { theme, darkTheme } from './mui_theme';
 import { CssBaseline, ThemeProvider, Button, CircularProgress, Typography, Paper, Box } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { TreeSettingsAccordion } from './TreeSettingsAccordion';
+import { SortableTree } from './SortableTree/SortableTree';
 import { useDialogStore } from '../store/dialogStore';
 import { useInputDialogStore } from '../store/dialogStore';
 import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 
-export default function AppEntry() {
+export default function App() {
   const darkMode = useAppStateStore((state) => state.darkMode); // ダークモードの状態
   const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
   const systemMessage = useAppStateStore((state) => state.systemMessage); // システムメッセージ
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete); // アカウント削除の確認状態
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete); // アカウント削除の確認状態を変更
+  const currentTree = useTreeStateStore((state) => state.currentTree);
 
   const isDialogVisible = useDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
@@ -48,7 +51,37 @@ export default function AppEntry() {
               handleDownloadAppState={handleDownloadAppState}
               handleLogout={handleLogout}
             />
-            <AppMain deleteTree={deleteTree} />
+            <Box
+              sx={{
+                marginLeft: { sm: '240px' }, // smサイズの時だけ左マージンを240pxに設定
+                width: { xs: '100%', sm: 'calc(100% - 240px)' }, // smサイズの時だけ幅をResponsiveDrawerの幅を考慮して調整}}
+                minHeight: currentTree !== null ? '100vh' : 'auto',
+              }}
+            >
+              {currentTree ? (
+                <>
+                  <TreeSettingsAccordion deleteTree={deleteTree} />
+                  <Box
+                    sx={{
+                      maxWidth: '900px', // 最大幅を指定
+                      width: '100%', // 横幅いっぱいに広がる
+                      margin: '0 auto', // 中央寄せ
+                    }}
+                  >
+                    <SortableTree collapsible indicator removable />
+                  </Box>
+                </>
+              ) : (
+                <Typography variant='h3'>
+                  <img
+                    src='/TaskTrees.svg'
+                    alt='Task Tree'
+                    style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
+                  />
+                  TaskTrees
+                </Typography>
+              )}
+            </Box>
             {isLoading && (
               <CircularProgress
                 sx={{

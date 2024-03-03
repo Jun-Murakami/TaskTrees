@@ -35,6 +35,7 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
   onRestoreItems?(id: UniqueIdentifier): void;
   onSelect?: (id: UniqueIdentifier) => void;
+  isNewTask?: boolean;
 }
 
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
@@ -63,6 +64,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       onMoveItems,
       onRestoreItems,
       onSelect,
+      isNewTask,
       ...props
     },
     ref
@@ -123,6 +125,11 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           whiteSpace: 'nowrap',
         },
       }),
+      ...(clone &&
+        isNewTask && {
+          left: '50%',
+          transform: 'translateX(calc(-50% +125px))',
+        }),
       ...(ghost && {
         zIndex: -1,
         position: 'relative',
