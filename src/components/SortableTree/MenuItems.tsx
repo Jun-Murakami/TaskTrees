@@ -25,6 +25,11 @@ interface MenuItemsTrashProps {
   onRestoreItems?(id: UniqueIdentifier): void;
 }
 
+interface MenuItemsTrashRootProps {
+  removeTrashDescendants: () => Promise<void>;
+  removeTrashDescendantsWithDone?: () => Promise<void>;
+}
+
 export function MenuItems({ id, currenTreeId, onRemove, onCopyItems, onMoveItems }: MenuItemsProps) {
   const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
   const [openCopyMenu, setOpenCopyMenu] = useState<boolean>(false);
@@ -257,6 +262,87 @@ export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashP
             <UndoIcon fontSize='small' />
           </ListItemIcon>
           ゴミ箱から戻す
+        </MenuItem>
+      </Menu>
+    </>
+  );
+}
+
+export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescendantsWithDone }: MenuItemsTrashRootProps) {
+  const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
+
+  const anchorElParent = useRef<HTMLButtonElement>(null);
+
+  const theme = useTheme();
+
+  const handleParentClick = () => {
+    setOpenParentMenu(!openParentMenu);
+  };
+
+  const handleParentClose = () => {
+    setOpenParentMenu(false);
+  };
+
+  return (
+    <>
+      <IconButton
+        ref={anchorElParent}
+        onClick={handleParentClick}
+        sx={{
+          color: theme.palette.grey[500],
+          top: 0,
+          width: '30px',
+          maxWidth: '30px',
+          height: '30px',
+          maxHeight: '30px',
+          justifyContent: 'center',
+          '& .MuiListItemIcon-root': {
+            width: '30px',
+            maxWidth: '30px',
+            height: '30px',
+            maxHeight: '30px',
+          },
+        }}
+      >
+        <MoreVertIcon />
+      </IconButton>
+      <Menu
+        anchorEl={anchorElParent.current}
+        id='menu-item-management-parent'
+        open={openParentMenu}
+        onClose={handleParentClose}
+        sx={{
+          elevation: 0,
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            removeTrashDescendants &&
+              (async () => {
+                await removeTrashDescendants();
+              })();
+            handleParentClose();
+          }}
+        >
+          <ListItemIcon>
+            <DeleteForeverIcon fontSize='small' />
+          </ListItemIcon>
+          ゴミ箱を空にする
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            removeTrashDescendantsWithDone &&
+              (async () => {
+                await removeTrashDescendantsWithDone();
+              })();
+            handleParentClose();
+          }}
+        >
+          <ListItemIcon>
+            <UndoIcon fontSize='small' />
+          </ListItemIcon>
+          完了済みタスクを完全に削除する
         </MenuItem>
       </Menu>
     </>

@@ -83,8 +83,17 @@ export function SortableTree({
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
   // タスクを管理するカスタムフック
-  const { handleSelect, handleRemove, handleValueChange, handleDoneChange, handleCopy, handleMove, handleRestore } =
-    useTaskManagement();
+  const {
+    handleSelect,
+    handleRemove,
+    handleValueChange,
+    handleDoneChange,
+    handleCopy,
+    handleMove,
+    handleRestore,
+    removeTrashDescendants,
+    removeTrashDescendantsWithDone,
+  } = useTaskManagement();
 
   const theme = useTheme();
   const isPC = useMediaQuery(theme.breakpoints.down('sm'));
@@ -196,6 +205,8 @@ export function SortableTree({
               onCopyItems={handleCopy}
               onMoveItems={handleMove}
               onRestoreItems={handleRestore}
+              removeTrashDescendants={removeTrashDescendants}
+              removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
               onSelect={handleSelect}
             />
           ))}

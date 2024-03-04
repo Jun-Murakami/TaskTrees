@@ -31,12 +31,10 @@ export const useTaskManagement = () => {
   };
 
   // タスクを追加する ------------------------------
-
   // ネストされたアイテムからアイテムを検索する
   const containsItemId = (items: TreeItems, itemId: UniqueIdentifier): boolean => {
     return items.some((item) => item.id === itemId || containsItemId(item.children, itemId));
   };
-
   // ネストされたアイテムにアイテムを追加する
   const addItemToNestedChildren = (items: TreeItems, parentId: UniqueIdentifier, newItem: TreeItem): TreeItem[] => {
     return items.map((item) => {
@@ -53,7 +51,6 @@ export const useTaskManagement = () => {
       return item;
     });
   };
-
   // 本編
   const handleAddTask = () => {
     const newTaskId = findMaxId(items) + 1;
@@ -122,6 +119,54 @@ export const useTaskManagement = () => {
       setItems(updatedItems);
     }
   }
+
+  // ゴミ箱を空にする ------------------------------
+  const removeTrashDescendants = async () => {
+    const targetItems = items;
+    const result = await showDialog('ゴミ箱の中のすべてのアイテムが完全に削除されます。実行しますか？', 'Confirm Requirements', true);
+    if (!result) return;
+    const itemsWithoutTrashDescendants = targetItems.filter(item => !isDescendantOfTrash(targetItems, item.id) || item.id === 'trash');
+    if (itemsWithoutTrashDescendants.find(item => item.id === 'trash')) {
+      const trashItem = itemsWithoutTrashDescendants.find(item => item.id === 'trash');
+      if (trashItem) {
+        trashItem.children = [];
+      }
+    }
+    setItems(itemsWithoutTrashDescendants);
+  }
+
+  // ゴミ箱内のdoneプロパティがtrueの完了済みタスクをすべて削除する ------------------------------
+  const removeTrashDescendantsWithDone = async () => {
+    const targetItems = items;
+    const result = await showDialog('ゴミ箱の中の完了済みタスクが完全に削除されます。（未完了のタスクを含むブランチは削除されません。）実行しますか？', 'Confirm Requirements', true);
+    if (!result) return;
+
+    const removeDoneDescendants = (items: TreeItems, parentId: UniqueIdentifier): TreeItems => {
+      return items.reduce<TreeItems>((acc, item) => {
+        if (item.id === parentId) {
+          item.children = item.children.filter(child => {
+            if (child.done && !child.children.some(grandchild => !grandchild.done)) {
+              return false;
+            }
+            child.children = removeDoneDescendants(child.children, child.id);
+            return true;
+          });
+          acc.push(item);
+        } else if (item.children.length) {
+          item.children = removeDoneDescendants(item.children, parentId);
+          acc.push(item);
+        } else {
+          acc.push(item);
+        }
+        return acc;
+      }, []);
+    };
+
+    const updatedItems = removeDoneDescendants(targetItems, 'trash');
+    setItems(updatedItems);
+  };
+
+
 
   // タスクをゴミ箱から復元する ------------------------------
   const handleRestore = (id: UniqueIdentifier) => {
@@ -265,7 +310,6 @@ export const useTaskManagement = () => {
     }
   }
 
-
   // アイテムのテキスト値を変更する ------------------------------
   function handleValueChange(id: UniqueIdentifier, newValue: string) {
     const newItems = setProperty(items, id, 'value', () => newValue);
@@ -299,5 +343,5 @@ export const useTaskManagement = () => {
     setItems(newItems);
   }
 
-  return { handleSelect, handleAddTask, handleRemove, handleValueChange, handleDoneChange, handleCopy, handleMove, handleRestore };
+  return { handleSelect, handleAddTask, handleRemove, handleValueChange, handleDoneChange, handleCopy, handleMove, handleRestore, removeTrashDescendants, removeTrashDescendantsWithDone };
 }

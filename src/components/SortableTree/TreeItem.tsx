@@ -8,7 +8,7 @@ import DragHandleIcon from '@mui/icons-material/DragHandle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAppStateStore } from '../../store/appStateStore';
 import { useTreeStateStore } from '../../store/treeStateStore';
-import { MenuItems, MenuItemsTrash } from './MenuItems';
+import { MenuItems, MenuItemsTrash, MenuItemsTrashRoot } from './MenuItems';
 
 export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
   id: UniqueIdentifier;
@@ -34,6 +34,8 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
   onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
   onRestoreItems?(id: UniqueIdentifier): void;
+  removeTrashDescendants?: () => Promise<void>;
+  removeTrashDescendantsWithDone?: () => Promise<void>;
   onSelect?: (id: UniqueIdentifier) => void;
   isNewTask?: boolean;
 }
@@ -63,6 +65,8 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       onCopyItems,
       onMoveItems,
       onRestoreItems,
+      removeTrashDescendants,
+      removeTrashDescendantsWithDone,
       onSelect,
       isNewTask,
       ...props
@@ -269,7 +273,15 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
               )}
             </>
           ) : (
-            <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px' }}> ゴミ箱 </Typography>
+            <>
+              <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px', width: '100%' }}> ゴミ箱 </Typography>
+              {!clone && id === 'trash' && removeTrashDescendants && (
+                <MenuItemsTrashRoot
+                  removeTrashDescendants={removeTrashDescendants}
+                  removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
+                />
+              )}
+            </>
           )}
           {clone && childCount && childCount > 1 ? <Badge badgeContent={childCount} color='primary' /> : null}
         </Stack>

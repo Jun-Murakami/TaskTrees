@@ -44,6 +44,7 @@ export function ResponsiveDrawer({
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isSwipe, setIsSwipe] = useState(false);
 
+  const darkMode = useAppStateStore((state) => state.darkMode);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
 
@@ -153,7 +154,7 @@ export function ResponsiveDrawer({
           minWidth: 240,
           position: 'fixed',
           zIndex: 1300,
-          backgroundColor: theme.palette.background.default,
+          backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
           ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } }),
         }}
       >
@@ -236,7 +237,7 @@ export function ResponsiveDrawer({
           borderRight: { xs: 0, sm: `1px solid ${theme.palette.divider}` },
           boxSize: 'border-box',
           zIndex: 1300,
-          backgroundColor: theme.palette.background.default,
+          backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
           ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } }),
         }}
       >
