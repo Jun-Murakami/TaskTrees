@@ -8,6 +8,7 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import UndoIcon from '@mui/icons-material/Undo';
+import FlakyIcon from '@mui/icons-material/Flaky';
 import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
 
@@ -340,9 +341,9 @@ export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescenda
           }}
         >
           <ListItemIcon>
-            <UndoIcon fontSize='small' />
+            <FlakyIcon fontSize='small' />
           </ListItemIcon>
-          完了済みタスクを完全に削除する
+          完了済みタスクを完全に削除
         </MenuItem>
       </Menu>
     </>

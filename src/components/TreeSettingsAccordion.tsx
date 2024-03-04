@@ -48,6 +48,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
   const currentTreeMembers = useTreeStateStore((state) => state.currentTreeMembers);
 
   const [editedTreeName, setEditedTreeName] = useState<string | null>(currentTreeName || '');
+  const [isComposing, setIsComposing] = useState(false);
 
   const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
@@ -224,8 +225,11 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
                 value={editedTreeName || ''}
                 onChange={(e) => handleTreeNameChange?.(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && editedTreeName) {
+                  if (e.key === 'Enter' && !isComposing) {
+                    e.preventDefault(); // エンターキーのデフォルト動作を防ぐ
                     handleTreeNameSubmit();
                     setIsAccordionExpanded(false);
                   }
