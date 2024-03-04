@@ -9,6 +9,8 @@ import { iOS } from './utilities';
 interface Props extends TreeItemProps {
   id: UniqueIdentifier;
   isNewTask?: boolean;
+  removeTrashDescendants?: () => Promise<void>;
+  removeTrashDescendantsWithDone?: () => Promise<void>;
 }
 
 const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) => (isSorting || wasDragging ? false : true);

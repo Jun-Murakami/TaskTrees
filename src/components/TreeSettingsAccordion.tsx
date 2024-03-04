@@ -102,7 +102,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
   const handleAddUserToTree = async () => {
     if (!currentTree) return;
     const email = await showInputDialog(
-      '追加する編集メンバーのメールアドレスを入力してください。',
+      '追加する編集メンバーのメールアドレスを入力してください。共有メンバーはこのアプリにユーザー登録されている必要があります。',
       'Add Member',
       'Email',
       null,
@@ -118,11 +118,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
       });
       return result.data;
     } catch (error) {
-      await showDialog(
-        'メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。メンバーはこのアプリに登録されている必要があります。' +
-          error,
-        'IInformation'
-      );
+      await showDialog('メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。' + error, 'IInformation');
     }
   };
 
@@ -166,7 +162,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
   // ツリーの削除
   const handleDeleteTree = async () => {
     const result = await showDialog(
-      'すべての編集メンバーからツリーが削除されます。この操作は元に戻せません。削除を実行しますか？',
+      'すべての編集メンバーからツリーが削除されます。この操作は元に戻せません。実行しますか？',
       'Confirmation Required',
       true
     );

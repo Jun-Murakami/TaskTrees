@@ -114,6 +114,7 @@ export const useTreeManagement = () => {
 
   useEffect(() => {
     if (currentTree) {
+      setIsLoading(true);
       setLastSelectedItemId(null);
       // デバウンスで前のツリーの状態変更が残っていたら保存
       if (prevCurrentTreeRef.current && prevCurrentTreeRef.current !== currentTree && prevItemsRef.current.length !== 0 && prevItemsRef.current !== items) {
@@ -138,6 +139,7 @@ export const useTreeManagement = () => {
               setItems(itemsWithChildren);
               prevItemsRef.current = [];
               prevCurrentTreeRef.current = currentTree;
+              setIsLoading(false);
 
             } else {
               throw new Error('取得したデータがTreeItem[]型ではありません。');
@@ -152,6 +154,7 @@ export const useTreeManagement = () => {
           setCurrentTreeMembers(null);
           setItems([]);
           setCurrentTree(null);
+          setIsLoading(false);
         });
 
         // ツリー名のデータベースの変更をリアルタイムで監視
@@ -455,7 +458,6 @@ export const useTreeManagement = () => {
           } else {
             setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
           }
-          setItems(appState.items);
           if (isLoading) setIsLoading(false);
           setTreesList(updatedTreesListWithLoadedTree);
           saveTreesListDb(updatedTreesListWithLoadedTree);
