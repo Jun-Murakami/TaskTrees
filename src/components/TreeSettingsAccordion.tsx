@@ -176,7 +176,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto' }}>
+    <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto', marginBottom: isAccordionExpanded ? { xs: 2, sm: 0 } : 0 }}>
       <Accordion
         sx={{
           marginBottom: 2,

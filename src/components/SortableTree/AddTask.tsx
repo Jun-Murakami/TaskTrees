@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useDraggable } from '@dnd-kit/core';
 import { Box, Button } from '@mui/material';
-import DragHandleIcon from '@mui/icons-material/DragHandle';
+import SwipeUpIcon from '@mui/icons-material/SwipeUp';
+import ReplyIcon from '@mui/icons-material/Reply';
+import { useTheme } from '@mui/material/styles';
+import { useMediaQuery } from '@mui/material';
 import { useAppStateStore } from '../../store/appStateStore';
 
 interface Props {
@@ -13,6 +16,9 @@ export function AddTask({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
   const [isScrolled, setIsScrolled] = useState(false);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
+
+  const theme = useTheme();
+  const matchesSM = useMediaQuery(theme.breakpoints.up('sm'));
 
   // タスク追加ボタンの表示をスクロールに応じて変更する
   useEffect(() => {
@@ -36,6 +42,7 @@ export function AddTask({ id, ...Props }: Props) {
         top: isScrolled || isAccordionExpanded ? { xs: 'auto', sm: 25 } : 'auto', // スクロール時は上部に固定
         left: '50%',
         bottom: { xs: 20, sm: 'auto' },
+        marginBottom: isAccordionExpanded ? { xs: 'auto', sm: 5 } : 'auto',
         transform: isScrolled ? { xs: 'translateX(-50%)', sm: 'translateX(calc(-50% + 120px))' } : 'translateX(-50%)', //X軸方向に-50%移動して中央寄せからさらに右に240pxずらす
         zIndex: 1300, // スクロール時は他の要素より前面に
         height: { xs: '40px', sm: '50px' },
@@ -47,7 +54,7 @@ export function AddTask({ id, ...Props }: Props) {
         data-id='add-task-button'
         variant='contained'
         color='primary'
-        startIcon={<DragHandleIcon />}
+        startIcon={matchesSM ? <ReplyIcon sx={{ transform: 'rotate(-90deg)' }} /> : <SwipeUpIcon />}
         sx={{
           width: '100%',
           maxWidth: '400px',

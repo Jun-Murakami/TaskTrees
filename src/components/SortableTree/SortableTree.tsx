@@ -102,10 +102,8 @@ export function SortableTree({
           // 例: スクロールされた分だけ位置を調整する
           if (isPC) {
             rect.y = window.scrollY + (window.innerHeight - 15);
-            console.log('isNot PC rect', rect);
           } else {
             rect.y += window.scrollY;
-            console.log('isPC rect', rect);
           }
           return rect;
         }
@@ -223,7 +221,6 @@ export function SortableTree({
   );
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
-    console.log('activeId', activeId);
     if (activeId === activeNewTaskId) {
       const activeNewTaskItem = {
         id: activeNewTaskId,
