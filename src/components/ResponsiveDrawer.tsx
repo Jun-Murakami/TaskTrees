@@ -128,7 +128,6 @@ export function ResponsiveDrawer({
         aria-label='open drawer'
         edge='start'
         onClick={toggleDrawer(true)}
-        onTouchStart={() => toggleDrawer(true)}
         size='large'
         sx={{
           border: `1px solid ${theme.palette.divider}`,
@@ -139,6 +138,7 @@ export function ResponsiveDrawer({
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,
           opacity: 1,
+          pointerEvents: 'all',
         }}
       >
         <MenuIcon />
