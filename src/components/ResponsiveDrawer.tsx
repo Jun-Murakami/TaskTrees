@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
   Box,
@@ -81,19 +81,17 @@ export function ResponsiveDrawer({
 
   const theme = useTheme();
 
-  const toggleDrawer = useCallback(
-    (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-      if (
-        event &&
-        event.type === 'keydown' &&
-        ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')
-      ) {
-        return;
-      }
-      setDrawerState(open);
-    },
-    []
-  );
+  const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+    if (
+      event &&
+      event.type === 'keydown' &&
+      ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')
+    ) {
+      return;
+    }
+
+    setDrawerState(open);
+  };
 
   // 完了したアイテムを非表示にする
   const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,52 +106,6 @@ export function ResponsiveDrawer({
       <Box sx={{ display: { xs: 'block', sm: 'none' }, height: '175px', minHeight: '175px' }} />
     </>
   );
-
-  const buttonRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    let startX = 0,
-      startY = 0;
-    const threshold = 10; // 移動を許容する閾値
-
-    const handleTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      startX = touch.clientX;
-      startY = touch.clientY;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (Math.abs(touch.clientX - startX) > threshold || Math.abs(touch.clientY - startY) > threshold) {
-        // 一定の移動があったため、タップとはみなさない
-        startX = startY = 0; // リセット
-      }
-    };
-
-    const handleTouchEnd = () => {
-      if (startX !== 0 || startY !== 0) {
-        // 移動が閾値以内であれば、タップとみなす
-        toggleDrawer(true);
-      }
-      // 終了後は値をリセット
-      startX = startY = 0;
-    };
-
-    const buttonElement = buttonRef.current;
-    if (buttonElement) {
-      buttonElement.addEventListener('touchstart', handleTouchStart);
-      buttonElement.addEventListener('touchmove', handleTouchMove);
-      buttonElement.addEventListener('touchend', handleTouchEnd);
-    }
-
-    return () => {
-      if (buttonElement) {
-        buttonElement.removeEventListener('touchstart', handleTouchStart);
-        buttonElement.removeEventListener('touchmove', handleTouchMove);
-        buttonElement.removeEventListener('touchend', handleTouchEnd);
-      }
-    };
-  }, [toggleDrawer]);
 
   return (
     <>
