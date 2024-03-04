@@ -43,6 +43,7 @@ export function ResponsiveDrawer({
   const [drawerState, setDrawerState] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isSwipe, setIsSwipe] = useState(false);
+  const [startTouch, setStartTouch] = useState<Touch | null>(null);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
@@ -107,6 +108,18 @@ export function ResponsiveDrawer({
     </>
   );
 
+  const handleTouchStart = (event: React.TouchEvent) => {
+    setStartTouch(event.touches[0] as Touch | null);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    const endTouch = event.changedTouches[0];
+    // スクロールを検出する簡単な方法
+    if (startTouch && Math.abs(startTouch.pageY - endTouch.pageY) < 10) {
+      toggleDrawer(true);
+    }
+  };
+
   return (
     <>
       {!currentTree && treesList.length === 0 && (
@@ -128,6 +141,8 @@ export function ResponsiveDrawer({
         aria-label='open drawer'
         edge='start'
         onClick={toggleDrawer(true)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         size='large'
         sx={{
           border: `1px solid ${theme.palette.divider}`,
@@ -138,7 +153,6 @@ export function ResponsiveDrawer({
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,
           opacity: 1,
-          pointerEvents: 'all',
         }}
       >
         <MenuIcon />
