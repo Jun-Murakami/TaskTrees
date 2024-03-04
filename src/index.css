@@ -24,7 +24,7 @@
 
 ::selection {
   color: #ffffff; /* 選択されたテキストの文字色 */
-  background: #2e748d; /* 選択されたテキストの背景色 */
+  background: #325599; /* 選択されたテキストの背景色 */
 }
 
 a {
