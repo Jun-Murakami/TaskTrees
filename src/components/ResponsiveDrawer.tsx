@@ -205,6 +205,7 @@ export function ResponsiveDrawer({
             open={drawerState}
             onOpen={toggleDrawer(true)}
             onClose={toggleDrawer(false)}
+            disableSwipeToOpen={false}
             ModalProps={{
               keepMounted: true, // Better open performance on mobile.
             }}
