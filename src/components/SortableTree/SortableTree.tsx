@@ -26,14 +26,9 @@ import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './SortableTreeItem';
 import { AddTask } from './AddTask';
 import { CSS } from '@dnd-kit/utilities';
+import { useTheme, useMediaQuery } from '@mui/material';
 import { useTreeStateStore } from '../../store/treeStateStore';
 import { useTaskManagement } from '../../hooks/useTaskManagement';
-
-const measuring = {
-  droppable: {
-    strategy: MeasuringStrategy.Always,
-  },
-};
 
 const dropAnimationConfig: DropAnimation = {
   keyframes({ transform }) {
@@ -90,6 +85,35 @@ export function SortableTree({
   // タスクを管理するカスタムフック
   const { handleSelect, handleRemove, handleValueChange, handleDoneChange, handleCopy, handleMove, handleRestore } =
     useTaskManagement();
+
+  const theme = useTheme();
+  const isPC = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const measuring = {
+    droppable: {
+      strategy: MeasuringStrategy.Always,
+    },
+    draggable: {
+      measure: (node: HTMLElement | null) => {
+        if (activeId === activeNewTaskId) {
+          // 特定の要素に対する調整
+          const rect = node!.getBoundingClientRect();
+          // 必要に応じてrectを修正
+          // 例: スクロールされた分だけ位置を調整する
+          if (isPC) {
+            rect.y = window.scrollY + (window.innerHeight - 15);
+            console.log('isNot PC rect', rect);
+          } else {
+            rect.y += window.scrollY;
+            console.log('isPC rect', rect);
+          }
+          return rect;
+        }
+        // それ以外の要素には通常の処理を適用
+        return node!.getBoundingClientRect();
+      },
+    },
+  };
 
   const flattenedItems = useMemo(() => {
     const flattenedTree = flattenTree(items);

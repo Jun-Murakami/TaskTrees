@@ -44,6 +44,7 @@ export function AddTask({ id, ...Props }: Props) {
       }}
     >
       <Button
+        data-id='add-task-button'
         variant='contained'
         color='primary'
         startIcon={<DragHandleIcon />}
