@@ -136,6 +136,7 @@ export function ResponsiveDrawer({
           right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.paper,
+          opacity: 1,
         }}
       >
         <MenuIcon />
