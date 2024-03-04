@@ -136,7 +136,7 @@ export function ResponsiveDrawer({
           bottom: 15,
           right: 30,
           zIndex: 1000,
-          backgroundColor: theme.palette.background.paper,
+          backgroundColor: theme.palette.common.white,
           opacity: 1,
         }}
       >
