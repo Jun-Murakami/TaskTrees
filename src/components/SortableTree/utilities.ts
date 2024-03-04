@@ -115,6 +115,27 @@ export function findItem(items: TreeItem[], itemId: UniqueIdentifier) {
   return items.find(({ id }) => id === itemId);
 }
 
+// itemsの中からitemIdを持つアイテムと、そのchildrenに含まれる子、孫アイテムを再帰的に抽出して新しいツリーを作成
+export function extractSubtree(items: TreeItems, itemId: UniqueIdentifier): TreeItem | undefined {
+  const item = findItemDeep(items, itemId);
+  if (!item) {
+    return undefined;
+  }
+
+  const extractChildren = (children: TreeItems): TreeItems => {
+    return children.map(child => ({
+      ...child,
+      children: extractChildren(child.children)
+    }));
+  };
+
+  return {
+    ...item,
+    children: extractChildren(item.children)
+  };
+}
+
+// itemsの中からitemIdを持つアイテムを探す
 export function findItemDeep(
   items: TreeItems,
   itemId: UniqueIdentifier
@@ -138,6 +159,7 @@ export function findItemDeep(
   return undefined;
 }
 
+// itemsの中からitemIdを持つアイテムの親を探す
 export function findParentItem(items: TreeItems, itemId: UniqueIdentifier): TreeItem | undefined {
   for (const item of items) {
     if (item.children.some(child => child.id === itemId)) {
@@ -178,6 +200,14 @@ export function isTreeItemArray(items: unknown): items is TreeItem[] {
   );
 }
 
+// 保存時に削除されたitemsのchildrenプロパティを復元
+export function ensureChildrenProperty(items: TreeItem[]): TreeItem[] {
+  return items.map(item => ({
+    ...item,
+    children: item.children ? ensureChildrenProperty(item.children) : []
+  }));
+}
+
 export function findMaxId(items: TreeItems, currentMax = 0) {
   items.forEach(item => {
     const itemId = typeof item.id === 'string' ? parseInt(item.id, 10) : item.id;
@@ -214,19 +244,15 @@ export function setProperty<T extends keyof TreeItem>(
   id: UniqueIdentifier,
   property: T,
   setter: (value: TreeItem[T]) => TreeItem[T]
-) {
-  for (const item of items) {
+): TreeItems {
+  return items.map(item => {
     if (item.id === id) {
-      item[property] = setter(item[property]);
-      continue;
+      return { ...item, [property]: setter(item[property]) };
+    } else if (item.children.length) {
+      return { ...item, children: setProperty(item.children, id, property, setter) };
     }
-
-    if (item.children.length) {
-      item.children = setProperty(item.children, id, property, setter);
-    }
-  }
-
-  return [...items];
+    return item;
+  });
 }
 
 function countChildren(items: TreeItem[], count = 0): number {

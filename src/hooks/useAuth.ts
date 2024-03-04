@@ -20,7 +20,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-getDatabase(app);
+const db = getDatabase(app);
 
 export const useAuth = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
@@ -79,7 +79,6 @@ export const useAuth = () => {
   const handleDeleteAccount = () => {
     const user = auth.currentUser;
     if (user) {
-      const db = getDatabase();
       const appStateRef = ref(db, `users/${user.uid}/appState`);
       remove(appStateRef)
         .then(() => {
@@ -107,5 +106,5 @@ export const useAuth = () => {
     }
     setIsWaitingForDelete(false);
   };
-  return { handleLogin, handleLogout, handleDeleteAccount, auth };
+  return { handleLogin, handleLogout, handleDeleteAccount };
 };

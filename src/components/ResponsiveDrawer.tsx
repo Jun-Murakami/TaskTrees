@@ -21,7 +21,7 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { SortableList } from './SortableList/SortableList';
-import { SettingsMenu } from './SettingsMenu';
+import { MenuSettings } from './MenuSettings';
 
 const drawerWidth = 240;
 
@@ -76,7 +76,6 @@ export function ResponsiveDrawer({
     } else {
       setIsMenuVisible(false);
     }
-    // drawerStateを依存配列に追加
   }, [isSwipe, drawerState]);
 
   const theme = useTheme();
@@ -255,7 +254,7 @@ export function ResponsiveDrawer({
         </List>
         <Divider />
         <List>
-          <SettingsMenu
+          <MenuSettings
             handleFileUpload={handleFileUpload}
             handleDownloadAppState={handleDownloadAppState}
             handleLogout={handleLogout}

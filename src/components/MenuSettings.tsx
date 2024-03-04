@@ -20,13 +20,13 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 
-interface SettingsMenuProps {
+interface MenuSettingsProps {
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDownloadAppState: () => void;
   handleLogout: () => void;
 }
 
-export function SettingsMenu({ handleFileUpload, handleDownloadAppState, handleLogout }: SettingsMenuProps) {
+export function MenuSettings({ handleFileUpload, handleDownloadAppState, handleLogout }: MenuSettingsProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const darkMode = useAppStateStore((state) => state.darkMode);

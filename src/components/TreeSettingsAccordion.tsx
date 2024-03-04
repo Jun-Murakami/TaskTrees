@@ -28,13 +28,13 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { useDatabase } from '../hooks/useDatabase';
 
 interface TreeSettingsAccordionProps {
-  saveCurrentTreeName: (name: string) => void;
   deleteTree: (treeId: string) => void;
 }
 
-export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeSettingsAccordionProps) {
+export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps) {
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
   const isFocusedTreeName = useAppStateStore((state) => state.isFocusedTreeName);
@@ -51,6 +51,8 @@ export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeS
 
   const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
+
+  const { saveCurrentTreeNameDb, saveTreesListDb } = useDatabase();
 
   const theme = useTheme();
 
@@ -77,10 +79,10 @@ export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeS
   }, [isFocusedTreeName, setIsFocusedTreeName]);
 
   // ツリー名の変更
-  const handleSubmit = () => {
+  const handleTreeNameSubmit = () => {
     if (editedTreeName !== null && editedTreeName !== '' && editedTreeName !== currentTreeName) {
       setCurrentTreeName(editedTreeName);
-      saveCurrentTreeName(editedTreeName);
+      saveCurrentTreeNameDb(editedTreeName, currentTree);
       if (treesList) {
         const newList = treesList.map((tree) => {
           if (tree.id === currentTree) {
@@ -89,6 +91,7 @@ export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeS
           return tree;
         });
         setTreesList(newList);
+        saveTreesListDb(newList);
       }
     } else {
       setEditedTreeName(currentTreeName);
@@ -99,7 +102,7 @@ export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeS
   const handleAddUserToTree = async () => {
     if (!currentTree) return;
     const email = await showInputDialog(
-      '追加する編集メンバーのメールアドレスを入力してください',
+      '追加する編集メンバーのメールアドレスを入力してください。',
       'Add Member',
       'Email',
       null,
@@ -115,7 +118,11 @@ export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeS
       });
       return result.data;
     } catch (error) {
-      await showDialog('メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。' + error, 'Error');
+      await showDialog(
+        'メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。メンバーはこのアプリに登録されている必要があります。' +
+          error,
+        'IInformation'
+      );
     }
   };
 
@@ -169,7 +176,7 @@ export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeS
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto' }}>
+    <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto', marginBottom: isAccordionExpanded ? { xs: 2, sm: 0 } : 0 }}>
       <Accordion
         sx={{
           marginBottom: 2,
@@ -187,7 +194,7 @@ export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeS
         onChange={() => {
           {
             if (isAccordionExpanded) {
-              handleSubmit();
+              handleTreeNameSubmit();
             }
             setIsAccordionExpanded(!isAccordionExpanded);
           }
@@ -223,7 +230,7 @@ export function TreeSettingsAccordion({ saveCurrentTreeName, deleteTree }: TreeS
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && editedTreeName) {
-                    handleSubmit();
+                    handleTreeNameSubmit();
                     setIsAccordionExpanded(false);
                   }
                 }}

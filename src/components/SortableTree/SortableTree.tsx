@@ -20,29 +20,15 @@ import {
   UniqueIdentifier,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import {
-  buildTree,
-  flattenTree,
-  getProjection,
-  getChildCount,
-  removeItem,
-  removeChildrenOf,
-  setProperty,
-  findItemDeep,
-  findParentItem,
-  isDescendantOfTrash,
-} from './utilities';
+import { buildTree, flattenTree, getProjection, getChildCount, removeChildrenOf, setProperty, findMaxId } from './utilities';
 import type { FlattenedItem, SensorContext, TreeItems } from '../../types/types';
 import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './SortableTreeItem';
+import { AddTask } from './AddTask';
 import { CSS } from '@dnd-kit/utilities';
+import { useTheme, useMediaQuery } from '@mui/material';
 import { useTreeStateStore } from '../../store/treeStateStore';
-
-const measuring = {
-  droppable: {
-    strategy: MeasuringStrategy.Always,
-  },
-};
+import { useTaskManagement } from '../../hooks/useTaskManagement';
 
 const dropAnimationConfig: DropAnimation = {
   keyframes({ transform }) {
@@ -74,7 +60,6 @@ interface SortableTreeProps {
   indicator?: boolean;
   removable?: boolean;
   hideDoneItems?: boolean;
-  onSelect: (id: UniqueIdentifier) => void;
 }
 
 export function SortableTree({
@@ -83,9 +68,9 @@ export function SortableTree({
   indentationWidth = 30,
   removable,
   hideDoneItems = false,
-  onSelect,
 }: SortableTreeProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  const [activeNewTaskId, setActiveNewTaskId] = useState<UniqueIdentifier>('-1');
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [offsetLeft, setOffsetLeft] = useState(0);
   const [currentPosition, setCurrentPosition] = useState<{
@@ -95,6 +80,38 @@ export function SortableTree({
 
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
+  const currentTree = useTreeStateStore((state) => state.currentTree);
+
+  // タスクを管理するカスタムフック
+  const { handleSelect, handleRemove, handleValueChange, handleDoneChange, handleCopy, handleMove, handleRestore } =
+    useTaskManagement();
+
+  const theme = useTheme();
+  const isPC = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const measuring = {
+    droppable: {
+      strategy: MeasuringStrategy.Always,
+    },
+    draggable: {
+      measure: (node: HTMLElement | null) => {
+        if (activeId === activeNewTaskId) {
+          // 特定の要素に対する調整
+          const rect = node!.getBoundingClientRect();
+          // 必要に応じてrectを修正
+          // 例: スクロールされた分だけ位置を調整する
+          if (isPC) {
+            rect.y = window.scrollY + (window.innerHeight - 15);
+          } else {
+            rect.y += window.scrollY;
+          }
+          return rect;
+        }
+        // それ以外の要素には通常の処理を適用
+        return node!.getBoundingClientRect();
+      },
+    },
+  };
 
   const flattenedItems = useMemo(() => {
     const flattenedTree = flattenTree(items);
@@ -146,36 +163,6 @@ export function SortableTree({
     },
   };
 
-  function handleValueChange(id: UniqueIdentifier, newValue: string) {
-    const newItems = setProperty(items, id, 'value', () => newValue);
-    setItems(newItems);
-  }
-
-  function updateChildrenDone(items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems {
-    return items.map((item) => {
-      // アイテム自体かその子孫が対象のIDと一致する場合、done状態を更新
-      if (item.id === targetId) {
-        const updateItemDone = (item: (typeof items)[number]): typeof item => ({
-          ...item,
-          done,
-          children: item.children.map(updateItemDone),
-        });
-        return updateItemDone(item);
-      } else if (item.children) {
-        return { ...item, children: updateChildrenDone(item.children, targetId, done) };
-      }
-      return item;
-    });
-  }
-
-  function handleDoneChange(id: UniqueIdentifier, done: boolean) {
-    // アイテム自体のdone状態を更新
-    const updatedItems = setProperty(items, id, 'done', () => done);
-    // 子要素のdone状態も更新
-    const newItems = updateChildrenDone(updatedItems, id, done);
-    setItems(newItems);
-  }
-
   return (
     <DndContext
       accessibility={{ announcements }}
@@ -188,6 +175,7 @@ export function SortableTree({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
+      {currentTree && <AddTask id={activeNewTaskId} />}
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
@@ -202,10 +190,13 @@ export function SortableTree({
               indicator={indicator}
               collapsed={Boolean(collapsed && children.length)}
               onCollapse={collapsible && children.length ? () => handleCollapse(id) : undefined}
-              onRemove={removable ? () => handleRemove(id) : undefined}
+              onRemove={removable ? () => (handleRemove ? handleRemove(id) : undefined) : undefined}
               onChange={(newValue) => handleValueChange(id, newValue)}
               onChangeDone={(done) => handleDoneChange(id, done)}
-              onSelect={onSelect}
+              onCopyItems={handleCopy}
+              onMoveItems={handleMove}
+              onRestoreItems={handleRestore}
+              onSelect={handleSelect}
             />
           ))}
         {createPortal(
@@ -219,7 +210,7 @@ export function SortableTree({
                 value={activeItem.value.toString()}
                 indentationWidth={indentationWidth}
                 done={activeItem.done}
-                onSelect={onSelect}
+                isNewTask={activeId === activeNewTaskId}
               />
             ) : null}
           </DragOverlay>,
@@ -230,8 +221,22 @@ export function SortableTree({
   );
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
-    setActiveId(activeId);
-    setOverId(activeId);
+    if (activeId === activeNewTaskId) {
+      const activeNewTaskItem = {
+        id: activeNewTaskId,
+        value: '新しいタスク',
+        done: false,
+        parentId: null,
+        depth: 0,
+        children: [],
+      };
+      setItems([activeNewTaskItem, ...items]);
+      setActiveId(activeNewTaskId);
+      setOverId(activeNewTaskId);
+    } else {
+      setActiveId(activeId);
+      setOverId(activeId);
+    }
 
     const activeItem = flattenedItems.find(({ id }) => id === activeId);
 
@@ -241,7 +246,6 @@ export function SortableTree({
         overId: activeId,
       });
     }
-
     document.body.style.setProperty('cursor', 'grabbing');
   }
 
@@ -255,7 +259,7 @@ export function SortableTree({
 
   function handleDragEnd({ active, over }: DragEndEvent) {
     resetState();
-    if (projected && over) {
+    if (projected && over && over.id !== 'trash') {
       const { depth, parentId } = projected;
       const clonedItems: FlattenedItem[] = JSON.parse(JSON.stringify(flattenTree(items)));
       const overIndex = clonedItems.findIndex(({ id }) => id === over.id);
@@ -267,7 +271,33 @@ export function SortableTree({
       const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
       const newItems = buildTree(sortedItems);
 
-      setItems(newItems);
+      if (active.id === activeNewTaskId) {
+        // newItemsをchildren内も再帰的に検索し-1のIDを持つ新規タスクのIDを最大ID+1に変更
+        const updateItemIdRecursively = (items: TreeItems, targetId: UniqueIdentifier, newId: UniqueIdentifier): TreeItems => {
+          return items.map((item) => {
+            // IDが目的のIDと一致する場合、新しいIDで更新
+            if (item.id === targetId) {
+              return { ...item, id: newId, value: '', children: updateItemIdRecursively(item.children, targetId, newId) };
+            }
+            // 子アイテムも同様に処理
+            return { ...item, children: updateItemIdRecursively(item.children, targetId, newId) };
+          });
+        };
+        const newItemsWithId = updateItemIdRecursively(newItems, activeNewTaskId, (findMaxId(newItems) + 1).toString());
+
+        setItems(newItemsWithId);
+        const newActiveId = (parseInt(activeNewTaskId.toString()) - 1).toString();
+        setActiveNewTaskId(newActiveId);
+      } else {
+        setItems(newItems);
+      }
+    } else {
+      // 新規タスクの場合、新規タスクを削除
+      if (active.id === activeNewTaskId) {
+        setItems(items.filter((item) => item.id !== active.id));
+        const newActiveId = (parseInt(activeNewTaskId.toString()) - 1).toString();
+        setActiveNewTaskId(newActiveId);
+      }
     }
   }
 
@@ -282,36 +312,6 @@ export function SortableTree({
     setCurrentPosition(null);
 
     document.body.style.setProperty('cursor', '');
-  }
-
-  // タスクの削除
-  function handleRemove(id: UniqueIdentifier) {
-    const currentItems = items;
-    const itemToRemove = findItemDeep(currentItems, id);
-    const trashItem = currentItems.find((item) => item.id === 'trash');
-
-    if (itemToRemove && trashItem) {
-      const itemToRemoveCopy = { ...itemToRemove, children: [...itemToRemove.children] }; // アイテムのコピーを作成
-
-      // 親アイテムを見つけ、そのchildrenからアイテムを削除
-      const parentItem = findParentItem(currentItems, id);
-      if (isDescendantOfTrash(currentItems, id)) {
-        return removeItem(currentItems, id);
-      } else if (parentItem) {
-        parentItem.children = parentItem.children.filter((child) => child.id !== id);
-      }
-
-      // アイテムをゴミ箱に移動
-      trashItem.children = [...trashItem.children, itemToRemoveCopy]; // 不変性を保ちながら追加
-
-      // 元のアイテムを削除した新しいアイテムリストを作成
-      const newItems = parentItem ? currentItems : currentItems.filter((item) => item.id !== id);
-
-      // ゴミ箱アイテムを更新
-      const updatedItems = newItems.map((item) => (item.id === 'trash' ? { ...trashItem, children: trashItem.children } : item));
-
-      setItems(updatedItems);
-    }
   }
 
   function handleCollapse(id: UniqueIdentifier) {

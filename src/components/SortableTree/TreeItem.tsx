@@ -1,15 +1,17 @@
 import { forwardRef, HTMLAttributes, useState, useEffect } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
+import { isDescendantOfTrash } from './utilities';
 import { useTheme } from '@mui/material/styles';
 import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAppStateStore } from '../../store/appStateStore';
+import { useTreeStateStore } from '../../store/treeStateStore';
+import { MenuItems, MenuItemsTrash } from './MenuItems';
 
 export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
-  id?: UniqueIdentifier;
+  id: UniqueIdentifier;
   childCount?: number;
   clone?: boolean;
   collapsed?: boolean;
@@ -29,7 +31,11 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   onChange?(value: string): void;
   onChangeDone?(done: boolean): void;
   done?: boolean;
+  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
+  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
+  onRestoreItems?(id: UniqueIdentifier): void;
   onSelect?: (id: UniqueIdentifier) => void;
+  isNewTask?: boolean;
 }
 
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
@@ -54,12 +60,18 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       onChange,
       done,
       onChangeDone,
+      onCopyItems,
+      onMoveItems,
+      onRestoreItems,
       onSelect,
+      isNewTask,
       ...props
     },
     ref
   ) => {
     const theme = useTheme();
+    const items = useTreeStateStore((state) => state.items);
+    const currentTree = useTreeStateStore((state) => state.currentTree);
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
 
     const darkMode = useAppStateStore((state) => state.darkMode);
@@ -113,9 +125,13 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           whiteSpace: 'nowrap',
         },
       }),
+      ...(clone &&
+        isNewTask && {
+          left: '50%',
+          transform: 'translateX(calc(-50% +125px))',
+        }),
       ...(ghost && {
         zIndex: -1,
-        position: 'relative',
         padding: 0,
         height: '8px',
         borderColor: theme.palette.primary.main,
@@ -193,7 +209,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           {onCollapse && (
             <Button
               sx={{
-                color: theme.palette.text.secondary,
+                color: theme.palette.grey[500],
                 ...buttonStyle,
               }}
               onClick={() => {
@@ -240,10 +256,16 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                   setTimeout(() => setIsFocusedOrHovered(false), 300);
                 }}
               />
-              {!clone && onRemove && (
-                <Button sx={{ color: theme.palette.grey[500], ...buttonStyle }} onClick={onRemove}>
-                  <CloseIcon />
-                </Button>
+              {!clone && onRemove && !isDescendantOfTrash(items, id) ? (
+                <MenuItems
+                  onRemove={onRemove}
+                  onCopyItems={onCopyItems}
+                  onMoveItems={onMoveItems}
+                  currenTreeId={currentTree}
+                  id={id}
+                />
+              ) : (
+                <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />
               )}
             </>
           ) : (
