@@ -35,7 +35,7 @@ export function AddTask({ id, ...Props }: Props) {
       <Box
         sx={{
           height: '50px',
-          display: isScrolled ? 'block' : 'none', // スクロール時は表示
+          display: isScrolled ? { xs: 'none', sm: 'block' } : 'none', // スクロール時は表示
         }}
       />
       <Box
