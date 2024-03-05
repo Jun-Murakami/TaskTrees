@@ -160,7 +160,7 @@ export function HomePage() {
             </Typography>
           </Paper>
           <Typography variant='caption' sx={{ width: '100%', minWidth: '100%' }}>
-            <a href='https://github.com/Jun-Murakami/TaskTrees'>©{new Date().getFullYear()} Jun Murakami</a> |{' '}
+            ©{new Date().getFullYear()} Jun Murakami | <a href='https://github.com/Jun-Murakami/TaskTrees'>GitHub</a> |{' '}
             <a href='/privacy-policy'>Privacy policy</a>
           </Typography>
           <Typography variant='caption' sx={{ width: '100%' }}></Typography>
