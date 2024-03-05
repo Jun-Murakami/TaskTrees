@@ -1,4 +1,4 @@
-import { forwardRef, HTMLAttributes, useState, useEffect } from 'react';
+import { forwardRef, HTMLAttributes, useState, useEffect, useRef } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { isDescendantOfTrash } from './utilities';
 import { useTheme } from '@mui/material/styles';
@@ -38,6 +38,7 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   removeTrashDescendantsWithDone?: () => Promise<void>;
   onSelect?: (id: UniqueIdentifier) => void;
   isNewTask?: boolean;
+  addedTaskId?: UniqueIdentifier | null;
 }
 
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
@@ -69,6 +70,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       removeTrashDescendantsWithDone,
       onSelect,
       isNewTask,
+      addedTaskId,
       ...props
     },
     ref
@@ -79,6 +81,15 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
 
     const darkMode = useAppStateStore((state) => state.darkMode);
+
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+      if (addedTaskId === id && inputRef.current) {
+        const timer = setTimeout(() => inputRef.current?.focus(), 300);
+        return () => clearTimeout(timer);
+      }
+    }, [addedTaskId, id]);
 
     useEffect(() => {
       const timer = setTimeout(() => setIsFocusedOrHovered(false), 300);
@@ -238,6 +249,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                 onChange={(e) => onChangeDone?.(e.target.checked)}
               />
               <TextField
+                inputRef={inputRef}
                 variant='standard'
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}

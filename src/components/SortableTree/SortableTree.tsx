@@ -71,6 +71,7 @@ export function SortableTree({
 }: SortableTreeProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeNewTaskId, setActiveNewTaskId] = useState<UniqueIdentifier>('-1');
+  const [addedTaskId, setAddedTaskId] = useState<UniqueIdentifier | null>(null);
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [offsetLeft, setOffsetLeft] = useState(0);
   const [currentPosition, setCurrentPosition] = useState<{
@@ -208,6 +209,7 @@ export function SortableTree({
               removeTrashDescendants={removeTrashDescendants}
               removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
               onSelect={handleSelect}
+              addedTaskId={addedTaskId}
             />
           ))}
         {createPortal(
@@ -295,7 +297,7 @@ export function SortableTree({
           });
         };
         const newItemsWithId = updateItemIdRecursively(newItems, activeNewTaskId, (findMaxId(newItems) + 1).toString());
-
+        setAddedTaskId(findMaxId(newItemsWithId).toString());
         setItems(newItemsWithId);
         const newActiveId = (parseInt(activeNewTaskId.toString()) - 1).toString();
         setActiveNewTaskId(newActiveId);

@@ -9,6 +9,7 @@ import { iOS } from './utilities';
 interface Props extends TreeItemProps {
   id: UniqueIdentifier;
   isNewTask?: boolean;
+  addedTaskId?: UniqueIdentifier | null;
   removeTrashDescendants?: () => Promise<void>;
   removeTrashDescendantsWithDone?: () => Promise<void>;
 }
@@ -42,6 +43,7 @@ export function SortableTreeItem({ id, depth, ...props }: Props) {
         ...listeners,
       }}
       isNewTask={props.isNewTask}
+      addedTaskId={props.addedTaskId}
       {...props}
     />
   );
