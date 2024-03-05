@@ -211,7 +211,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
           }}
         >
           <Stack direction='row' sx={{ height: 40, width: '100%', margin: '0 auto' }}>
-            <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '28px', height: '28px', marginTop: 5 }} />
+            <img src='/src/assets/TaskTrees.svg' alt='Task Tree' style={{ width: '28px', height: '28px', marginTop: 5 }} />
             {isAccordionExpanded ? (
               <TextField
                 id='outlined-basic'

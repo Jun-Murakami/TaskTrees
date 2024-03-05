@@ -71,7 +71,7 @@ export function HomePage() {
               ) : (
                 <Typography variant='h3'>
                   <img
-                    src='/TaskTrees.svg'
+                    src='/src/assets/TaskTrees.svg'
                     alt='Task Tree'
                     style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
                   />
@@ -94,7 +94,11 @@ export function HomePage() {
           // アカウント削除の確認ダイアログ
           <>
             <Typography sx={{ marginBottom: 0 }} variant='h3'>
-              <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
+              <img
+                src='/src/assets/TaskTrees.svg'
+                alt='Task Tree'
+                style={{ width: '35px', height: '35px', marginRight: '10px' }}
+              />
               TaskTrees
             </Typography>
             <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
@@ -123,7 +127,7 @@ export function HomePage() {
         // ログイン前の画面
         <>
           <Typography sx={{ marginBottom: 0 }} variant='h3'>
-            <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
+            <img src='/src/assets/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
             TaskTrees
           </Typography>
           <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
