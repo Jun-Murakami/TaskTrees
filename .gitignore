@@ -21,6 +21,7 @@ firebase.json
 !.vscode/extensions.json
 .idea
 .DS_Store
+.firebase/
 .firebase/*
 *.suo
 *.ntvs*
