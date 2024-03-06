@@ -86,7 +86,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
 
     useEffect(() => {
       if (addedTaskId === id && inputRef.current) {
-        const timer = setTimeout(() => inputRef.current?.focus(), 300);
+        const timer = setTimeout(() => inputRef.current?.focus(), 500);
         return () => clearTimeout(timer);
       }
     }, [addedTaskId, id]);
