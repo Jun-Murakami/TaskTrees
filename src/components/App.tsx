@@ -4,6 +4,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material';
 import { useAppStateStore } from '../store/appStateStore';
 import { HomePage } from './HomePage';
 import { PrivacyPolicy } from './PrivacyPolicy';
+import { Download } from './Download';
 
 export default function App() {
   const darkMode = useAppStateStore((state) => state.darkMode); // ダークモードの状態
@@ -14,6 +15,7 @@ export default function App() {
       <Router>
         <Routes>
           <Route path='/privacy-policy' Component={PrivacyPolicy} />
+          <Route path='/download' Component={Download} />
           <Route path='/' Component={HomePage} />
         </Routes>
       </Router>
