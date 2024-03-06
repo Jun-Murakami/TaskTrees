@@ -164,8 +164,14 @@ export function HomePage() {
             </Typography>
           </Paper>
           <Typography variant='caption' sx={{ width: '100%', minWidth: '100%' }}>
-            <a href='mailto:app@bucketrelay.com'>©{new Date().getFullYear()} Jun Murakami</a> |{' '}
-            <a href='https://github.com/Jun-Murakami/TaskTrees'>GitHub</a> | <a href='/privacy-policy'>Privacy policy</a>
+            <a href='mailto:app@bucketrelay.com' target='_blank' rel='noreferrer'>
+              ©{new Date().getFullYear()} Jun Murakami
+            </a>{' '}
+            |{' '}
+            <a href='https://github.com/Jun-Murakami/TaskTrees' target='_blank' rel='noreferrer'>
+              GitHub
+            </a>{' '}
+            | <a href='/privacy-policy'>Privacy policy</a>
           </Typography>
           <Typography variant='caption' sx={{ width: '100%' }}></Typography>
         </>
