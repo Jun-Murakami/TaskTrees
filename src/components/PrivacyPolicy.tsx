@@ -80,7 +80,7 @@ export function PrivacyPolicy() {
     <>
       <Typography variant='h3' sx={{ margin: 10 }}>
         <img
-          src='/src/assets/TaskTrees.svg'
+          src='/TaskTrees.svg'
           alt='Task Tree'
           style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
         />
