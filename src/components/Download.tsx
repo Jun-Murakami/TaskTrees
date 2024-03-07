@@ -15,7 +15,7 @@ export function Download() {
         TaskTrees
       </Typography>
       <Typography variant='h5' sx={{ mt: 1, mb: 0 }}>
-        PCアプリのダウンロード
+        デスクトップアプリのダウンロード
       </Typography>
       <Typography variant='h6' sx={{ mt: 0, mb: 8 }}>
         version 1.0.0
