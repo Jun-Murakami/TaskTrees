@@ -26,7 +26,7 @@ export function Download() {
           variant={'contained'}
           startIcon={<MicrosoftIcon />}
           component='a'
-          href='/TaskTreesSetup.exe'
+          href='https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v1.0.0/TaskTrees-1.0.0-setup_win_x64.exe'
           download
         >
           Windows
@@ -36,8 +36,9 @@ export function Download() {
           variant={'contained'}
           startIcon={<AppleIcon />}
           component='a'
-          href='/TaskTreesSetup.exe'
+          href='/'
           download
+          disabled
         >
           MacOS (Apple Silicon)
         </Button>
@@ -46,11 +47,13 @@ export function Download() {
           variant={'contained'}
           startIcon={<AppleIcon />}
           component='a'
-          href='/TaskTreesSetup.exe'
+          href='/'
           download
+          disabled
         >
           MacOS (Intel)
         </Button>
+        <Typography variant='caption'>※MacOS版は現在開発中です</Typography>
       </Stack>
       <Button
         sx={{ marginTop: 5 }}

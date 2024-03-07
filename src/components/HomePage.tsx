@@ -152,7 +152,9 @@ export function HomePage() {
 
           <Paper sx={{ maxWidth: 300, margin: 'auto', marginTop: 4 }}>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-              複数のツリー管理＆共同編集に対応した新バージョンです。
+              2024.03.07 デスクトップアプリ版を開発中です。（現在Windows版のみ）
+              <br />
+              <a href='/download'>こちら</a>からダウンロードできます。
               <br />
               <br />
               １ツリーのシンプルな個人用バージョンは<a href='https://tasktree-fb.web.app/'>こちら</a>。
