@@ -3,7 +3,7 @@
 ツリー型で整理可能なタスク管理アプリです。複数のツリーを管理可能で、他の人と共有することもできます。  
 [https://tasktree-s.web.app/](https://tasktree-s.web.app/)
 
-デスクトップアプリ版はこちら
+デスクトップアプリ版はこちら  
 [https://github.com/Jun-Murakami/TaskTrees-Electron](https://github.com/Jun-Murakami/TaskTrees-Electron)
 
 シンプルな１ツリーの旧バージョンはこちら  
