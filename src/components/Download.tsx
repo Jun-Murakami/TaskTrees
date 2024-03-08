@@ -1,9 +1,19 @@
+import { useEffect, useState } from 'react';
 import { Typography, Stack, Button } from '@mui/material';
 import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import AppleIcon from '@mui/icons-material/Apple';
 import ReplyIcon from '@mui/icons-material/Reply';
 
 export function Download() {
+  const [version, setVersion] = useState('');
+  //publicルートのversion.jsonからバージョン番号を取得
+
+  useEffect(() => {
+    fetch('/version.json')
+      .then((response) => response.json())
+      .then((data) => setVersion(data.version));
+  }, []);
+
   return (
     <>
       <Typography variant='h3' sx={{ margin: 10 }}>
@@ -18,7 +28,7 @@ export function Download() {
         デスクトップアプリのダウンロード
       </Typography>
       <Typography variant='h6' sx={{ mt: 0, mb: 8 }}>
-        version 1.0.1
+        version {version}
       </Typography>
       <Stack spacing={3} sx={{ width: '350px', maxWidth: '350px', marginX: 'auto', marginY: 6 }}>
         <Button
@@ -26,7 +36,7 @@ export function Download() {
           variant={'contained'}
           startIcon={<MicrosoftIcon />}
           component='a'
-          href='https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v1.0.1/TaskTrees-1.0.1-setup_win_x64.exe'
+          href={`https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v${version}/TaskTrees-${version}-setup_win_x64.exe`}
           download
         >
           Windows
@@ -36,7 +46,7 @@ export function Download() {
           variant={'contained'}
           startIcon={<AppleIcon />}
           component='a'
-          href='https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v1.0.1/TaskTrees-1.0.1_mac_arm64.dmg'
+          href={`https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v${version}/TaskTrees-${version}_mac_arm64.dmg`}
           download
         >
           MacOS (Apple Silicon)
@@ -46,7 +56,7 @@ export function Download() {
           variant={'contained'}
           startIcon={<AppleIcon />}
           component='a'
-          href='https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v1.0.1/TaskTrees-1.0.1_mac_x64.dmg'
+          href={`https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v${version}/TaskTrees-${version}_mac_x64.dmg`}
           download
         >
           MacOS (Intel)

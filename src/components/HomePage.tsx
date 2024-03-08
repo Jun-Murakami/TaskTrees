@@ -5,6 +5,7 @@ import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
 import { ResponsiveDrawer } from './ResponsiveDrawer';
 import { MessagePaper } from './MessagePaper';
+import { TaskTreesLogo } from './TaskTreesLogo';
 import { Button, CircularProgress, Typography, Box } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
@@ -71,14 +72,7 @@ export function HomePage() {
                 </>
               ) : (
                 <>
-                  <Typography variant='h3'>
-                    <img
-                      src='/TaskTrees.svg'
-                      alt='Task Tree'
-                      style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
-                    />
-                    TaskTrees
-                  </Typography>
+                  <TaskTreesLogo />
                   <MessagePaper />
                 </>
               )}
@@ -97,15 +91,7 @@ export function HomePage() {
         ) : (
           // アカウント削除の確認ダイアログ
           <>
-            <Typography sx={{ marginBottom: 0 }} variant='h3'>
-              <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
-              TaskTrees
-            </Typography>
-            <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
-              <Typography variant='caption' sx={{ width: '100%' }}>
-                Team Edition
-              </Typography>
-            </Box>
+            <TaskTreesLogo />
             <Typography variant='body2' sx={{ marginY: 4 }}>
               アプリケーションのすべてのデータとアカウント情報が削除されます。この操作は取り消せません。削除を実行しますか？
             </Typography>
@@ -126,15 +112,7 @@ export function HomePage() {
       ) : (
         // ログイン前の画面
         <>
-          <Typography sx={{ marginBottom: 0 }} variant='h3'>
-            <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
-            TaskTrees
-          </Typography>
-          <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
-            <Typography variant='caption' sx={{ width: '100%' }}>
-              Team Edition
-            </Typography>
-          </Box>
+          <TaskTreesLogo />
           {isLoading ? (
             <CircularProgress
               sx={{

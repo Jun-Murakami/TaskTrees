@@ -5,8 +5,7 @@ export const MessagePaper = () => {
     <>
       <Paper sx={{ maxWidth: 300, margin: 'auto', marginTop: 4 }}>
         <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-          2024.03.08 デスクトップアプリ版を正式リリースしました。(Windows, MacOS対応)
-          <br />
+          2024.03.08 デスクトップアプリ版を正式リリースしました。（Windows,MacOS）
           <a href='/download'>こちら</a>からダウンロードできます。
           <br />
           <br />
