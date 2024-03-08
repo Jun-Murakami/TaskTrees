@@ -152,7 +152,7 @@ export function HomePage() {
 
           <Paper sx={{ maxWidth: 300, margin: 'auto', marginTop: 4 }}>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-              2024.03.07 デスクトップアプリ版を開発中です。（現在Windows版のみ）
+              2024.03.08 デスクトップアプリ版を正式リリースしました。(Windows, MacOS対応)
               <br />
               <a href='/download'>こちら</a>からダウンロードできます。
               <br />

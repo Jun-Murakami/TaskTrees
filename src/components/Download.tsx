@@ -18,7 +18,7 @@ export function Download() {
         デスクトップアプリのダウンロード
       </Typography>
       <Typography variant='h6' sx={{ mt: 0, mb: 8 }}>
-        version 1.0.0
+        version 1.0.1
       </Typography>
       <Stack spacing={3} sx={{ width: '350px', maxWidth: '350px', marginX: 'auto', marginY: 6 }}>
         <Button
@@ -26,7 +26,7 @@ export function Download() {
           variant={'contained'}
           startIcon={<MicrosoftIcon />}
           component='a'
-          href='https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v1.0.0/TaskTrees-1.0.0-setup_win_x64.exe'
+          href='https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v1.0.1/TaskTrees-1.0.1-setup_win_x64.exe'
           download
         >
           Windows
@@ -36,9 +36,8 @@ export function Download() {
           variant={'contained'}
           startIcon={<AppleIcon />}
           component='a'
-          href='/'
+          href='https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v1.0.1/TaskTrees-1.0.1_mac_arm64.dmg'
           download
-          disabled
         >
           MacOS (Apple Silicon)
         </Button>
@@ -47,13 +46,11 @@ export function Download() {
           variant={'contained'}
           startIcon={<AppleIcon />}
           component='a'
-          href='/'
+          href='https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v1.0.1/TaskTrees-1.0.1_mac_x64.dmg'
           download
-          disabled
         >
           MacOS (Intel)
         </Button>
-        <Typography variant='caption'>※MacOS版は現在開発中です</Typography>
       </Stack>
       <Button
         sx={{ marginTop: 5 }}
