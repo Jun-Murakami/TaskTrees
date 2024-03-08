@@ -4,7 +4,8 @@ import { useAuth } from '../hooks/useAuth';
 import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
 import { ResponsiveDrawer } from './ResponsiveDrawer';
-import { Button, CircularProgress, Typography, Paper, Box } from '@mui/material';
+import { MessagePaper } from './MessagePaper';
+import { Button, CircularProgress, Typography, Box } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
@@ -69,14 +70,17 @@ export function HomePage() {
                   </Box>
                 </>
               ) : (
-                <Typography variant='h3'>
-                  <img
-                    src='/TaskTrees.svg'
-                    alt='Task Tree'
-                    style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
-                  />
-                  TaskTrees
-                </Typography>
+                <>
+                  <Typography variant='h3'>
+                    <img
+                      src='/TaskTrees.svg'
+                      alt='Task Tree'
+                      style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
+                    />
+                    TaskTrees
+                  </Typography>
+                  <MessagePaper />
+                </>
               )}
             </Box>
             {isLoading && (
@@ -149,29 +153,7 @@ export function HomePage() {
               {systemMessage}
             </Typography>
           )}
-
-          <Paper sx={{ maxWidth: 300, margin: 'auto', marginTop: 4 }}>
-            <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-              2024.03.08 デスクトップアプリ版を正式リリースしました。(Windows, MacOS対応)
-              <br />
-              <a href='/download'>こちら</a>からダウンロードできます。
-              <br />
-              <br />
-              １ツリーのシンプルな個人用バージョンは<a href='https://tasktree-fb.web.app/'>こちら</a>。
-              ツリーデータは相互に移行可能です。
-            </Typography>
-          </Paper>
-          <Typography variant='caption' sx={{ width: '100%', minWidth: '100%' }}>
-            <a href='mailto:app@bucketrelay.com' target='_blank' rel='noreferrer'>
-              ©{new Date().getFullYear()} Jun Murakami
-            </a>{' '}
-            |{' '}
-            <a href='https://github.com/Jun-Murakami/TaskTrees' target='_blank' rel='noreferrer'>
-              GitHub
-            </a>{' '}
-            | <a href='/privacy-policy'>Privacy policy</a>
-          </Typography>
-          <Typography variant='caption' sx={{ width: '100%' }}></Typography>
+          <MessagePaper />
         </>
       )}
     </>
