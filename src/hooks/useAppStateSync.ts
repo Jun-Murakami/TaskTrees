@@ -61,6 +61,7 @@ export const useAppStateSync = () => {
     } catch (error) {
       handleError(error)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [darkMode, hideDoneItems, handleError])
 }
 

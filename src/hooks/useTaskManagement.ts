@@ -242,9 +242,9 @@ export const useTaskManagement = () => {
               // ゴミ箱の直前にコピー用アイテムを追加
               const newItems = trashIndex
                 ? itemsWithChildren
-                    .slice(0, itemsWithChildren.indexOf(trashIndex))
-                    .concat(reIdItemsCopy)
-                    .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
+                  .slice(0, itemsWithChildren.indexOf(trashIndex))
+                  .concat(reIdItemsCopy)
+                  .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
                 : itemsWithChildren.concat(reIdItemsCopy)
               if (newItems && trashIndex) {
                 //コピー先のDBにコピー用アイテムを追加
@@ -310,9 +310,9 @@ export const useTaskManagement = () => {
               // ゴミ箱の直前に移動用アイテムを追加
               const newItems = trashIndex
                 ? itemsWithChildren
-                    .slice(0, itemsWithChildren.indexOf(trashIndex))
-                    .concat(reIdItemsCopy)
-                    .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
+                  .slice(0, itemsWithChildren.indexOf(trashIndex))
+                  .concat(reIdItemsCopy)
+                  .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
                 : itemsWithChildren.concat(reIdItemsCopy)
 
               if (newItems && trashIndex) {

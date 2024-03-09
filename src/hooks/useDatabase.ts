@@ -85,9 +85,13 @@ export const useDatabase = () => {
 
   // treeListを反復して、データベースからitemsとnameを取得する関数 ---------------------------------------------------------------------------
   // treeDataがTreesListItemIncludingItems型かチェックする関数
-  const isValiedTreesListItemIncludingItems = (arg: any): arg is TreesListItemIncludingItems => {
-    return arg.id && arg.name && arg.members && arg.items
-  }
+  const isValiedTreesListItemIncludingItems = (arg: unknown): arg is TreesListItemIncludingItems => {
+    return typeof arg === 'object' && arg !== null &&
+      'id' in arg && typeof arg.id === 'string' &&
+      'name' in arg && typeof arg.name === 'string' &&
+      'members' in arg && typeof arg.members === 'object' &&
+      'items' in arg && Array.isArray(arg.items);
+  };
   // 本編
   const loadAllTreesDataFromDb = async (treesList: TreesList) => {
     const user = getAuth().currentUser

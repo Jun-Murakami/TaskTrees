@@ -1,7 +1,7 @@
-import { Typography, Box, Button } from '@mui/material'
-import ReplyIcon from '@mui/icons-material/Reply'
-import ReactMarkdown from 'react-markdown'
-import TaskTreesLogo from '../assets/TaskTrees.svg'
+import { Typography, Box, Button } from '@mui/material';
+import ReplyIcon from '@mui/icons-material/Reply';
+import ReactMarkdown from 'react-markdown';
+import TaskTreesLogo from '../assets/TaskTrees.svg';
 
 const ppMarkdown = `
 村上純（以下、「管理者」といいます。）は、本ウェブサイト上で提供するサービス（以下、「本サービス」といいます。）における、ユーザーの個人情報の取扱いについて、以下のとおりプライバシーポリシー（以下、「本ポリシー」といいます。）を定めます。  
@@ -74,24 +74,24 @@ const ppMarkdown = `
 サービス提供者 氏名：村上純
   
   
-`
+`;
 
 export function PrivacyPolicy() {
   return (
     <>
-      <Typography variant="h3" sx={{ margin: 10 }}>
+      <Typography variant='h3' sx={{ margin: 10 }}>
         <img
           src={TaskTreesLogo}
-          alt="Task Tree"
+          alt='Task Tree'
           style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
         />
         TaskTrees
       </Typography>
-      <Typography variant="h5" sx={{ marginY: 5 }}>
+      <Typography variant='h5' sx={{ marginY: 5 }}>
         プライバシーポリシー
       </Typography>
       <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto' }}>
-        <Typography variant="body1" sx={{ textAlign: 'left' }}>
+        <Typography variant='body1' sx={{ textAlign: 'left' }}>
           <ReactMarkdown>{ppMarkdown}</ReactMarkdown>
         </Typography>
       </Box>
@@ -99,11 +99,11 @@ export function PrivacyPolicy() {
         variant={'outlined'}
         startIcon={<ReplyIcon />}
         onClick={() => {
-          window.location.href = '/'
+          window.location.href = '/';
         }}
       >
         アプリのトップに戻る
       </Button>
     </>
-  )
+  );
 }
