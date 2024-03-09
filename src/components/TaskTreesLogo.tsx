@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import TaskTreesSVG from '../assets/TaskTrees.svg';
+import TaskTreesSVG from '/TaskTrees.svg';
 
 export const TaskTreesLogo = () => {
   return (
