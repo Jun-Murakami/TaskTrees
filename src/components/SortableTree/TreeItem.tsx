@@ -1,44 +1,45 @@
-import { forwardRef, HTMLAttributes, useState, useEffect, useRef } from 'react';
-import type { UniqueIdentifier } from '@dnd-kit/core';
-import { isDescendantOfTrash } from './utilities';
-import { useTheme } from '@mui/material/styles';
-import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import DragHandleIcon from '@mui/icons-material/DragHandle';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { useAppStateStore } from '../../store/appStateStore';
-import { useTreeStateStore } from '../../store/treeStateStore';
-import { MenuItems, MenuItemsTrash, MenuItemsTrashRoot } from './MenuItems';
+import { forwardRef, HTMLAttributes, useState, useEffect, useRef } from 'react'
+import type { UniqueIdentifier } from '@dnd-kit/core'
+import { isDescendantOfTrash } from './utilities'
+import { useTheme } from '@mui/material/styles'
+import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography } from '@mui/material'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import DragHandleIcon from '@mui/icons-material/DragHandle'
+import DeleteIcon from '@mui/icons-material/Delete'
+import { useAppStateStore } from '../../store/appStateStore'
+import { useTreeStateStore } from '../../store/treeStateStore'
+import { MenuItems, MenuItemsTrash, MenuItemsTrashRoot } from './MenuItems'
 
-export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
-  id: UniqueIdentifier;
-  childCount?: number;
-  clone?: boolean;
-  collapsed?: boolean;
-  depth: number;
-  disableInteraction?: boolean;
-  disableSelection?: boolean;
-  ghost?: boolean;
+export interface TreeItemProps
+  extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
+  id: UniqueIdentifier
+  childCount?: number
+  clone?: boolean
+  collapsed?: boolean
+  depth: number
+  disableInteraction?: boolean
+  disableSelection?: boolean
+  ghost?: boolean
   handleProps?: {
-    [key: string]: unknown;
-  };
-  indicator?: boolean;
-  indentationWidth: number;
-  value: string;
-  onCollapse?(): void;
-  onRemove?(): void;
-  wrapperRef?(node: HTMLLIElement): void;
-  onChange?(value: string): void;
-  onChangeDone?(done: boolean): void;
-  done?: boolean;
-  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
-  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
-  onRestoreItems?(id: UniqueIdentifier): void;
-  removeTrashDescendants?: () => Promise<void>;
-  removeTrashDescendantsWithDone?: () => Promise<void>;
-  onSelect?: (id: UniqueIdentifier) => void;
-  isNewTask?: boolean;
-  addedTaskId?: UniqueIdentifier | null;
+    [key: string]: unknown
+  }
+  indicator?: boolean
+  indentationWidth: number
+  value: string
+  onCollapse?(): void
+  onRemove?(): void
+  wrapperRef?(node: HTMLLIElement): void
+  onChange?(value: string): void
+  onChangeDone?(done: boolean): void
+  done?: boolean
+  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void
+  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void
+  onRestoreItems?(id: UniqueIdentifier): void
+  removeTrashDescendants?: () => Promise<void>
+  removeTrashDescendantsWithDone?: () => Promise<void>
+  onSelect?: (id: UniqueIdentifier) => void
+  isNewTask?: boolean
+  addedTaskId?: UniqueIdentifier | null
 }
 
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
@@ -75,34 +76,35 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
     },
     ref
   ) => {
-    const theme = useTheme();
-    const items = useTreeStateStore((state) => state.items);
-    const currentTree = useTreeStateStore((state) => state.currentTree);
-    const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
+    const theme = useTheme()
+    const items = useTreeStateStore((state) => state.items)
+    const currentTree = useTreeStateStore((state) => state.currentTree)
+    const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false)
 
-    const darkMode = useAppStateStore((state) => state.darkMode);
+    const darkMode = useAppStateStore((state) => state.darkMode)
 
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
       if (addedTaskId === id && inputRef.current) {
-        const timer = setTimeout(() => inputRef.current?.focus(), 500);
-        return () => clearTimeout(timer);
+        const timer = setTimeout(() => inputRef.current?.focus(), 500)
+        return () => clearTimeout(timer)
       }
-    }, [addedTaskId, id]);
+      return () => {}
+    }, [addedTaskId, id])
 
     useEffect(() => {
-      const timer = setTimeout(() => setIsFocusedOrHovered(false), 300);
-      return () => clearTimeout(timer);
-    }, []);
+      const timer = setTimeout(() => setIsFocusedOrHovered(false), 300)
+      return () => clearTimeout(timer)
+    }, [])
 
     // ボタンの共通スタイルを定義
     const buttonStyle = {
       width: '30px',
       minWidth: '30px',
       height: '30px',
-      marginTop: '0px',
-    };
+      marginTop: '0px'
+    }
 
     const stackStyles = (clone: boolean | undefined, ghost: boolean | undefined) => ({
       width: '100%',
@@ -112,21 +114,21 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
         ? depth >= 4
           ? theme.palette.grey[800]
           : depth === 3
-          ? '#303030'
-          : depth === 2
-          ? theme.palette.grey[900]
-          : depth === 1
-          ? '#1a1a1a'
-          : theme.palette.background.default
+            ? '#303030'
+            : depth === 2
+              ? theme.palette.grey[900]
+              : depth === 1
+                ? '#1a1a1a'
+                : theme.palette.background.default
         : depth >= 4
-        ? theme.palette.grey[300]
-        : depth === 3
-        ? theme.palette.grey[200]
-        : depth === 2
-        ? theme.palette.grey[100]
-        : depth === 1
-        ? theme.palette.grey[50]
-        : theme.palette.background.default,
+          ? theme.palette.grey[300]
+          : depth === 3
+            ? theme.palette.grey[200]
+            : depth === 2
+              ? theme.palette.grey[100]
+              : depth === 1
+                ? theme.palette.grey[50]
+                : theme.palette.background.default,
       borderColor: theme.palette.divider,
       boxSizing: 'border-box',
       ...(clone && {
@@ -137,13 +139,13 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
         boxShadow: '0px 15px 15px 0 rgba(34, 33, 81, 0.1)',
         '& textarea': {
           overflow: 'hidden',
-          whiteSpace: 'nowrap',
-        },
+          whiteSpace: 'nowrap'
+        }
       }),
       ...(clone &&
         isNewTask && {
           left: '50%',
-          transform: 'translateX(calc(-50% +125px))',
+          transform: 'translateX(calc(-50% +125px))'
         }),
       ...(ghost && {
         zIndex: -1,
@@ -163,14 +165,14 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           borderRadius: '50%',
           border: '1px solid',
           borderColor: theme.palette.primary.main,
-          backgroundColor: theme.palette.background.default,
+          backgroundColor: theme.palette.background.default
         },
         '> *': {
           opacity: 0,
-          height: 0,
-        },
-      }),
-    });
+          height: 0
+        }
+      })
+    })
 
     return (
       <ListItem
@@ -184,29 +186,29 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             opacity: 1,
             position: 'relative',
             zIndex: 1,
-            marginBottom: '-1px',
+            marginBottom: '-1px'
           }),
           ...(disableSelection && {
             userSelect: 'none',
-            WebkitUserSelect: 'none', // Safari/Chrome用
+            WebkitUserSelect: 'none' // Safari/Chrome用
           }),
           ...(disableInteraction && {
-            pointerEvents: 'none',
+            pointerEvents: 'none'
           }),
           ...(id === 'trash' && {
-            marginTop: '20px',
-          }),
+            marginTop: '20px'
+          })
         }}
         {...props}
       >
-        <Stack direction='row' ref={ref} style={style} sx={stackStyles(clone, ghost)}>
+        <Stack direction="row" ref={ref} style={style} sx={stackStyles(clone, ghost)}>
           {id !== 'trash' ? (
             <Button
               sx={{
                 color: theme.palette.grey[500],
                 cursor: 'grab',
                 ...buttonStyle,
-                touchAction: 'none',
+                touchAction: 'none'
               }}
               onClick={() => id !== undefined && onSelect?.(id)}
               {...handleProps}
@@ -225,17 +227,17 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             <Button
               sx={{
                 color: theme.palette.grey[500],
-                ...buttonStyle,
+                ...buttonStyle
               }}
               onClick={() => {
-                onCollapse?.();
-                id !== undefined && onSelect?.(id);
+                onCollapse?.()
+                id !== undefined && onSelect?.(id)
               }}
             >
               <KeyboardArrowDownIcon
                 sx={{
                   transition: 'transform 250ms ease',
-                  transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+                  transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)'
                 }}
               />
             </Button>
@@ -250,7 +252,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
               />
               <TextField
                 inputRef={inputRef}
-                variant='standard'
+                variant="standard"
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}
                 onClick={() => id !== undefined && onSelect?.(id)}
@@ -264,12 +266,12 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                     margin: 0,
                     paddingTop: '3px',
                     paddingBottom: '3px',
-                    fontSize: '0.9rem',
-                  },
+                    fontSize: '0.9rem'
+                  }
                 }}
                 onFocus={() => setIsFocusedOrHovered(true)}
                 onBlur={() => {
-                  setTimeout(() => setIsFocusedOrHovered(false), 300);
+                  setTimeout(() => setIsFocusedOrHovered(false), 300)
                 }}
               />
               {!clone && onRemove && !isDescendantOfTrash(items, id) ? (
@@ -286,7 +288,10 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             </>
           ) : (
             <>
-              <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px', width: '100%' }}> ゴミ箱 </Typography>
+              <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px', width: '100%' }}>
+                {' '}
+                ゴミ箱{' '}
+              </Typography>
               {!clone && id === 'trash' && removeTrashDescendants && (
                 <MenuItemsTrashRoot
                   removeTrashDescendants={removeTrashDescendants}
@@ -295,9 +300,11 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
               )}
             </>
           )}
-          {clone && childCount && childCount > 1 ? <Badge badgeContent={childCount} color='primary' /> : null}
+          {clone && childCount && childCount > 1 ? (
+            <Badge badgeContent={childCount} color="primary" />
+          ) : null}
         </Stack>
       </ListItem>
-    );
+    )
   }
-);
+)

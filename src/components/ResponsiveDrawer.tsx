@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useTheme } from '@mui/material/styles';
+import { useState, useEffect } from 'react'
+import { useTheme } from '@mui/material/styles'
 import {
   Box,
   Drawer,
@@ -13,24 +13,25 @@ import {
   Divider,
   FormControlLabel,
   Switch,
-  Typography,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import MenuIcon from '@mui/icons-material/Menu';
-import { UniqueIdentifier } from '@dnd-kit/core';
-import { useAppStateStore } from '../store/appStateStore';
-import { useTreeStateStore } from '../store/treeStateStore';
-import { SortableList } from './SortableList/SortableList';
-import { MenuSettings } from './MenuSettings';
+  Typography
+} from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import MenuIcon from '@mui/icons-material/Menu'
+import { UniqueIdentifier } from '@dnd-kit/core'
+import { useAppStateStore } from '../store/appStateStore'
+import { useTreeStateStore } from '../store/treeStateStore'
+import { SortableList } from './SortableList/SortableList'
+import { MenuSettings } from './MenuSettings'
 
-const drawerWidth = 240;
+const drawerWidth = 240
 
 interface ResponsiveDrawerProps {
-  handleCreateNewTree: () => void;
-  handleListClick: (treeId: UniqueIdentifier) => void;
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleDownloadAppState: () => void;
-  handleLogout: () => void;
+  handleCreateNewTree: () => void
+  handleListClick: (treeId: UniqueIdentifier) => void
+  handleFileUpload: (file: File) => void
+  handleDownloadAppState: () => void
+  handleDownloadAllTrees: () => void
+  handleLogout: () => void
 }
 
 export function ResponsiveDrawer({
@@ -38,97 +39,104 @@ export function ResponsiveDrawer({
   handleListClick,
   handleFileUpload,
   handleDownloadAppState,
-  handleLogout,
+  handleDownloadAllTrees,
+  handleLogout
 }: ResponsiveDrawerProps) {
-  const [drawerState, setDrawerState] = useState(false);
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const [isSwipe, setIsSwipe] = useState(false);
+  const [drawerState, setDrawerState] = useState(false)
+  const [isMenuVisible, setIsMenuVisible] = useState(false)
+  const [isSwipe, setIsSwipe] = useState(false)
 
-  const darkMode = useAppStateStore((state) => state.darkMode);
-  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
-  const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
+  const darkMode = useAppStateStore((state) => state.darkMode)
+  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems)
+  const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems)
 
-  const currentTree = useTreeStateStore((state) => state.currentTree);
-  const treesList = useTreeStateStore((state) => state.treesList);
+  const currentTree = useTreeStateStore((state) => state.currentTree)
+  const treesList = useTreeStateStore((state) => state.treesList)
 
   useEffect(() => {
     if (drawerState) {
       const setTimer = setTimeout(() => {
-        setIsMenuVisible(true);
-      }, 170);
-      return () => clearTimeout(setTimer);
+        setIsMenuVisible(true)
+      }, 170)
+      return () => clearTimeout(setTimer)
     } else {
-      setIsMenuVisible(false);
+      setIsMenuVisible(false)
+      return () => {}
     }
-  }, [drawerState]);
+  }, [drawerState])
 
   useEffect(() => {
     if (isSwipe && drawerState) {
-      setIsMenuVisible(false);
+      setIsMenuVisible(false)
+      return () => {}
     } else if (!isSwipe && drawerState) {
       const setTimer = setTimeout(() => {
         // drawerStateがfalseになっているかチェック
         if (!drawerState) {
-          return;
+          return
         }
-        setIsMenuVisible(true);
-      }, 170);
-      return () => clearTimeout(setTimer);
+        setIsMenuVisible(true)
+      }, 170)
+      return () => clearTimeout(setTimer)
     } else {
-      setIsMenuVisible(false);
+      setIsMenuVisible(false)
+      return () => {}
     }
-  }, [isSwipe, drawerState]);
+  }, [isSwipe, drawerState])
 
-  const theme = useTheme();
+  const theme = useTheme()
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
       event &&
       event.type === 'keydown' &&
-      ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')
+      ((event as React.KeyboardEvent).key === 'Tab' ||
+        (event as React.KeyboardEvent).key === 'Shift')
     ) {
-      return;
+      return
     }
 
-    setDrawerState(open);
-  };
+    setDrawerState(open)
+  }
 
   // 完了したアイテムを非表示にする
   const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setHideDoneItems(event.target.checked);
-  };
+    setHideDoneItems(event.target.checked)
+  }
 
   const drawerItems = (
     <>
       <List sx={{ height: '100%' }}>
-        {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}
+        {treesList && (
+          <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />
+        )}
       </List>
       <Box sx={{ display: { xs: 'block', sm: 'none' }, height: '175px', minHeight: '175px' }} />
     </>
-  );
+  )
 
   return (
     <>
       {!currentTree && treesList.length === 0 && (
         <Typography
-          variant='caption'
+          variant="caption"
           sx={{
             display: { sm: 'none' },
             position: 'fixed',
             bottom: 30,
             right: 100,
-            zIndex: 1000,
+            zIndex: 1000
           }}
         >
           Tap to open the tree list →
         </Typography>
       )}
       <IconButton
-        color='inherit'
-        aria-label='open drawer'
-        edge='start'
+        color="inherit"
+        aria-label="open drawer"
+        edge="start"
         onClick={toggleDrawer(true)}
-        size='large'
+        size="large"
         sx={{
           border: `1px solid ${theme.palette.divider}`,
           display: { sm: 'none' },
@@ -137,7 +145,7 @@ export function ResponsiveDrawer({
           right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,
-          opacity: 1,
+          opacity: 1
         }}
       >
         <MenuIcon />
@@ -154,8 +162,10 @@ export function ResponsiveDrawer({
           minWidth: 240,
           position: 'fixed',
           zIndex: 1300,
-          backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
-          ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } }),
+          backgroundColor: darkMode
+            ? { xs: '#353535', sm: theme.palette.background.default }
+            : theme.palette.background.default,
+          ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } })
         }}
       >
         <List>
@@ -164,18 +174,18 @@ export function ResponsiveDrawer({
               sx={{
                 '& .MuiListItemIcon-root': {
                   minWidth: 0,
-                  marginRight: 1,
-                },
+                  marginRight: 1
+                }
               }}
               onClick={() => {
-                handleCreateNewTree();
-                setDrawerState(false);
+                handleCreateNewTree()
+                setDrawerState(false)
               }}
             >
               <ListItemIcon>
                 <AddIcon />
               </ListItemIcon>
-              <ListItemText secondary='新しいツリーを作成' />
+              <ListItemText secondary="新しいツリーを作成" />
             </ListItemButton>
           </ListItem>
         </List>
@@ -183,16 +193,16 @@ export function ResponsiveDrawer({
       </Box>
 
       <Box sx={{ display: 'flex' }}>
-        <Box component='nav' sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
+        <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
           <SwipeableDrawer
-            anchor='right'
-            variant='temporary'
+            anchor="right"
+            variant="temporary"
             open={drawerState}
             onOpen={toggleDrawer(true)}
             onClose={toggleDrawer(false)}
             disableSwipeToOpen={false}
             ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
+              keepMounted: true // Better open performance on mobile.
             }}
             sx={{
               display: { xs: 'block', sm: 'none' },
@@ -200,8 +210,8 @@ export function ResponsiveDrawer({
                 pt: '60px',
                 pb: '175px',
                 boxSizing: 'border-box',
-                width: drawerWidth,
-              },
+                width: drawerWidth
+              }
             }}
             onTouchStart={() => setIsSwipe(true)}
             onTouchEnd={() => setIsSwipe(false)}
@@ -209,7 +219,7 @@ export function ResponsiveDrawer({
             {drawerItems}
           </SwipeableDrawer>
           <Drawer
-            variant='permanent'
+            variant="permanent"
             sx={{
               display: { xs: 'none', sm: 'block' },
               '& .MuiDrawer-paper': {
@@ -217,8 +227,8 @@ export function ResponsiveDrawer({
                 boxSizing: 'border-box',
                 width: drawerWidth,
                 height: 'calc(100% - 115px)',
-                maxHeight: 'calc(100% - 115px)',
-              },
+                maxHeight: 'calc(100% - 115px)'
+              }
             }}
             open
           >
@@ -238,8 +248,10 @@ export function ResponsiveDrawer({
           borderRight: { xs: 0, sm: `1px solid ${theme.palette.divider}` },
           boxSize: 'border-box',
           zIndex: 1300,
-          backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
-          ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } }),
+          backgroundColor: darkMode
+            ? { xs: '#353535', sm: theme.palette.background.default }
+            : theme.palette.background.default,
+          ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } })
         }}
       >
         <Divider />
@@ -248,7 +260,13 @@ export function ResponsiveDrawer({
             <FormControlLabel
               control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
               label={
-                <Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap', color: theme.palette.text.secondary }}>
+                <Typography
+                  sx={{
+                    fontSize: '0.9em',
+                    whiteSpace: 'nowrap',
+                    color: theme.palette.text.secondary
+                  }}
+                >
                   完了タスクを非表示
                 </Typography>
               }
@@ -260,10 +278,11 @@ export function ResponsiveDrawer({
           <MenuSettings
             handleFileUpload={handleFileUpload}
             handleDownloadAppState={handleDownloadAppState}
+            handleDownloadAllTrees={handleDownloadAllTrees}
             handleLogout={handleLogout}
           />
         </List>
       </Box>
     </>
-  );
+  )
 }
