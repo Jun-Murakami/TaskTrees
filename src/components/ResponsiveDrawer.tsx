@@ -28,8 +28,9 @@ const drawerWidth = 240;
 interface ResponsiveDrawerProps {
   handleCreateNewTree: () => void;
   handleListClick: (treeId: UniqueIdentifier) => void;
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleFileUpload: (file: File) => void;
   handleDownloadAppState: () => void;
+  handleDownloadAllTrees: () => void;
   handleLogout: () => void;
 }
 
@@ -38,6 +39,7 @@ export function ResponsiveDrawer({
   handleListClick,
   handleFileUpload,
   handleDownloadAppState,
+  handleDownloadAllTrees,
   handleLogout,
 }: ResponsiveDrawerProps) {
   const [drawerState, setDrawerState] = useState(false);
@@ -59,12 +61,14 @@ export function ResponsiveDrawer({
       return () => clearTimeout(setTimer);
     } else {
       setIsMenuVisible(false);
+      return () => {};
     }
   }, [drawerState]);
 
   useEffect(() => {
     if (isSwipe && drawerState) {
       setIsMenuVisible(false);
+      return () => {};
     } else if (!isSwipe && drawerState) {
       const setTimer = setTimeout(() => {
         // drawerStateがfalseになっているかチェック
@@ -76,6 +80,7 @@ export function ResponsiveDrawer({
       return () => clearTimeout(setTimer);
     } else {
       setIsMenuVisible(false);
+      return () => {};
     }
   }, [isSwipe, drawerState]);
 
@@ -248,7 +253,13 @@ export function ResponsiveDrawer({
             <FormControlLabel
               control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
               label={
-                <Typography sx={{ fontSize: '0.9em', whiteSpace: 'nowrap', color: theme.palette.text.secondary }}>
+                <Typography
+                  sx={{
+                    fontSize: '0.9em',
+                    whiteSpace: 'nowrap',
+                    color: theme.palette.text.secondary,
+                  }}
+                >
                   完了タスクを非表示
                 </Typography>
               }
@@ -260,6 +271,7 @@ export function ResponsiveDrawer({
           <MenuSettings
             handleFileUpload={handleFileUpload}
             handleDownloadAppState={handleDownloadAppState}
+            handleDownloadAllTrees={handleDownloadAllTrees}
             handleLogout={handleLogout}
           />
         </List>
