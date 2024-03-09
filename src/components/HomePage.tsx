@@ -7,6 +7,7 @@ import { ResponsiveDrawer } from './ResponsiveDrawer';
 import { MessagePaper } from './MessagePaper';
 import { TaskTreesLogo } from './TaskTreesLogo';
 import { Button, CircularProgress, Typography, Box } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
@@ -29,11 +30,14 @@ export function HomePage() {
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
   const { handleLogin, handleLogout, handleDeleteAccount } = useAuth();
 
-  // アプリの状態の読み込みと保存を行うカスタムフック
-  const { handleDownloadAppState } = useAppStateSync();
+  // ツリーの状態の読み込みと保存を行うカスタムフック
+  useAppStateSync();
 
   //ツリーの状態を同期するカスタムフック
-  const { deleteTree, handleCreateNewTree, handleListClick, handleFileUpload } = useTreeManagement();
+  const { deleteTree, handleCreateNewTree, handleListClick, handleFileUpload, handleDownloadTreeState, handleDownloadAllTrees } =
+    useTreeManagement();
+
+  const theme = useTheme();
 
   return (
     <>
@@ -47,7 +51,8 @@ export function HomePage() {
               handleCreateNewTree={handleCreateNewTree}
               handleListClick={handleListClick}
               handleFileUpload={handleFileUpload}
-              handleDownloadAppState={handleDownloadAppState}
+              handleDownloadAppState={handleDownloadTreeState}
+              handleDownloadAllTrees={handleDownloadAllTrees}
               handleLogout={handleLogout}
             />
             <Box
@@ -60,13 +65,7 @@ export function HomePage() {
               {currentTree ? (
                 <>
                   <TreeSettingsAccordion deleteTree={deleteTree} />
-                  <Box
-                    sx={{
-                      maxWidth: '900px', // 最大幅を指定
-                      width: '100%', // 横幅いっぱいに広がる
-                      margin: '0 auto', // 中央寄せ
-                    }}
-                  >
+                  <Box sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: 6 }}>
                     <SortableTree collapsible indicator removable />
                   </Box>
                 </>
@@ -127,10 +126,28 @@ export function HomePage() {
             </Button>
           )}
           {systemMessage && (
-            <Typography variant='body2' sx={{ marginY: 4 }}>
-              {systemMessage}
-            </Typography>
+            <Box
+              sx={{
+                backgroundColor: theme.palette.action.hover,
+                borderRadius: 4,
+                py: '10px',
+                mx: 'auto',
+                my: 2,
+                maxWidth: 400,
+              }}
+            >
+              <Typography
+                variant='body2'
+                sx={{
+                  marginY: '1px',
+                  color: theme.palette.primary.main,
+                }}
+              >
+                {systemMessage}
+              </Typography>
+            </Box>
           )}
+
           <MessagePaper />
         </>
       )}

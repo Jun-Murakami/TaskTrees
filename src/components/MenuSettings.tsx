@@ -21,12 +21,18 @@ import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 
 interface MenuSettingsProps {
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleFileUpload: (file: File) => void;
   handleDownloadAppState: () => void;
+  handleDownloadAllTrees: () => void;
   handleLogout: () => void;
 }
 
-export function MenuSettings({ handleFileUpload, handleDownloadAppState, handleLogout }: MenuSettingsProps) {
+export function MenuSettings({
+  handleFileUpload,
+  handleDownloadAppState,
+  handleDownloadAllTrees,
+  handleLogout,
+}: MenuSettingsProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
@@ -121,9 +127,11 @@ export function MenuSettings({ handleFileUpload, handleDownloadAppState, handleL
         sx={{
           elevation: 0,
           overflow: 'visible',
-          width: 240,
-          minWidth: 240,
-          bottom: 10,
+          '& .MuiPaper-root': {
+            width: 240,
+            minWidth: 240,
+            ml: -2,
+          },
           '& .MuiAvatar-root': {
             width: 32,
             height: 32,
@@ -170,7 +178,7 @@ export function MenuSettings({ handleFileUpload, handleDownloadAppState, handleL
           type='file'
           ref={hiddenFileInput}
           onChange={(event) => {
-            handleFileUpload(event);
+            handleFileUpload(event.target.files![0]);
             handleClose();
           }}
           style={{ display: 'none' }}
@@ -185,7 +193,7 @@ export function MenuSettings({ handleFileUpload, handleDownloadAppState, handleL
             <ListItemIcon>
               <UploadIcon fontSize='small' />
             </ListItemIcon>
-            Upload
+            Import Tree(s)
           </MenuItem>
         </Tooltip>
         {currentTree && (
@@ -199,15 +207,35 @@ export function MenuSettings({ handleFileUpload, handleDownloadAppState, handleL
               <ListItemIcon>
                 <DownloadIcon fontSize='small' />
               </ListItemIcon>
-              Backup
+              Backup Tree
             </MenuItem>
           </Tooltip>
         )}
+        <Tooltip title='すべてのツリーデータをバックアップ' placement='right'>
+          <MenuItem
+            onClick={() => {
+              handleDownloadAllTrees();
+              handleClose();
+            }}
+          >
+            <ListItemIcon>
+              <DownloadIcon fontSize='small' />
+            </ListItemIcon>
+            Backup All Trees
+          </MenuItem>
+        </Tooltip>
         <Divider />
         <Tooltip title='表示モードの切り替え' placement='right'>
           <MenuItem>
             <FormControlLabel
-              control={<MaterialUISwitch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />}
+              control={
+                <MaterialUISwitch
+                  checked={darkMode}
+                  onChange={() => {
+                    setDarkMode(!darkMode);
+                  }}
+                />
+              }
               label={`${darkMode ? 'Dark Mode' : 'Light Mode'}`}
             />
           </MenuItem>
