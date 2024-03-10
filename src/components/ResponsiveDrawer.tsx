@@ -23,7 +23,7 @@ import { useTreeStateStore } from '../store/treeStateStore';
 import { SortableList } from './SortableList/SortableList';
 import { MenuSettings } from './MenuSettings';
 
-const drawerWidth = 240;
+const drawerWidth = 300;
 
 interface ResponsiveDrawerProps {
   handleCreateNewTree: () => void;
@@ -155,8 +155,8 @@ export function ResponsiveDrawer({
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           borderRight: { xs: 0, sm: `1px solid ${theme.palette.divider}` },
           boxSize: 'border-box',
-          width: 240,
-          minWidth: 240,
+          width: drawerWidth,
+          minWidth: drawerWidth,
           position: 'fixed',
           zIndex: 1300,
           backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
@@ -238,8 +238,8 @@ export function ResponsiveDrawer({
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           bottom: 0,
-          width: 240,
-          minWidth: 240,
+          width: drawerWidth,
+          minWidth: drawerWidth,
           borderRight: { xs: 0, sm: `1px solid ${theme.palette.divider}` },
           boxSize: 'border-box',
           zIndex: 1300,

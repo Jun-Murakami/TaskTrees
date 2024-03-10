@@ -39,6 +39,8 @@ export function HomePage() {
 
   const theme = useTheme();
 
+  const drawerWidth = 300;
+
   return (
     <>
       {isLoggedIn ? (
@@ -57,9 +59,12 @@ export function HomePage() {
             />
             <Box
               sx={{
-                marginLeft: { sm: '240px' }, // smサイズの時だけ左マージンを240pxに設定
-                width: { xs: '100%', sm: 'calc(100% - 240px)' }, // smサイズの時だけ幅をResponsiveDrawerの幅を考慮して調整}}
+                maxWidth: '900px',
+                mx: 'auto',
                 minHeight: currentTree !== null ? '100vh' : 'auto',
+                '@media (max-width: 1546px)': {
+                  ml: { xs: 'auto', sm: `${drawerWidth}px` },
+                },
               }}
             >
               {currentTree ? (
@@ -80,7 +85,7 @@ export function HomePage() {
                   sx={{
                     position: 'fixed',
                     display: 'block',
-                    left: { xs: 'calc(50vw - 20px)', sm: 'calc(50vw + 100px)' },
+                    left: 'calc(50% - 20px)',
                     top: '50vh',
                     zIndex: 1400,
                   }}
