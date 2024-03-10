@@ -28,6 +28,7 @@ export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, handl
     ...(isDragging ? { opacity } : {}), // opacity が undefined の場合はプロパティ自体を追加しない
     ...(canTransform && transform ? { transform: CSS.Transform.toString(transform) } : {}),
     ...(transition ? { transition } : {}),
+    height: 50,
   };
 
   return (
