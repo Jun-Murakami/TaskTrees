@@ -94,7 +94,7 @@ export const useTreeManagement = () => {
                   resolve() // エラーが発生してもPromiseを解決
                 })
             }).catch((error) => {
-              console.log('trees/${treeId}/nameの監視中にエラーが発生しました' + error)
+              console.log('trees/${treeId}/nameの監視中にエラーが発生しました\n\n' + error)
               setMissingTrees((prev) => (prev ? [...prev, treeId] : [treeId]))
             })
           )
@@ -116,7 +116,7 @@ export const useTreeManagement = () => {
       return () => unsubscribe()
     } catch (error) {
       setIsLoading(false)
-      handleError('ツリーリストの監視中にエラーが発生しました' + error)
+      handleError('ツリーリストの監視中にエラーが発生しました\n\n' + error)
       return
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -222,7 +222,7 @@ export const useTreeManagement = () => {
           unsubscribeMembers()
         }
       } catch (error) {
-        handleError('ツリーリストの変更をデータベースに保存できませんでした。' + error)
+        handleError('ツリーリストの変更をデータベースに保存できませんでした。\n\n' + error)
         return
       }
     }
@@ -270,7 +270,7 @@ export const useTreeManagement = () => {
         saveItemsDb(items, currentTree)
         prevItemsRef.current = items
       } catch (error) {
-        handleError('ツリー内容の変更をデータベースに保存できませんでした。' + error)
+        handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error)
       }
     }, 3000) // 3秒のデバウンス
 
@@ -321,7 +321,7 @@ export const useTreeManagement = () => {
         const emails = (result.data as { emails: string[] }).emails
         return emails // ここでemailsを返す
       } catch (error) {
-        showDialog('メンバーのメールアドレスの取得に失敗しました。' + error, 'Error')
+        showDialog('メンバーのメールアドレスの取得に失敗しました。\n\n' + error, 'Error')
         return [] // エラーが発生した場合は空の配列を返す
       }
     },
@@ -372,7 +372,7 @@ export const useTreeManagement = () => {
       setTreesList(updatedTreesList)
       saveTreesListDb(updatedTreesList)
     } catch (error) {
-      await showDialog('ツリーの削除に失敗しました。' + error, 'Error')
+      await showDialog('ツリーの削除に失敗しました。\n\n' + error, 'Error')
     }
   }
 
@@ -397,7 +397,7 @@ export const useTreeManagement = () => {
         const treeId: string = result.data as string // result.dataをstring型としてキャスト
         return treeId
       } catch (error) {
-        showDialog('メンバーのメールアドレスの取得に失敗しました。' + error, 'Error')
+        showDialog('メンバーのメールアドレスの取得に失敗しました。\n\n' + error, 'Error')
         return [] // エラーが発生した場合は空の配列を返す
       }
     },
@@ -448,7 +448,7 @@ export const useTreeManagement = () => {
         Promise.resolve()
       }
     } catch (error) {
-      await showDialog('新しいツリーの作成に失敗しました。' + error, 'Error')
+      await showDialog('新しいツリーの作成に失敗しました。\n\n' + error, 'Error')
       setIsLoading(false)
       return Promise.reject()
     }
@@ -619,7 +619,7 @@ export const useTreeManagement = () => {
           }
         }
       } catch (error) {
-        await showDialog('ファイルの読み込みに失敗しました。' + error, 'Error')
+        await showDialog('ファイルの読み込みに失敗しました。\n\n' + error, 'Error')
         if (isLoading) setIsLoading(false)
         return Promise.reject()
       }
@@ -678,7 +678,7 @@ export const useTreeManagement = () => {
       a.download = `TaskTrees_AllBackup_${getCurrentDateTime()}.json`
       a.click()
     } catch (error) {
-      await showDialog('ツリーのバックアップに失敗しました。' + error, 'Error')
+      await showDialog('ツリーのバックアップに失敗しました。\n\n' + error, 'Error')
       return Promise.reject()
     }
   }

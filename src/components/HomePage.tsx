@@ -120,13 +120,7 @@ export function HomePage() {
         <>
           <TaskTreesLogo />
           {isLoading ? (
-            <CircularProgress
-              sx={{
-                marginY: 4,
-                display: 'block',
-                marginX: 'auto',
-              }}
-            />
+            <CircularProgress sx={{ marginY: 4, display: 'block', marginX: 'auto' }} />
           ) : (
             <Button onClick={() => handleLogin()} variant={'contained'}>
               Googleでログイン
@@ -144,13 +138,7 @@ export function HomePage() {
                 maxWidth: 400,
               }}
             >
-              <Typography
-                variant='body2'
-                sx={{
-                  mx: 2,
-                  color: theme.palette.primary.main,
-                }}
-              >
+              <Typography variant='body2' sx={{ mx: 2, color: theme.palette.primary.main }}>
                 {systemMessage}
               </Typography>
             </Box>

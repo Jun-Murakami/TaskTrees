@@ -129,7 +129,7 @@ export const useTaskManagement = () => {
             await deleteFile(attachedFile)
           })
         } catch (error) {
-          showDialog('添付ファイルの削除に失敗しました。' + error, 'Error')
+          showDialog('添付ファイルの削除に失敗しました。\n\n' + error, 'Error')
         }
         setItems(removeItem(currentItems, id))
         return
@@ -176,7 +176,7 @@ export const useTaskManagement = () => {
         await deleteFile(attachedFile, true)
       })
     } catch (error) {
-      showDialog('添付ファイルの削除に失敗しました。' + error, 'Error')
+      showDialog('添付ファイルの削除に失敗しました。\n\n' + error, 'Error')
     }
     const itemsWithoutTrashDescendants = targetItems.filter(
       (item) => !isDescendantOfTrash(targetItems, item.id) || item.id === 'trash'
@@ -313,7 +313,7 @@ export const useTaskManagement = () => {
               if (newItems && trashIndex) {
                 //コピー先のDBにコピー用アイテムを追加
                 set(treeItemsRef, newItems).catch((error) => {
-                  throw new Error('データベースにアイテムを保存できませんでした。' + error)
+                  throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error)
                 })
                 return true
               } else {
@@ -330,8 +330,8 @@ export const useTaskManagement = () => {
           throw new Error(error)
         })
     } catch (error) {
-      console.error('エラーが発生しました。' + error)
-      showDialog('エラーが発生しました。' + error, 'Error')
+      console.error('エラーが発生しました。\n\n' + error)
+      showDialog('エラーが発生しました。\n\n' + error, 'Error')
       return false
     }
     return false
@@ -382,7 +382,7 @@ export const useTaskManagement = () => {
               if (newItems && trashIndex) {
                 //移動先のDBにアイテムを追加
                 set(treeItemsRef, newItems).catch((error) => {
-                  throw new Error('データベースにアイテムを保存できませんでした。' + error)
+                  throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error)
                 })
                 setItems(removeItem(items, targetTaskId))
               } else {
@@ -399,8 +399,8 @@ export const useTaskManagement = () => {
           throw new Error(error)
         })
     } catch (error) {
-      console.error('エラーが発生しました。' + error)
-      showDialog('エラーが発生しました。' + error, 'Error')
+      console.error('エラーが発生しました。\n\n' + error)
+      showDialog('エラーが発生しました。\n\n' + error, 'Error')
     }
   }
 

@@ -108,7 +108,7 @@ export const useAuth = () => {
                   })
                   .catch((error) => {
                     handleLogout();
-                    setSystemMessage('ツリーのメンバーから自分を削除中にエラーが発生しました:' + error);
+                    setSystemMessage('ツリーのメンバーから自分を削除中にエラーが発生しました\n\n' + error);
                     if (isLoading) setIsLoading(false);
                     return;
                   });
@@ -120,7 +120,7 @@ export const useAuth = () => {
                   })
                   .catch((error) => {
                     handleLogout();
-                    setSystemMessage('ツリーの削除中にエラーが発生しました。code1:' + error);
+                    setSystemMessage('ツリーの削除中にエラーが発生しました。code1\n\n' + error);
                     if (isLoading) setIsLoading(false);
                     return;
                   });
@@ -145,7 +145,7 @@ export const useAuth = () => {
           })
           .catch((error) => {
             handleLogout();
-            setSystemMessage('ツリーの削除中にエラーが発生しました。code2:' + error);
+            setSystemMessage('ツリーの削除中にエラーが発生しました。code2\n\n' + error);
             if (isLoading) setIsLoading(false);
             return;
           });
@@ -158,7 +158,7 @@ export const useAuth = () => {
         })
         .catch((error) => {
           handleLogout();
-          setSystemMessage('データの削除中にエラーが発生しました:' + error);
+          setSystemMessage('データの削除中にエラーが発生しました\n\n' + error);
           if (isLoading) setIsLoading(false);
           return;
         });
@@ -173,7 +173,7 @@ export const useAuth = () => {
         })
         .catch((error) => {
           if (error instanceof Error) {
-            setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : ' + error.message);
+            setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : \n\n' + error.message);
           } else {
             setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : 不明なエラー');
           }

@@ -18,9 +18,9 @@ export const useError = () => {
   const handleError = useCallback((error: unknown) => {
     if (!isLoading) return;
     if (error instanceof Error) {
-      setSystemMessage('ログアウトしました。 : ' + error.message);
+      setSystemMessage('ログアウトしました。 : \n\n' + error.message);
     } else {
-      setSystemMessage('ログアウトしました。: ' + error);
+      setSystemMessage('ログアウトしました。: \n\n' + error);
     }
     setCurrentTree(null);
     setCurrentTreeName(null);

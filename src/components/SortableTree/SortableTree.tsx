@@ -279,10 +279,15 @@ export function SortableTree({
 
   function handleDragEnd({ active, over }: DragEndEvent) {
     resetState();
-    if (projected && over && over.id !== 'trash') {
+    if (projected && over) {
       const { depth, parentId } = projected;
       const clonedItems: FlattenedItem[] = JSON.parse(JSON.stringify(flattenTree(items)));
-      const overIndex = clonedItems.findIndex(({ id }) => id === over.id);
+      let overIndex;
+      if (over.id === 'trash') {
+        overIndex = 0;
+      } else {
+        overIndex = clonedItems.findIndex(({ id }) => id === over.id);
+      }
       const activeIndex = clonedItems.findIndex(({ id }) => id === active.id);
       const activeTreeItem = clonedItems[activeIndex];
 

@@ -15,6 +15,13 @@ export const useAttachedFile = () => {
   // ファイルをFirebaseStorageにアップロードする処理 ------------------------------------------------
   const uploadFile = async (file: File) => {
     setIsLoading(true);
+    // ファイルサイズを取得
+    const fileSize = file.size / 1024 / 1024;
+    if (fileSize > 25) {
+      setIsLoading(false);
+      await showDialog('添付できるファイルサイズは25MBまでです', 'Information');
+      return;
+    }
     const storage = getStorage();
     let fileName = file.name;
     const fileExtension = fileName.slice(fileName.lastIndexOf('.'));
@@ -43,7 +50,7 @@ export const useAttachedFile = () => {
       return fileName;
     } catch (error) {
       setIsLoading(false);
-      await showDialog('ファイルのアップロードに失敗しました:' + error, 'Error');
+      await showDialog('ファイルのアップロードに失敗しました\n\n' + error, 'Error');
       return undefined;
     }
   }
@@ -69,7 +76,7 @@ export const useAttachedFile = () => {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      const result = await showDialog('ファイルのダウンロードに失敗しました。ファイルが削除されている可能性があります。データベースからこのファイルの添付を削除しますか？:' + error, 'Error', true);
+      const result = await showDialog('ファイルのダウンロードに失敗しました。ファイルが削除されている可能性があります。データベースからこのファイルの添付を削除しますか？\n\n' + error, 'Error', true);
       if (result) {
         const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
         const updatedItems = await deleteAttachedFile(newItems, fileName);
@@ -93,7 +100,7 @@ export const useAttachedFile = () => {
   // 本編 ------------------------------------------------
   const deleteFile = async (fileName: string, isSilent: boolean = false) => {
     if (!isSilent) {
-      const result = await showDialog(`ファイル「${fileName}」を削除しますか？`, 'Delete File', true);
+      const result = await showDialog(`添付ファイル「${fileName}」を削除しますか？`, 'Delete File', true);
       if (!result) return;
     }
     try {
@@ -108,7 +115,12 @@ export const useAttachedFile = () => {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      const result = await showDialog('ファイルの削除に失敗しました。既にファイルが削除されている可能性があります。データベースからこのファイルの参照を削除しますか？::' + error, 'Error', true);
+      const result = await showDialog(
+        '添付ファイルの削除に失敗しました。既にファイルが削除されている可能性があります。データベースからファイルの参照を削除しますか？\n\n' +
+        error,
+        'Error',
+        true
+      );
       if (result) {
         const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
         const updatedItems = await deleteAttachedFile(newItems, fileName);

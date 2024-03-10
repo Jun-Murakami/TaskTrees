@@ -33,7 +33,7 @@ export const useDatabase = () => {
           if (snapshot.exists()) {
             // 存在する場合、更新を実行
             set(treeStateRef, newItems).catch((error) => {
-              handleError('データベースの保存に失敗しました。code:3' + error)
+              handleError('データベースの保存に失敗しました。code:3\n\n' + error)
             })
           } else {
             // 存在しない場合、エラーハンドリング
@@ -44,11 +44,11 @@ export const useDatabase = () => {
         })
         .catch((error) => {
           console.log(
-            '更新対象のitemsが存在しません。ツリー内容の変更は破棄されました。code:5 ' + error
+            '更新対象のitemsが存在しません。ツリー内容の変更は破棄されました。code:5 \n\n' + error
           )
         })
     } catch (error) {
-      handleError('ツリー内容の変更をデータベースに保存できませんでした。' + error)
+      handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error)
     }
   }
 
@@ -65,7 +65,7 @@ export const useDatabase = () => {
         newTreesList.map((tree) => tree.id)
       )
     } catch (error) {
-      handleError('ツリーリストの変更をデータベースに保存できませんでした。' + error)
+      handleError('ツリーリストの変更をデータベースに保存できませんでした。\n\n' + error)
     }
   }
 
@@ -79,7 +79,7 @@ export const useDatabase = () => {
       const treeNameRef = ref(getDatabase(), `trees/${targetTree}/name`)
       set(treeNameRef, editedTreeName)
     } catch (error) {
-      handleError('ツリー名の変更をデータベースに保存できませんでした。' + error)
+      handleError('ツリー名の変更をデータベースに保存できませんでした。\n\n' + error)
     }
   }
 
@@ -122,7 +122,7 @@ export const useDatabase = () => {
         return treeData.filter((item) => item !== null)
       }
     } catch (error) {
-      throw new Error('ツリーデータの取得に失敗しました。' + error)
+      throw new Error('ツリーデータの取得に失敗しました。\n\n' + error)
     }
     return null
   }

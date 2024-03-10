@@ -10,10 +10,10 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import UndoIcon from '@mui/icons-material/Undo';
 import FlakyIcon from '@mui/icons-material/Flaky';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
-import DownloadIcon from '@mui/icons-material/Download';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
+import { useDialogStore } from '../../store/dialogStore';
 import { useAttachedFile } from '../../hooks/useAttachedFile';
 
 interface MenuItemsProps {
@@ -42,12 +42,22 @@ interface MenuItemsAttachedFileProps {
   attachedFile: string;
 }
 
-export function MenuItems({ id, currenTreeId, handleAttachFile, onRemove, onCopyItems, onMoveItems }: MenuItemsProps) {
+export function MenuItems({
+  id,
+  attachedFile,
+  currenTreeId,
+  handleAttachFile,
+  onRemove,
+  onCopyItems,
+  onMoveItems,
+}: MenuItemsProps) {
   const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
   const [openCopyMenu, setOpenCopyMenu] = useState<boolean>(false);
   const [openMoveMenu, setOpenMoveMenu] = useState<boolean>(false);
 
-  const { uploadFile } = useAttachedFile();
+  const showDialog = useDialogStore((state) => state.showDialog);
+
+  const { uploadFile, deleteFile } = useAttachedFile();
 
   const anchorElParent = useRef<HTMLButtonElement>(null);
   const anchorElCopy = useRef<HTMLButtonElement>(null);
@@ -79,7 +89,7 @@ export function MenuItems({ id, currenTreeId, handleAttachFile, onRemove, onCopy
   };
 
   // ファイルをアップロードして添付する処理
-  const handleUploadClick = () => {
+  const handleUploadClick = async () => {
     //ファイルダイアログを開いてファイルを選択
     const input = document.createElement('input');
     input.type = 'file';
@@ -87,6 +97,16 @@ export function MenuItems({ id, currenTreeId, handleAttachFile, onRemove, onCopy
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
+      if (attachedFile) {
+        const result = await showDialog(
+          '既存の添付ファイルは上書きされます。新しいファイルを添付しますか？',
+          'Information',
+          true
+        );
+        if (!result) return;
+        await deleteFile(attachedFile, true);
+      }
+
       //ファイルをアップロード
       const fileName = await uploadFile(file);
       if (!fileName) return;
@@ -143,8 +163,8 @@ export function MenuItems({ id, currenTreeId, handleAttachFile, onRemove, onCopy
         </MenuItem>
         <Divider />
         <MenuItem
-          onClick={() => {
-            handleUploadClick();
+          onClick={async () => {
+            await handleUploadClick();
             handleParentClose();
           }}
         >
@@ -444,13 +464,6 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
           elevation: 0,
         }}
       >
-        <MenuItem disabled>
-          <ListItemIcon>
-            <InsertDriveFileOutlinedIcon fontSize='small' />
-          </ListItemIcon>
-          {attachedFile}
-        </MenuItem>
-        <Divider />
         <MenuItem
           onClick={() => {
             downloadFile &&
@@ -461,10 +474,11 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
           }}
         >
           <ListItemIcon>
-            <DownloadIcon fontSize='small' />
+            <InsertDriveFileOutlinedIcon fontSize='small' />
           </ListItemIcon>
-          ダウンロード
+          {attachedFile}
         </MenuItem>
+        <Divider />
         <MenuItem
           onClick={() => {
             deleteFile &&

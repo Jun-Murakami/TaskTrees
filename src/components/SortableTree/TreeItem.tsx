@@ -342,6 +342,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                   onMoveItems={onMoveItems}
                   currenTreeId={currentTree}
                   id={id}
+                  attachedFile={attachedFile}
                 />
               ) : (
                 <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />

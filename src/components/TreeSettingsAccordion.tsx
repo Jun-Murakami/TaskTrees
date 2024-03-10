@@ -122,7 +122,10 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
       setIsLoading(false);
       return result.data;
     } catch (error) {
-      await showDialog('メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。' + error, 'IInformation');
+      await showDialog(
+        'メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。\n\n' + error,
+        'IInformation'
+      );
       setIsLoading(false);
     }
   };
@@ -161,7 +164,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
         setIsLoading(false);
         return result.data;
       } catch (error) {
-        await showDialog('メンバーの削除に失敗しました。' + error, 'Error');
+        await showDialog('メンバーの削除に失敗しました。\n\n' + error, 'Error');
         setIsLoading(false);
       }
     }
