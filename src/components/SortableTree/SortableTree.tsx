@@ -28,6 +28,7 @@ import { AddTask } from './AddTask';
 import { CSS } from '@dnd-kit/utilities';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { useTreeStateStore } from '../../store/treeStateStore';
+import { useAppStateStore } from '../../store/appStateStore';
 import { useTaskManagement } from '../../hooks/useTaskManagement';
 
 const dropAnimationConfig: DropAnimation = {
@@ -82,6 +83,7 @@ export function SortableTree({
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
+  const isLoading = useAppStateStore((state) => state.isLoading);
 
   // タスクを管理するカスタムフック
   const {
@@ -92,6 +94,7 @@ export function SortableTree({
     handleCopy,
     handleMove,
     handleRestore,
+    handleAttachFile,
     removeTrashDescendants,
     removeTrashDescendantsWithDone,
   } = useTaskManagement();
@@ -189,7 +192,7 @@ export function SortableTree({
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
-          .map(({ id, value, done, children, collapsed, depth }) => (
+          .map(({ id, value, done, attachedFile, children, collapsed, depth }) => (
             <SortableTreeItem
               key={id}
               id={id.toString()}
@@ -206,6 +209,8 @@ export function SortableTree({
               onCopyItems={handleCopy}
               onMoveItems={handleMove}
               onRestoreItems={handleRestore}
+              attachedFile={attachedFile}
+              handleAttachFile={handleAttachFile}
               removeTrashDescendants={removeTrashDescendants}
               removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
               onSelect={handleSelect}
@@ -222,6 +227,7 @@ export function SortableTree({
                 childCount={getChildCount(items, activeId) + 1}
                 value={activeItem.value.toString()}
                 indentationWidth={indentationWidth}
+                handleAttachFile={handleAttachFile}
                 done={activeItem.done}
                 isNewTask={activeId === activeNewTaskId}
               />
@@ -234,6 +240,7 @@ export function SortableTree({
   );
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
+    if (isLoading) return;
     if (activeId === activeNewTaskId) {
       const activeNewTaskItem = {
         id: activeNewTaskId,

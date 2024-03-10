@@ -35,6 +35,7 @@ interface TreeSettingsAccordionProps {
 }
 
 export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps) {
+  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
   const isFocusedTreeName = useAppStateStore((state) => state.isFocusedTreeName);
@@ -110,6 +111,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
       false
     );
     if (!email) return;
+    setIsLoading(true);
     const functions = getFunctions();
     const addUserToTreeCallable = httpsCallable(functions, 'addUserToTree');
     try {
@@ -117,9 +119,11 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
         email,
         treeId: currentTree,
       });
+      setIsLoading(false);
       return result.data;
     } catch (error) {
       await showDialog('メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。' + error, 'IInformation');
+      setIsLoading(false);
     }
   };
 
@@ -146,6 +150,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
       );
     }
     if (result) {
+      setIsLoading(true);
       const functions = getFunctions();
       const removeUserFromTreeCallable = httpsCallable(functions, 'removeUserFromTree');
       try {
@@ -153,9 +158,11 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
           treeId: currentTree,
           userId: uid,
         });
+        setIsLoading(false);
         return result.data;
       } catch (error) {
         await showDialog('メンバーの削除に失敗しました。' + error, 'Error');
+        setIsLoading(false);
       }
     }
   };

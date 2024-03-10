@@ -75,27 +75,34 @@ export function HomePage() {
                   <MessagePaper />
                 </>
               )}
+              {isLoading && (
+                <CircularProgress
+                  sx={{
+                    position: 'fixed',
+                    display: 'block',
+                    left: { xs: 'calc(50vw - 20px)', sm: 'calc(50vw + 100px)' },
+                    top: '50vh',
+                    zIndex: 1400,
+                  }}
+                />
+              )}
             </Box>
-            {isLoading && (
-              <CircularProgress
-                sx={{
-                  marginTop: 4,
-                  display: 'block',
-                  position: 'absolute',
-                  left: { xs: 'calc(50% - 20px)', sm: 'calc(50% + 100px)' },
-                }}
-              />
-            )}
           </>
         ) : (
           // アカウント削除の確認ダイアログ
           <>
             <TaskTreesLogo />
             <Typography variant='body2' sx={{ marginY: 4 }}>
-              アプリケーションのすべてのデータとアカウント情報が削除されます。この操作は取り消せません。削除を実行しますか？
+              アプリケーションのすべてのデータとアカウント情報が削除されます。
+              <br />
+              （複数メンバーで共有しているツリーは自分が編集メンバーから削除されます。）
+              <br />
+              この操作は取り消せません。削除を実行しますか？
             </Typography>
             <Button
-              onClick={handleDeleteAccount}
+              onClick={async () => {
+                await handleDeleteAccount();
+              }}
               variant={'contained'}
               startIcon={<DeleteForeverIcon />}
               color='error'
@@ -132,14 +139,15 @@ export function HomePage() {
                 borderRadius: 4,
                 py: '10px',
                 mx: 'auto',
-                my: 2,
+                mt: 4,
+                mb: 0,
                 maxWidth: 400,
               }}
             >
               <Typography
                 variant='body2'
                 sx={{
-                  marginY: '1px',
+                  mx: 2,
                   color: theme.palette.primary.main,
                 }}
               >

@@ -10,7 +10,7 @@ export const TaskTreesLogo = () => {
       </Typography>
       <Box sx={{ width: '100%', marginTop: -1, marginBottom: 4 }}>
         <Typography variant='caption' sx={{ width: '100%' }}>
-          Desktop
+          Team Edition
         </Typography>
       </Box>
     </>

@@ -9,6 +9,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions'
 import { useAppStateStore } from '../store/appStateStore'
 import { useTreeStateStore } from '../store/treeStateStore'
 import { useTaskStateStore } from '../store/taskStateStore'
+import { useAttachedFile } from './useAttachedFile'
 import { useError } from './useError'
 import { useDatabase } from './useDatabase'
 import { useDialogStore } from '../store/dialogStore'
@@ -42,6 +43,9 @@ export const useTreeManagement = () => {
 
   // データベース関連の関数
   const { saveItemsDb, saveTreesListDb, loadAllTreesDataFromDb } = useDatabase()
+
+  // ファイルのアップロードとダウンロード
+  const { deleteFile } = useAttachedFile()
 
   // ツリーリストのDB側の監視→変更されたらツリーリストを更新 ---------------------------------------------------------------------------
   useEffect(() => {
@@ -331,6 +335,22 @@ export const useTreeManagement = () => {
     if (!user || !db) {
       return
     }
+    // ツリーを削除する前に現在のツリー内の子要素を含むすべてのattachedFileを再帰的に削除
+    const deleteAttachedFiles = async () => {
+      const deleteAttachedFilesRecursively = async (items: TreeItem[]) => {
+        for (const item of items) {
+          if (item.attachedFile) {
+            await deleteFile(item.attachedFile, true)
+          }
+          if (item.children) {
+            await deleteAttachedFilesRecursively(item.children)
+          }
+        }
+      }
+      await deleteAttachedFilesRecursively(items)
+    }
+    await deleteAttachedFiles()
+
     setCurrentTree(null)
     setCurrentTreeName(null)
     setCurrentTreeMembers(null)
@@ -469,6 +489,7 @@ export const useTreeManagement = () => {
       }
     }
     reader.readAsText(file)
+    if (isLoading) setIsLoading(false)
   }
 
   // データがTreesListItemIncludingItems[]型であることを確認する関数
@@ -506,15 +527,32 @@ export const useTreeManagement = () => {
     if (data) {
       try {
         setCurrentTree(null)
-        const treeState = JSON.parse(data as string)
-        if (isValidTreeListItemIncludingItems(treeState)) {
+        const treeStateWithAttachedDFiles = JSON.parse(data as string)
+        // 子要素を含めたすべてのattachedFileをtreeStateから除外したリストを取得
+        const deleteAttachedFilesState = (treeState: TreesListItemIncludingItems) => {
+          const deleteAttachedFilesRecursively = (items: TreeItem[]) => {
+            for (const item of items) {
+              if (item.attachedFile) {
+                item.attachedFile = undefined
+              }
+              if (item.children) {
+                deleteAttachedFilesRecursively(item.children)
+              }
+            }
+          }
+          deleteAttachedFilesRecursively(treeState.items)
+          return treeState
+        }
+
+        if (isValidTreeListItemIncludingItems(treeStateWithAttachedDFiles)) {
           // 複数のツリーが含まれる場合、TreesListItemIncludingItems[] を反復してツリーをDBに保存
           let temporaryTreesList = [...treesList]
-          for (const tree of treeState) {
+          for (const tree of treeStateWithAttachedDFiles) {
             if (!isValidTreeState(tree) || !tree.name) {
               throw new Error('無効な複数ツリーファイル形式です。')
             }
-            const newTreeRef: unknown = await saveNewTree(tree.items, tree.name, {
+            const treeState = deleteAttachedFilesState(tree)
+            const newTreeRef: unknown = await saveNewTree(treeState.items, treeState.name ? treeState.name : '読み込まれたツリー', {
               [user.uid]: true
             })
             if (!newTreeRef) {
@@ -522,7 +560,7 @@ export const useTreeManagement = () => {
             }
             const loadedTreeObject = {
               id: newTreeRef as UniqueIdentifier,
-              name: tree.name
+              name: treeState.name ? treeState.name : '読み込まれたツリー'
             }
             temporaryTreesList = [...temporaryTreesList, loadedTreeObject]
           }
@@ -531,9 +569,10 @@ export const useTreeManagement = () => {
           showDialog('複数のツリーが正常に読み込まれました。', 'Information')
         } else {
           // 単体のツリーが含まれる場合、treeStateをDBに保存
-          if (!isValidTreeState(treeState)) {
+          if (!isValidTreeState(treeStateWithAttachedDFiles)) {
             throw new Error('無効なファイル形式です。')
           } else {
+            const treeState = deleteAttachedFilesState(treeStateWithAttachedDFiles)
             let treeName: string = ''
             if (!treeState.name && !treeState.currentTreeName) {
               treeName = '読み込まれたツリー'

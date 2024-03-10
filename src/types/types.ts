@@ -1,12 +1,13 @@
 import type { MutableRefObject } from 'react'
 import type { UniqueIdentifier } from '@dnd-kit/core'
 
-export interface TreeItem {
+export type TreeItem = {
   id: UniqueIdentifier
   children: TreeItem[]
   collapsed?: boolean
   value: string
   done?: boolean
+  attachedFile?: string
 }
 
 export type TreeItems = TreeItem[]
@@ -21,6 +22,7 @@ export type TreesList = TreesListItem[]
 export type TreesListItemIncludingItems = {
   id?: UniqueIdentifier
   name?: string
+  currentTreeName?: string
   members?: string[]
   items: TreeItems
 }

@@ -12,8 +12,10 @@ import {
   extractSubtree
 } from '../components/SortableTree/utilities'
 import { ref, getDatabase, get, set } from 'firebase/database'
+import { useAttachedFile } from './useAttachedFile'
 import { useTaskStateStore } from '../store/taskStateStore'
 import { useTreeStateStore } from '../store/treeStateStore'
+import { useAppStateStore } from '../store/appStateStore'
 import { useDialogStore } from '../store/dialogStore'
 
 export const useTaskManagement = () => {
@@ -23,6 +25,10 @@ export const useTaskManagement = () => {
   const items = useTreeStateStore((state) => state.items)
   const setItems = useTreeStateStore((state) => state.setItems)
   const showDialog = useDialogStore((state) => state.showDialog)
+
+  const setIsLoading = useAppStateStore((state) => state.setIsLoading)
+
+  const { deleteFile } = useAttachedFile()
 
   // 選択したアイテムのIDを記憶する
   const handleSelect = (id: UniqueIdentifier) => {
@@ -95,19 +101,36 @@ export const useTaskManagement = () => {
   }
 
   // タスクの削除 ------------------------------
-  function handleRemove(id: UniqueIdentifier | undefined) {
+  async function handleRemove(id: UniqueIdentifier | undefined) {
     if (!id) return
     const currentItems = items
     const itemToRemove = findItemDeep(currentItems, id)
     const trashItem = currentItems.find((item) => item.id === 'trash')
 
     if (itemToRemove && trashItem) {
+      setIsLoading(true)
       const itemToRemoveCopy = { ...itemToRemove, children: [...itemToRemove.children] } // アイテムのコピーを作成
 
       // 親アイテムを見つけ、そのchildrenからアイテムを削除
       const parentItem = findParentItem(currentItems, id)
       // ゴミ箱にアイテムを追加するか、元のアイテムを削除するかを決定
       if (isDescendantOfTrash(currentItems, id)) {
+        try {
+          // itemToRemoveCopy自身とその子孫のattachedFileをすべてリストアップ
+          const attachedFiles: string[] = []
+          const listUpAttachedFiles = (item: TreeItem) => {
+            if (item.attachedFile) {
+              attachedFiles.push(item.attachedFile)
+            }
+            item.children.forEach(listUpAttachedFiles)
+          }
+          listUpAttachedFiles(itemToRemoveCopy)
+          attachedFiles.forEach(async (attachedFile) => {
+            await deleteFile(attachedFile)
+          })
+        } catch (error) {
+          showDialog('添付ファイルの削除に失敗しました。' + error, 'Error')
+        }
         setItems(removeItem(currentItems, id))
         return
       } else if (parentItem) {
@@ -122,6 +145,7 @@ export const useTaskManagement = () => {
         item.id === 'trash' ? { ...trashItem, children: trashItem.children } : item
       )
       setItems(updatedItems)
+      setIsLoading(false)
     }
   }
 
@@ -134,6 +158,26 @@ export const useTaskManagement = () => {
       true
     )
     if (!result) return
+    try {
+      setIsLoading(true)
+      // ゴミ箱の子孫のアイテムに含まれるattachedFileをすべてリストアップ
+      const itemsWithTrashDescendants = targetItems.filter(
+        (item) => isDescendantOfTrash(targetItems, item.id) || item.id === 'trash'
+      )
+      const attachedFiles: string[] = []
+      const listUpAttachedFiles = (item: TreeItem) => {
+        if (item.attachedFile) {
+          attachedFiles.push(item.attachedFile)
+        }
+        item.children.forEach(listUpAttachedFiles)
+      }
+      itemsWithTrashDescendants.forEach(listUpAttachedFiles)
+      attachedFiles.forEach(async (attachedFile) => {
+        await deleteFile(attachedFile, true)
+      })
+    } catch (error) {
+      showDialog('添付ファイルの削除に失敗しました。' + error, 'Error')
+    }
     const itemsWithoutTrashDescendants = targetItems.filter(
       (item) => !isDescendantOfTrash(targetItems, item.id) || item.id === 'trash'
     )
@@ -144,6 +188,7 @@ export const useTaskManagement = () => {
       }
     }
     setItems(itemsWithoutTrashDescendants)
+    setIsLoading(false)
   }
 
   // ゴミ箱内のdoneプロパティがtrueの完了済みタスクをすべて削除する ------------------------------
@@ -156,29 +201,48 @@ export const useTaskManagement = () => {
     )
     if (!result) return
 
-    const removeDoneDescendants = (items: TreeItems, parentId: UniqueIdentifier): TreeItems => {
-      return items.reduce<TreeItems>((acc, item) => {
-        if (item.id === parentId) {
-          item.children = item.children.filter((child) => {
-            if (child.done && !child.children.some((grandchild) => !grandchild.done)) {
-              return false
-            }
-            child.children = removeDoneDescendants(child.children, child.id)
-            return true
-          })
-          acc.push(item)
-        } else if (item.children.length) {
-          item.children = removeDoneDescendants(item.children, parentId)
-          acc.push(item)
-        } else {
-          acc.push(item)
-        }
-        return acc
-      }, [])
-    }
+    setIsLoading(true)
 
-    const updatedItems = removeDoneDescendants(targetItems, 'trash')
+    const deleteList: string[] = []
+
+    const addAttachedFilesToDeleteList = async (item: TreeItem) => {
+      if (item.attachedFile) {
+        console.log('attachedFile:', item.attachedFile)
+        deleteList.push(item.attachedFile);
+      }
+      item.children.forEach(addAttachedFilesToDeleteList);
+    };
+
+
+    const removeDoneDescendants = async (items: TreeItems, parentId: UniqueIdentifier): Promise<TreeItems> => {
+      const result: TreeItems = [];
+      for (const item of items) {
+        if (item.id === parentId) {
+          const filteredChildren: TreeItem[] = [];
+          for (const child of item.children) {
+            if (!(await child.done && !child.children.some((grandchild) => !grandchild.done))) {
+              child.children = await removeDoneDescendants(child.children, child.id);
+              filteredChildren.push(child);
+            } else {
+              // ここで child が削除される場合、関連する非同期処理を行う
+              await addAttachedFilesToDeleteList(child);
+            }
+          }
+          item.children = filteredChildren;
+        } else if (item.children.length) {
+          item.children = await removeDoneDescendants(item.children, parentId);
+        }
+        result.push(item);
+      }
+      return result;
+    };
+
+    const updatedItems = await removeDoneDescendants(targetItems, 'trash')
+    for (const file of deleteList) {
+      await deleteFile(file, true)
+    }
     setItems(updatedItems)
+    setIsLoading(false)
   }
 
   // タスクをゴミ箱から復元する ------------------------------
@@ -377,6 +441,12 @@ export const useTaskManagement = () => {
     setItems(newItems)
   }
 
+  // アイテムにファイルを添付する ------------------------------
+  const handleAttachFile = (id: UniqueIdentifier, fileName: string) => {
+    const newItems = setProperty(items, id, 'attachedFile', () => fileName)
+    setItems(newItems)
+  }
+
   return {
     handleSelect,
     handleAddTask,
@@ -386,6 +456,7 @@ export const useTaskManagement = () => {
     handleCopy,
     handleMove,
     handleRestore,
+    handleAttachFile,
     removeTrashDescendants,
     removeTrashDescendantsWithDone
   }

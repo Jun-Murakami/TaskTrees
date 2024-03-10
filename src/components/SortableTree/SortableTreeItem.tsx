@@ -10,13 +10,15 @@ interface Props extends TreeItemProps {
   id: UniqueIdentifier;
   isNewTask?: boolean;
   addedTaskId?: UniqueIdentifier | null;
+  attachedFile?: string;
+  handleAttachFile(id: UniqueIdentifier, fileName: string): void;
   removeTrashDescendants?: () => Promise<void>;
   removeTrashDescendantsWithDone?: () => Promise<void>;
 }
 
 const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) => (isSorting || wasDragging ? false : true);
 
-export function SortableTreeItem({ id, depth, ...props }: Props) {
+export function SortableTreeItem({ id, depth, handleAttachFile, ...props }: Props) {
   const { attributes, isDragging, isSorting, listeners, setDraggableNodeRef, setDroppableNodeRef, transform, transition } =
     useSortable({
       id,
@@ -42,6 +44,8 @@ export function SortableTreeItem({ id, depth, ...props }: Props) {
         ...attributes,
         ...listeners,
       }}
+      attachedFile={props.attachedFile}
+      handleAttachFile={handleAttachFile}
       isNewTask={props.isNewTask}
       addedTaskId={props.addedTaskId}
       {...props}
