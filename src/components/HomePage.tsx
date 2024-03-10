@@ -86,6 +86,12 @@ export function HomePage() {
                     position: 'fixed',
                     display: 'block',
                     left: 'calc(50% - 20px)',
+                    '@media (min-width: 1249px) and (max-width: 1546px)': {
+                      left: { xs: 'calc(50% - 20px)', sm: '745px' },
+                    },
+                    '@media (max-width: 1249px)': {
+                      left: { xs: 'calc(50% - 20px)', sm: 'calc((100vw - 300px) / 2 + 270px)' },
+                    },
                     top: '50vh',
                     zIndex: 1400,
                   }}
