@@ -5,12 +5,12 @@ import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 
 export const useAttachedFile = () => {
-
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const showDialog = useDialogStore((state) => state.showDialog);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
+
 
   // ファイルをFirebaseStorageにアップロードする処理 ------------------------------------------------
   const uploadFile = async (file: File) => {
@@ -39,12 +39,12 @@ export const useAttachedFile = () => {
     try {
       const newFileRef = ref(storage, `trees/${currentTree}/${fileName}`);
       await uploadBytes(newFileRef, file);
+      setIsLoading(false);
       return fileName;
     } catch (error) {
+      setIsLoading(false);
       await showDialog('ファイルのアップロードに失敗しました:' + error, 'Error');
       return undefined;
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -66,10 +66,15 @@ export const useAttachedFile = () => {
       a.click();
       window.URL.revokeObjectURL(downloadUrl); // 使用後はURLを解放
       a.remove(); // DOMから削除
-    } catch (error) {
-      await showDialog('ファイルのダウンロードに失敗しました:' + error, 'Error');
-    } finally {
       setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      const result = await showDialog('ファイルのダウンロードに失敗しました。ファイルが削除されている可能性があります。データベースからこのファイルの添付を削除しますか？:' + error, 'Error', true);
+      if (result) {
+        const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
+        const updatedItems = await deleteAttachedFile(newItems, fileName);
+        setItems(updatedItems);
+      }
     }
   }
 
@@ -77,7 +82,7 @@ export const useAttachedFile = () => {
   const deleteAttachedFile = async (items: TreeItem[], fileName: string): Promise<TreeItem[]> => {
     items.forEach(async (item) => {
       if (item.attachedFile === fileName) {
-        item.attachedFile = undefined;
+        delete item.attachedFile;
       }
       if (item.children.length > 0) {
         deleteAttachedFile(item.children, fileName);
@@ -100,13 +105,15 @@ export const useAttachedFile = () => {
       const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
       const updatedItems = await deleteAttachedFile(newItems, fileName);
       setItems(updatedItems);
-    } catch (error) {
-      await showDialog('ファイルの削除に失敗しました:' + error, 'Error');
-      const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
-      const updatedItems = await deleteAttachedFile(newItems, fileName);
-      setItems(updatedItems);
-    } finally {
       setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      const result = await showDialog('ファイルの削除に失敗しました。既にファイルが削除されている可能性があります。データベースからこのファイルの参照を削除しますか？::' + error, 'Error', true);
+      if (result) {
+        const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
+        const updatedItems = await deleteAttachedFile(newItems, fileName);
+        setItems(updatedItems);
+      }
     }
   }
 
