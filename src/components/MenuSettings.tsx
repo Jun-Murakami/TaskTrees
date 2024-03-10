@@ -128,8 +128,8 @@ export function MenuSettings({
           elevation: 0,
           overflow: 'visible',
           '& .MuiPaper-root': {
-            width: 240,
-            minWidth: 240,
+            width: { xs: 240, sm: 300 },
+            minWidth: { xs: 240, sm: 300 },
             ml: -2,
           },
           '& .MuiAvatar-root': {
