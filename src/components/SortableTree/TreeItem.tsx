@@ -147,7 +147,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
 
     const stackStyles = (clone: boolean | undefined, ghost: boolean | undefined) => ({
       width: '100%',
-      p: { xs: 0.7, sm: 1 },
+      p: 1,
       border: '1px solid',
       backgroundColor: isDragOver
         ? theme.palette.action.focus
