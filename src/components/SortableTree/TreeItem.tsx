@@ -307,7 +307,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                 onClick={() => id !== undefined && onSelect?.(id)}
                 multiline
                 fullWidth
-                sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.5, sm: 1 } }}
+                sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.75, sm: 1 } }}
                 InputProps={{
                   disableUnderline: !isFocusedOrHovered,
                   style: {
