@@ -48,14 +48,15 @@ export function AddTask({ id, ...Props }: Props) {
           position: isScrolled ? 'fixed' : { xs: 'fixed', sm: 'relative' }, // スクロールに応じて位置を固定
           top: isScrolled || isAccordionExpanded ? { xs: 'auto', sm: 25 } : 'auto', // スクロール時は上部に固定
           left: '50%',
-          '@media (min-width: 1247px) and (max-width:  1549px)': {
+          '@media (min-width: 1249px) and (max-width: 1546px)': {
             left: isScrolled ? { xs: '50%', sm: '765px' } : '50%',
           },
-          '@media (max-width: 1247px)': {
+          '@media (max-width: 1249px)': {
             left: isScrolled ? { xs: '50%', sm: 'calc((100vw - 300px) / 2 + 292px)' } : '50%',
           },
           bottom: { xs: 20, sm: 'auto' },
           marginBottom: isAccordionExpanded ? { xs: 'auto', sm: 5 } : 'auto',
+          transform: 'translateX(-50%)',
           zIndex: 1000, // スクロール時は他の要素より前面に
           height: { xs: '40px', sm: '50px' },
           width: { xs: '50%', sm: '80%' },

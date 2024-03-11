@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { useAppStateSync } from '../hooks/useAppStateSync';
 import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useAuth } from '../hooks/useAuth';
@@ -23,8 +22,6 @@ export function HomePage() {
   const systemMessage = useAppStateStore((state) => state.systemMessage); // システムメッセージ
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete); // アカウント削除の確認状態
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete); // アカウント削除の確認状態を変更
-  const containerWidth = useAppStateStore((state) => state.containerWidth); // コンテナの幅
-  const setContainerWidth = useAppStateStore((state) => state.setContainerWidth); // コンテナの幅を変更
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
   const isDialogVisible = useDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
@@ -44,34 +41,6 @@ export function HomePage() {
 
   const drawerWidth = 300;
 
-  const boxRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const updateWidth = () => {
-      if (boxRef.current) {
-        const computedStyle = window.getComputedStyle(boxRef.current);
-        const marginLeft = parseInt(computedStyle.marginLeft, 10);
-        const marginRight = parseInt(computedStyle.marginRight, 10);
-        const totalWidth = boxRef.current.offsetWidth + marginLeft + marginRight;
-        setContainerWidth(totalWidth);
-        console.log('containerWidth:', totalWidth);
-      }
-    };
-
-    const resizeObserver = new ResizeObserver(updateWidth);
-    const currentBox = boxRef.current; // 変更点: boxRef.currentを変数に保存
-    if (currentBox) {
-      resizeObserver.observe(currentBox);
-    }
-
-    return () => {
-      if (currentBox) {
-        // 変更点: 直接boxRef.currentを参照するのではなく、保存した変数を使用
-        resizeObserver.unobserve(currentBox);
-      }
-    };
-  }, [setContainerWidth]);
-
   return (
     <>
       {isLoggedIn ? (
@@ -89,31 +58,19 @@ export function HomePage() {
               handleLogout={handleLogout}
             />
             <Box
-              ref={boxRef}
               sx={{
-                width: '100%',
-                maxWidth: '100%',
+                maxWidth: '900px',
                 mx: 'auto',
                 minHeight: currentTree !== null ? 'calc(100vh - 55px)' : 'auto',
-                '@media (max-width: 1549px)': {
+                '@media (max-width: 1546px)': {
                   ml: { xs: 'auto', sm: `${drawerWidth}px` },
                 },
               }}
             >
               {currentTree ? (
                 <>
-                  <Box
-                    sx={{
-                      maxWidth: '900px',
-                      marginX: 'auto',
-                      mt: 0,
-                      mb: 6,
-                      ...(containerWidth < 1500 && {
-                        ml: { xs: 'auto', sm: `${drawerWidth}px` },
-                      }),
-                    }}
-                  >
-                    <TreeSettingsAccordion deleteTree={deleteTree} />
+                  <TreeSettingsAccordion deleteTree={deleteTree} />
+                  <Box sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: 6 }}>
                     <SortableTree collapsible indicator removable />
                   </Box>
                 </>
