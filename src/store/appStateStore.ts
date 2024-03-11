@@ -9,6 +9,7 @@ type AppState = {
   isWaitingForDelete: boolean;
   isAccordionExpanded: boolean;
   isFocusedTreeName: boolean;
+  containerWidth: number;
   setDarkMode: (darkMode: boolean) => void;
   setHideDoneItems: (hideDoneItems: boolean) => void;
   setSystemMessage: (systemMessage: string | null) => void;
@@ -17,6 +18,7 @@ type AppState = {
   setIsWaitingForDelete: (isWaitingForDelete: boolean) => void;
   setIsAccordionExpanded: (isAccordionExpanded: boolean) => void;
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
+  setContainerWidth: (containerWidth: number) => void;
 }
 
 export const useAppStateStore = create<AppState>((set) => ({
@@ -28,6 +30,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   isWaitingForDelete: false,
   isAccordionExpanded: false,
   isFocusedTreeName: false,
+  containerWidth: 0,
   setDarkMode: (darkMode) => set({ darkMode }),
   setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),
   setSystemMessage: (systemMessage) => set({ systemMessage }),
@@ -36,4 +39,5 @@ export const useAppStateStore = create<AppState>((set) => ({
   setIsWaitingForDelete: (isWaitingForDelete) => set({ isWaitingForDelete }),
   setIsAccordionExpanded: (isAccordionExpanded) => set({ isAccordionExpanded }),
   setIsFocusedTreeName: (isFocusedTreeName) => set({ isFocusedTreeName }),
+  setContainerWidth: (containerWidth) => set({ containerWidth }),
 }));

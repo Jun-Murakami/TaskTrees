@@ -16,6 +16,7 @@ export function AddTask({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
   const [isScrolled, setIsScrolled] = useState(false);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
+  const containerWidth = useAppStateStore((state) => state.containerWidth);
 
   const theme = useTheme();
   const matchesSM = useMediaQuery(theme.breakpoints.up('sm'));
@@ -47,16 +48,18 @@ export function AddTask({ id, ...Props }: Props) {
           display: { xs: 'flex', sm: 'block' },
           position: isScrolled ? 'fixed' : { xs: 'fixed', sm: 'relative' }, // スクロールに応じて位置を固定
           top: isScrolled || isAccordionExpanded ? { xs: 'auto', sm: 25 } : 'auto', // スクロール時は上部に固定
-          left: '50%',
-          '@media (min-width: 1249px) and (max-width: 1546px)': {
-            left: isScrolled ? { xs: '50%', sm: '765px' } : '50%',
-          },
-          '@media (max-width: 1249px)': {
-            left: isScrolled ? { xs: '50%', sm: 'calc((100vw - 300px) / 2 + 290px)' } : '50%',
-          },
+          transform: 'translateX(-50%)',
+          ...(containerWidth < 1500 && containerWidth > 1200
+            ? {
+                left: isScrolled ? { xs: '50%', sm: '770px' } : '50%',
+              }
+            : {
+                ...(containerWidth < 1200
+                  ? { left: isScrolled ? { xs: '50%', sm: `calc((${containerWidth}px + 40px - 300px) / 2 + 300px)` } : '50%' }
+                  : { left: '50%' }),
+              }),
           bottom: { xs: 20, sm: 'auto' },
           marginBottom: isAccordionExpanded ? { xs: 'auto', sm: 5 } : 'auto',
-          transform: 'translateX(-50%)',
           zIndex: 1000, // スクロール時は他の要素より前面に
           height: { xs: '40px', sm: '50px' },
           width: { xs: '50%', sm: '80%' },
