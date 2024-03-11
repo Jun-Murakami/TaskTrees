@@ -94,7 +94,10 @@ export function HomePage() {
                 width: '100%',
                 maxWidth: '100%',
                 mx: 'auto',
-                minHeight: currentTree !== null ? 'calc(100vh - 60px)' : 'auto',
+                minHeight: currentTree !== null ? 'calc(100vh - 55px)' : 'auto',
+                '@media (max-width: 1549px)': {
+                  ml: { xs: 'auto', sm: `${drawerWidth}px` },
+                },
               }}
             >
               {currentTree ? (
