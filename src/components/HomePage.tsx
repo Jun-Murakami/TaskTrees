@@ -61,8 +61,8 @@ export function HomePage() {
               sx={{
                 maxWidth: '900px',
                 mx: 'auto',
-                minHeight: currentTree !== null ? '100vh' : 'auto',
-                '@media (max-width: 1546px)': {
+                minHeight: currentTree !== null ? 'calc(100vh - 55px)' : 'auto',
+                '@media (max-width: 1549px)': {
                   ml: { xs: 'auto', sm: `${drawerWidth}px` },
                 },
               }}

@@ -12,8 +12,8 @@
 #root {
   width: 100%;
   margin: 0 auto;
-  margin-bottom: 4rem;
-  padding: 1rem;
+  margin-bottom: 40px;
+  padding: 15px;
   padding-top: 0;
   text-align: center;
 }
