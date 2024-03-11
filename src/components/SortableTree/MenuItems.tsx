@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { IconButton, Menu, MenuItem, Divider, Box } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -11,6 +11,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import FlakyIcon from '@mui/icons-material/Flaky';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
 import { useDialogStore } from '../../store/dialogStore';
@@ -417,10 +418,14 @@ export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescenda
 
 export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFileProps) {
   const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
+  const [imageURL, setImageURL] = useState<string | null>(null);
+
+  const currentTree = useTreeStateStore((state) => state.currentTree);
 
   const { downloadFile, deleteFile } = useAttachedFile();
 
   const anchorElParent = useRef<HTMLButtonElement>(null);
+  const prevAttachedFileRef = useRef<string | null>(null);
 
   const theme = useTheme();
 
@@ -432,8 +437,51 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
     setOpenParentMenu(false);
   };
 
+  useEffect(() => {
+    if (prevAttachedFileRef.current !== attachedFile) {
+      if (attachedFile?.match(/\.(jpg|jpeg|png|gif|svg)$/i) && currentTree) {
+        const storage = getStorage();
+        const imageRef = ref(storage, `trees/${currentTree}/${attachedFile}`);
+        getDownloadURL(imageRef)
+          .then((url) => {
+            setImageURL(url);
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      } else {
+        setImageURL(null);
+      }
+    }
+    // 現在のattachedFileを記録
+    prevAttachedFileRef.current = attachedFile;
+  }, [attachedFile, currentTree]);
+
   return (
     <>
+      {imageURL && (
+        <Box
+          sx={{
+            width: 30,
+            height: 30,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            overflow: 'hidden',
+            backgroundColor: theme.palette.action.hover,
+          }}
+        >
+          <Box
+            component='img'
+            sx={{
+              height: 'auto',
+              width: '100%',
+              maxHeight: '100%',
+            }}
+            src={imageURL}
+          />
+        </Box>
+      )}
       <IconButton
         ref={anchorElParent}
         onClick={handleParentClick}
