@@ -131,7 +131,7 @@ export function HomePage() {
         )
       ) : (
         // ログイン前の画面
-        <>
+        <Box sx={{ textAlign: 'center' }}>
           <TaskTreesLogo />
           {isLoading ? (
             <CircularProgress sx={{ marginY: 4, display: 'block', marginX: 'auto' }} />
@@ -159,7 +159,7 @@ export function HomePage() {
           )}
 
           <MessagePaper />
-        </>
+        </Box>
       )}
     </>
   );
