@@ -43,6 +43,20 @@ interface MenuItemsAttachedFileProps {
   attachedFile: string;
 }
 
+const iconButtonStyle = {
+  top: 0,
+  width: { xs: '22px', sm: '30px' },
+  minWidth: { xs: '22px', sm: '30px' },
+  height: '30px',
+  justifyContent: 'center',
+  '& .MuiListItemIcon-root': {
+    width: '30px',
+    maxWidth: '30px',
+    height: '30px',
+    maxHeight: '30px',
+  },
+};
+
 export function MenuItems({
   id,
   attachedFile,
@@ -121,25 +135,7 @@ export function MenuItems({
 
   return (
     <>
-      <IconButton
-        ref={anchorElParent}
-        onClick={handleParentClick}
-        sx={{
-          color: theme.palette.grey[500],
-          top: 0,
-          width: '30px',
-          maxWidth: '30px',
-          height: '30px',
-          maxHeight: '30px',
-          justifyContent: 'center',
-          '& .MuiListItemIcon-root': {
-            width: '30px',
-            maxWidth: '30px',
-            height: '30px',
-            maxHeight: '30px',
-          },
-        }}
-      >
+      <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
         <MoreVertIcon />
       </IconButton>
       <Menu
@@ -277,25 +273,7 @@ export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashP
 
   return (
     <>
-      <IconButton
-        ref={anchorElParent}
-        onClick={handleParentClick}
-        sx={{
-          color: theme.palette.grey[500],
-          top: 0,
-          width: '30px',
-          maxWidth: '30px',
-          height: '30px',
-          maxHeight: '30px',
-          justifyContent: 'center',
-          '& .MuiListItemIcon-root': {
-            width: '30px',
-            maxWidth: '30px',
-            height: '30px',
-            maxHeight: '30px',
-          },
-        }}
-      >
+      <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
         <MoreVertIcon />
       </IconButton>
       <Menu
@@ -352,25 +330,7 @@ export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescenda
 
   return (
     <>
-      <IconButton
-        ref={anchorElParent}
-        onClick={handleParentClick}
-        sx={{
-          color: theme.palette.grey[500],
-          top: 0,
-          width: '30px',
-          maxWidth: '30px',
-          height: '30px',
-          maxHeight: '30px',
-          justifyContent: 'center',
-          '& .MuiListItemIcon-root': {
-            width: '30px',
-            maxWidth: '30px',
-            height: '30px',
-            maxHeight: '30px',
-          },
-        }}
-      >
+      <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
         <MoreVertIcon />
       </IconButton>
       <Menu
@@ -462,8 +422,9 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
       {imageURL && (
         <Box
           sx={{
-            width: 30,
-            height: 30,
+            width: '30px',
+            minWidth: '30px',
+            height: '30px',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -476,31 +437,12 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
             sx={{
               height: 'auto',
               width: '100%',
-              maxHeight: '100%',
             }}
             src={imageURL}
           />
         </Box>
       )}
-      <IconButton
-        ref={anchorElParent}
-        onClick={handleParentClick}
-        sx={{
-          color: theme.palette.grey[500],
-          top: 0,
-          width: '30px',
-          maxWidth: '30px',
-          height: '30px',
-          maxHeight: '30px',
-          justifyContent: 'center',
-          '& .MuiListItemIcon-root': {
-            width: '30px',
-            maxWidth: '30px',
-            height: '30px',
-            maxHeight: '30px',
-          },
-        }}
-      >
+      <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
         <AttachFileIcon />
       </IconButton>
       <Menu

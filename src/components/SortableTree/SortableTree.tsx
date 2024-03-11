@@ -100,7 +100,11 @@ export function SortableTree({
   } = useTaskManagement();
 
   const theme = useTheme();
-  const isPC = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  if (isMobile) {
+    indentationWidth = 22;
+  }
 
   const measuring = {
     droppable: {
@@ -113,7 +117,7 @@ export function SortableTree({
           const rect = node!.getBoundingClientRect();
           // 必要に応じてrectを修正
           // 例: スクロールされた分だけ位置を調整する
-          if (isPC) {
+          if (!isMobile) {
             rect.y = window.scrollY + (window.innerHeight - 15);
           } else {
             rect.y += window.scrollY;

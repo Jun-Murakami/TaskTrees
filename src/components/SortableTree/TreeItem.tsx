@@ -139,15 +139,15 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
 
     // ボタンの共通スタイルを定義
     const buttonStyle = {
-      width: '30px',
-      minWidth: '30px',
+      width: `${indentationWidth}px`,
+      minWidth: `${indentationWidth}px`,
       height: '30px',
       marginTop: '0px',
     };
 
     const stackStyles = (clone: boolean | undefined, ghost: boolean | undefined) => ({
       width: '100%',
-      p: 1,
+      p: { xs: 0.7, sm: 1 },
       border: '1px solid',
       backgroundColor: isDragOver
         ? theme.palette.action.focus
@@ -307,7 +307,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                 onClick={() => id !== undefined && onSelect?.(id)}
                 multiline
                 fullWidth
-                sx={{ padding: 0, margin: 'auto 0', marginX: 1 }}
+                sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.5, sm: 1 } }}
                 InputProps={{
                   disableUnderline: !isFocusedOrHovered,
                   style: {
