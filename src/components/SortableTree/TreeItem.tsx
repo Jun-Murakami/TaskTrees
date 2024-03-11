@@ -275,8 +275,8 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           {onCollapse && (
             <Button
               sx={{
-                color: theme.palette.grey[500],
                 ...buttonStyle,
+                color: theme.palette.grey[500],
               }}
               onClick={() => {
                 onCollapse?.();
@@ -294,7 +294,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           {id !== 'trash' ? (
             <>
               <Checkbox
-                sx={{ ...buttonStyle }}
+                sx={{ ...buttonStyle, color: darkMode ? theme.palette.grey[400] : theme.palette.grey[600] }}
                 checked={done}
                 onClick={() => id !== undefined && onSelect?.(id)}
                 onChange={(e) => onChangeDone?.(e.target.checked)}
