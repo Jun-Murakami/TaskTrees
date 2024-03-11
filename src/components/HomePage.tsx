@@ -59,9 +59,12 @@ export function HomePage() {
             />
             <Box
               sx={{
-                maxWidth: '900px',
+                maxWidth: '930px',
+                px: '15px',
+                pt: 0,
+                pb: '60px',
                 mx: 'auto',
-                minHeight: currentTree !== null ? 'calc(100vh - 55px)' : 'auto',
+                minHeight: currentTree !== null ? '100vh' : 'auto',
                 '@media (max-width: 1546px)': {
                   ml: { xs: 'auto', sm: `${drawerWidth}px` },
                 },

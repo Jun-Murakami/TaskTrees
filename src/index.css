@@ -1,8 +1,4 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -11,11 +7,9 @@
 
 #root {
   width: 100%;
-  margin: 0 auto;
-  margin-bottom: 40px;
-  padding: 15px;
-  padding-top: 0;
-  text-align: center;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 ::selection {

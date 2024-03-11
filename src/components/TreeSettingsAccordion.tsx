@@ -252,7 +252,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
                 inputRef={inputRef}
               />
             ) : (
-              <Typography sx={{ width: '100%', marginTop: '6px' }}>{currentTreeName}</Typography>
+              <Typography sx={{ width: '100%', marginTop: '6px', textAlign: 'center' }}>{currentTreeName}</Typography>
             )}
             {isAccordionExpanded ? (
               <SaveAsIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
