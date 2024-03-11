@@ -52,7 +52,7 @@ export function AddTask({ id, ...Props }: Props) {
             left: isScrolled ? { xs: '50%', sm: '765px' } : '50%',
           },
           '@media (max-width: 1249px)': {
-            left: isScrolled ? { xs: '50%', sm: 'calc((100vw - 300px) / 2 + 292px)' } : '50%',
+            left: isScrolled ? { xs: '50%', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px)' } : '50%',
           },
           bottom: { xs: 20, sm: 'auto' },
           marginBottom: isAccordionExpanded ? { xs: 'auto', sm: 5 } : 'auto',
