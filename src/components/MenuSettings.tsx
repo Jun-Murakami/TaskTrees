@@ -237,6 +237,7 @@ export function MenuSettings({
                 />
               }
               label={`${darkMode ? 'Dark Mode' : 'Light Mode'}`}
+              sx={{ width: '100%' }}
             />
           </MenuItem>
         </Tooltip>
