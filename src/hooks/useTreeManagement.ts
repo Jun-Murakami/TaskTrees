@@ -619,9 +619,7 @@ export const useTreeManagement = () => {
   // 現在の日時を取得する
   function getCurrentDateTime() {
     const now = new Date();
-    return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(
-      now.getHours()
-    ).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+    return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
   }
 
   const handleDownloadTreeState = async () => {
@@ -644,16 +642,14 @@ export const useTreeManagement = () => {
   };
 
   // すべてのツリーをJSONファイルとしてダウンロードする --------------------------------------------------------------------------
-
   const handleDownloadAllTrees = async (isSilent: boolean = false) => {
     const user = getAuth().currentUser;
     if (!user && !treesList) {
       return Promise.reject('');
     }
     try {
-      const treesListItemIncludingItems: TreesListItemIncludingItems[] | null | undefined = await loadAllTreesDataFromDb(
-        treesList
-      );
+      const treesListItemIncludingItems: TreesListItemIncludingItems[] | null | undefined =
+        await loadAllTreesDataFromDb(treesList);
       if (!treesListItemIncludingItems) {
         return Promise.reject('');
       }
@@ -666,12 +662,13 @@ export const useTreeManagement = () => {
       // JSON形式でダウンロードする
       const a = document.createElement('a');
       // 人間に読みやすい形に変換
-      const file = new Blob([JSON.stringify(treesListItemIncludingItems, null, 2)], {
+      const file = await new Blob([JSON.stringify(treesListItemIncludingItems, null, 2)], {
         type: 'application/json',
       });
-      a.href = URL.createObjectURL(file);
+      a.href = await URL.createObjectURL(file);
       a.download = `TaskTrees_AllBackup_${getCurrentDateTime()}.json`;
-      a.click();
+      await a.click();
+      await URL.revokeObjectURL(a.href);
       return Promise.resolve('');
     } catch (error) {
       await showDialog('ツリーのバックアップに失敗しました。\n\n' + error, 'Error');
