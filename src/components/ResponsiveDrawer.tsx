@@ -263,6 +263,7 @@ export function ResponsiveDrawer({
                   完了タスクを非表示
                 </Typography>
               }
+              sx={{ width: '100%' }}
             />
           </ListItem>
         </List>
