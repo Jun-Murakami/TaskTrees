@@ -22,8 +22,8 @@ import { useTreeStateStore } from '../store/treeStateStore';
 
 interface MenuSettingsProps {
   handleFileUpload: (file: File) => void;
-  handleDownloadAppState: () => void;
-  handleDownloadAllTrees: () => void;
+  handleDownloadAppState: () => Promise<void>;
+  handleDownloadAllTrees: (isSilent?: boolean) => Promise<string>;
   handleLogout: () => void;
 }
 
@@ -199,8 +199,8 @@ export function MenuSettings({
         {currentTree && (
           <Tooltip title='現在のツリーのデータをバックアップ' placement='right'>
             <MenuItem
-              onClick={() => {
-                handleDownloadAppState();
+              onClick={async () => {
+                await handleDownloadAppState();
                 handleClose();
               }}
             >
@@ -213,8 +213,8 @@ export function MenuSettings({
         )}
         <Tooltip title='すべてのツリーデータをバックアップ' placement='right'>
           <MenuItem
-            onClick={() => {
-              handleDownloadAllTrees();
+            onClick={async () => {
+              await handleDownloadAllTrees();
               handleClose();
             }}
           >

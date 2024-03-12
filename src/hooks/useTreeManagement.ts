@@ -275,7 +275,7 @@ export const useTreeManagement = () => {
   useEffect(() => {
     const asyncFunc = async () => {
       if (missingTrees) {
-        showDialog('1つ以上のツリーが他のユーザーまたはシステムによって削除されました。' + missingTrees, 'Information');
+        await showDialog('1つ以上のツリーが他のユーザーまたはシステムによって削除されました。\n\n' + missingTrees, 'Information');
         const user = getAuth().currentUser;
         if (!user) {
           return;
@@ -624,38 +624,44 @@ export const useTreeManagement = () => {
     ).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
   }
 
-  const handleDownloadTreeState = () => {
+  const handleDownloadTreeState = async () => {
     if (!currentTreeName) return;
     const treeState: TreesListItemIncludingItems = { items: items, name: currentTreeName };
-    const treeStateJSON = JSON.stringify(treeState, null, 2); // 読みやすい形式でJSONを整形
+    const treeStateJSON = await JSON.stringify(treeState, null, 2); // 読みやすい形式でJSONを整形
     const blob = new Blob([treeStateJSON], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const url = await URL.createObjectURL(blob);
+    const link = await document.createElement('a');
     link.href = url;
     if (!currentTreeName) {
       link.download = `TaskTree_Backup_${getCurrentDateTime()}.json`;
     } else {
       link.download = `TaskTree_${currentTreeName}_Backup_${getCurrentDateTime()}.json`;
     }
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await document.body.appendChild(link);
+    await link.click();
+    await document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
   // すべてのツリーをJSONファイルとしてダウンロードする --------------------------------------------------------------------------
 
-  const handleDownloadAllTrees = async () => {
+  const handleDownloadAllTrees = async (isSilent: boolean = false) => {
     const user = getAuth().currentUser;
     if (!user && !treesList) {
-      return Promise.reject();
+      return Promise.reject('');
     }
     try {
       const treesListItemIncludingItems: TreesListItemIncludingItems[] | null | undefined = await loadAllTreesDataFromDb(
         treesList
       );
       if (!treesListItemIncludingItems) {
-        return Promise.reject();
+        return Promise.reject('');
+      }
+      if (isSilent) {
+        // JSON形式でダウンロードする
+        // 人間に読みやすい形に変換
+        const data = await JSON.stringify(treesListItemIncludingItems, null, 2);
+        return Promise.resolve(data);
       }
       // JSON形式でダウンロードする
       const a = document.createElement('a');
@@ -666,9 +672,10 @@ export const useTreeManagement = () => {
       a.href = URL.createObjectURL(file);
       a.download = `TaskTrees_AllBackup_${getCurrentDateTime()}.json`;
       a.click();
+      return Promise.resolve('');
     } catch (error) {
       await showDialog('ツリーのバックアップに失敗しました。\n\n' + error, 'Error');
-      return Promise.reject();
+      return Promise.reject('');
     }
   };
 

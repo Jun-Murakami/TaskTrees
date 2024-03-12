@@ -29,8 +29,8 @@ interface ResponsiveDrawerProps {
   handleCreateNewTree: () => void;
   handleListClick: (treeId: UniqueIdentifier) => void;
   handleFileUpload: (file: File) => void;
-  handleDownloadAppState: () => void;
-  handleDownloadAllTrees: () => void;
+  handleDownloadAppState: () => Promise<void>;
+  handleDownloadAllTrees: (isSilent?: boolean) => Promise<string>;
   handleLogout: () => void;
 }
 
