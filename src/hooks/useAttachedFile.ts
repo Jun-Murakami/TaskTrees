@@ -11,7 +11,6 @@ export const useAttachedFile = () => {
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
-
   // ファイルをFirebaseStorageにアップロードする処理 ------------------------------------------------
   const uploadFile = async (file: File) => {
     setIsLoading(true);
@@ -53,7 +52,7 @@ export const useAttachedFile = () => {
       await showDialog('ファイルのアップロードに失敗しました\n\n' + error, 'Error');
       return undefined;
     }
-  }
+  };
 
   // ファイルをダウンロードする関数 ------------------------------------------------
   const downloadFile = async (fileName: string) => {
@@ -76,14 +75,19 @@ export const useAttachedFile = () => {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      const result = await showDialog('ファイルのダウンロードに失敗しました。ファイルが削除されている可能性があります。データベースからこのファイルの添付を削除しますか？\n\n' + error, 'Error', true);
+      const result = await showDialog(
+        'ファイルのダウンロードに失敗しました。ファイルが削除されている可能性があります。データベースからこのファイルの添付を削除しますか？\n\n' +
+        error,
+        'Error',
+        true
+      );
       if (result) {
         const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
         const updatedItems = await deleteAttachedFile(newItems, fileName);
         setItems(updatedItems);
       }
     }
-  }
+  };
 
   // ファイルを削除する関数 ------------------------------------------------
   const deleteAttachedFile = async (items: TreeItem[], fileName: string): Promise<TreeItem[]> => {
@@ -96,7 +100,7 @@ export const useAttachedFile = () => {
       }
     });
     return items;
-  }
+  };
   // 本編 ------------------------------------------------
   const deleteFile = async (fileName: string, isSilent: boolean = false) => {
     if (!isSilent) {
@@ -127,7 +131,7 @@ export const useAttachedFile = () => {
         setItems(updatedItems);
       }
     }
-  }
+  };
 
   return { uploadFile, downloadFile, deleteFile };
-}
+};

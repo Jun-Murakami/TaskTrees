@@ -1,12 +1,12 @@
-import type { UniqueIdentifier } from '@dnd-kit/core'
-import { arrayMove } from '@dnd-kit/sortable'
+import type { UniqueIdentifier } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 
-import type { FlattenedItem, TreeItem, TreeItems, AppState } from '../../types/types'
+import type { FlattenedItem, TreeItem, TreeItems, AppState } from '../../types/types';
 
-export const iOS = /iPad|iPhone|iPod/.test(navigator.platform)
+export const iOS = /iPad|iPhone|iPod/.test(navigator.platform);
 
 function getDragDepth(offset: number, indentationWidth: number) {
-  return Math.round(offset / indentationWidth)
+  return Math.round(offset / indentationWidth);
 }
 
 export function getProjection(
@@ -16,176 +16,168 @@ export function getProjection(
   dragOffset: number,
   indentationWidth: number
 ) {
-  const overItemIndex = items.findIndex(({ id }) => id === overId)
-  const activeItemIndex = items.findIndex(({ id }) => id === activeId)
-  const activeItem = items[activeItemIndex]
-  const newItems = arrayMove(items, activeItemIndex, overItemIndex)
-  const previousItem = newItems[overItemIndex - 1]
-  const nextItem = newItems[overItemIndex + 1]
-  const dragDepth = getDragDepth(dragOffset, indentationWidth)
-  const projectedDepth = activeItem.depth + dragDepth
+  const overItemIndex = items.findIndex(({ id }) => id === overId);
+  const activeItemIndex = items.findIndex(({ id }) => id === activeId);
+  const activeItem = items[activeItemIndex];
+  const newItems = arrayMove(items, activeItemIndex, overItemIndex);
+  const previousItem = newItems[overItemIndex - 1];
+  const nextItem = newItems[overItemIndex + 1];
+  const dragDepth = getDragDepth(dragOffset, indentationWidth);
+  const projectedDepth = activeItem.depth + dragDepth;
   const maxDepth = getMaxDepth({
-    previousItem
-  })
-  const minDepth = getMinDepth({ nextItem })
-  let depth = projectedDepth
+    previousItem,
+  });
+  const minDepth = getMinDepth({ nextItem });
+  let depth = projectedDepth;
 
   if (projectedDepth >= maxDepth) {
-    depth = maxDepth
+    depth = maxDepth;
   } else if (projectedDepth < minDepth) {
-    depth = minDepth
+    depth = minDepth;
   }
 
-  return { depth, maxDepth, minDepth, parentId: getParentId() }
+  return { depth, maxDepth, minDepth, parentId: getParentId() };
 
   function getParentId() {
     if (depth === 0 || !previousItem) {
-      return null
+      return null;
     }
 
     if (depth === previousItem.depth) {
-      return previousItem.parentId
+      return previousItem.parentId;
     }
 
     if (depth > previousItem.depth) {
-      return previousItem.id
+      return previousItem.id;
     }
 
     const newParent = newItems
       .slice(0, overItemIndex)
       .reverse()
-      .find((item) => item.depth === depth)?.parentId
+      .find((item) => item.depth === depth)?.parentId;
 
-    return newParent ?? null
+    return newParent ?? null;
   }
 }
 
 function getMaxDepth({ previousItem }: { previousItem: FlattenedItem }) {
   if (previousItem) {
-    return previousItem.depth + 1
+    return previousItem.depth + 1;
   }
 
-  return 0
+  return 0;
 }
 
 function getMinDepth({ nextItem }: { nextItem: FlattenedItem }) {
   if (nextItem) {
-    return nextItem.depth
+    return nextItem.depth;
   }
 
-  return 0
+  return 0;
 }
 
-function flatten(
-  items: TreeItems,
-  parentId: UniqueIdentifier | null = null,
-  depth = 0
-): FlattenedItem[] {
+function flatten(items: TreeItems, parentId: UniqueIdentifier | null = null, depth = 0): FlattenedItem[] {
   return items.reduce<FlattenedItem[]>((acc, item, index) => {
-    return [
-      ...acc,
-      { ...item, parentId, depth, index },
-      ...flatten(item.children, item.id, depth + 1)
-    ]
-  }, [])
+    return [...acc, { ...item, parentId, depth, index }, ...flatten(item.children, item.id, depth + 1)];
+  }, []);
 }
 
 export function flattenTree(items: TreeItems): FlattenedItem[] {
-  return flatten(items)
+  return flatten(items);
 }
 
 export function buildTree(flattenedItems: FlattenedItem[]): TreeItems {
-  const root: TreeItem = { id: 'root', children: [], value: '' }
-  const nodes: Record<string, TreeItem> = { [root.id]: root }
-  const items = flattenedItems.map((item) => ({ ...item, children: [] }))
+  const root: TreeItem = { id: 'root', children: [], value: '' };
+  const nodes: Record<string, TreeItem> = { [root.id]: root };
+  const items = flattenedItems.map((item) => ({ ...item, children: [] }));
 
   for (const item of items) {
-    const { id, children } = item
-    const parentId = item.parentId ?? root.id
-    const parent = nodes[parentId] ?? findItem(items, parentId)
+    const { id, children } = item;
+    const parentId = item.parentId ?? root.id;
+    const parent = nodes[parentId] ?? findItem(items, parentId);
 
-    nodes[id] = { id, children, value: '' }
-    parent.children.push(item)
+    nodes[id] = { id, children, value: '' };
+    parent.children.push(item);
   }
 
-  return root.children
+  return root.children;
 }
 
 export function findItem(items: TreeItem[], itemId: UniqueIdentifier) {
-  return items.find(({ id }) => id === itemId)
+  return items.find(({ id }) => id === itemId);
 }
 
 // itemsの中からitemIdを持つアイテムと、そのchildrenに含まれる子、孫アイテムを再帰的に抽出して新しいツリーを作成
 export function extractSubtree(items: TreeItems, itemId: UniqueIdentifier): TreeItem | undefined {
-  const item = findItemDeep(items, itemId)
+  const item = findItemDeep(items, itemId);
   if (!item) {
-    return undefined
+    return undefined;
   }
 
   const extractChildren = (children: TreeItems): TreeItems => {
     return children.map((child) => ({
       ...child,
-      children: extractChildren(child.children)
-    }))
-  }
+      children: extractChildren(child.children),
+    }));
+  };
 
   return {
     ...item,
-    children: extractChildren(item.children)
-  }
+    children: extractChildren(item.children),
+  };
 }
 
 // itemsの中からitemIdを持つアイテムを探す
 export function findItemDeep(items: TreeItems, itemId: UniqueIdentifier): TreeItem | undefined {
   for (const item of items) {
-    const { id, children } = item
+    const { id, children } = item;
 
     if (id === itemId) {
-      return item
+      return item;
     }
 
     if (children.length) {
-      const child = findItemDeep(children, itemId)
+      const child = findItemDeep(children, itemId);
 
       if (child) {
-        return child
+        return child;
       }
     }
   }
 
-  return undefined
+  return undefined;
 }
 
 // itemsの中からitemIdを持つアイテムの親を探す
 export function findParentItem(items: TreeItems, itemId: UniqueIdentifier): TreeItem | undefined {
   for (const item of items) {
     if (item.children.some((child) => child.id === itemId)) {
-      return item
+      return item;
     }
-    const foundInChild = findParentItem(item.children, itemId)
-    if (foundInChild) return foundInChild
+    const foundInChild = findParentItem(item.children, itemId);
+    if (foundInChild) return foundInChild;
   }
-  return undefined
+  return undefined;
 }
 
 export function isDescendantOfTrash(items: TreeItems, itemId: UniqueIdentifier): boolean {
-  const parentItem = findParentItem(items, itemId)
-  if (!parentItem) return false
-  if (parentItem.id === 'trash') return true
-  return isDescendantOfTrash(items, parentItem.id)
+  const parentItem = findParentItem(items, itemId);
+  if (!parentItem) return false;
+  if (parentItem.id === 'trash') return true;
+  return isDescendantOfTrash(items, parentItem.id);
 }
 
 export function isValidAppState(appState: AppState): boolean {
-  const hasTrash = appState.items.some((item: TreeItem) => item.id === 'trash')
-  const hasHideDoneItems = typeof appState.hideDoneItems === 'boolean'
-  const hasDarkMode = typeof appState.darkMode === 'boolean'
-  return hasTrash && hasHideDoneItems && hasDarkMode
+  const hasTrash = appState.items.some((item: TreeItem) => item.id === 'trash');
+  const hasHideDoneItems = typeof appState.hideDoneItems === 'boolean';
+  const hasDarkMode = typeof appState.darkMode === 'boolean';
+  return hasTrash && hasHideDoneItems && hasDarkMode;
 }
 
 export function isValidAppSettingsState(appState: AppState): boolean {
-  const hasHideDoneItems = typeof appState.hideDoneItems === 'boolean'
-  const hasDarkMode = typeof appState.darkMode === 'boolean'
-  return hasHideDoneItems && hasDarkMode
+  const hasHideDoneItems = typeof appState.hideDoneItems === 'boolean';
+  const hasDarkMode = typeof appState.darkMode === 'boolean';
+  return hasHideDoneItems && hasDarkMode;
 }
 
 // itemsがTreeItem[]型であることを確認
@@ -198,46 +190,46 @@ export function isTreeItemArray(items: unknown): items is TreeItem[] {
         (typeof item.children === 'undefined' || Array.isArray(item.children)) && // childrenが未定義または配列であることを許容
         typeof item.value === 'string'
     )
-  )
+  );
 }
 
 // 保存時に削除されたitemsのchildrenプロパティを復元
 export function ensureChildrenProperty(items: TreeItem[]): TreeItem[] {
   return items.map((item) => ({
     ...item,
-    children: item.children ? ensureChildrenProperty(item.children) : []
-  }))
+    children: item.children ? ensureChildrenProperty(item.children) : [],
+  }));
 }
 
 export function findMaxId(items: TreeItems, currentMax = 0) {
   items.forEach((item) => {
-    const itemId = typeof item.id === 'string' ? parseInt(item.id, 10) : item.id
+    const itemId = typeof item.id === 'string' ? parseInt(item.id, 10) : item.id;
     if (itemId > currentMax) {
-      currentMax = itemId
+      currentMax = itemId;
     }
     if (item.children && item.children.length > 0) {
-      currentMax = findMaxId(item.children, currentMax)
+      currentMax = findMaxId(item.children, currentMax);
     }
-  })
-  return currentMax
+  });
+  return currentMax;
 }
 
 export function removeItem(items: TreeItems, id: UniqueIdentifier) {
-  const newItems: TreeItems = []
+  const newItems: TreeItems = [];
 
   for (const item of items) {
     if (item.id === id) {
-      continue
+      continue;
     }
 
     if (item.children.length) {
-      item.children = removeItem(item.children, id)
+      item.children = removeItem(item.children, id);
     }
 
-    newItems.push(item)
+    newItems.push(item);
   }
 
-  return newItems
+  return newItems;
 }
 
 export function setProperty<T extends keyof TreeItem>(
@@ -248,41 +240,41 @@ export function setProperty<T extends keyof TreeItem>(
 ): TreeItems {
   return items.map((item) => {
     if (item.id === id) {
-      return { ...item, [property]: setter(item[property]) }
+      return { ...item, [property]: setter(item[property]) };
     } else if (item.children.length) {
-      return { ...item, children: setProperty(item.children, id, property, setter) }
+      return { ...item, children: setProperty(item.children, id, property, setter) };
     }
-    return item
-  })
+    return item;
+  });
 }
 
 function countChildren(items: TreeItem[], count = 0): number {
   return items.reduce((acc, { children }) => {
     if (children.length) {
-      return countChildren(children, acc + 1)
+      return countChildren(children, acc + 1);
     }
 
-    return acc + 1
-  }, count)
+    return acc + 1;
+  }, count);
 }
 
 export function getChildCount(items: TreeItems, id: UniqueIdentifier) {
-  const item = findItemDeep(items, id)
+  const item = findItemDeep(items, id);
 
-  return item ? countChildren(item.children) : 0
+  return item ? countChildren(item.children) : 0;
 }
 
 export function removeChildrenOf(items: FlattenedItem[], ids: UniqueIdentifier[]) {
-  const excludeParentIds = [...ids]
+  const excludeParentIds = [...ids];
 
   return items.filter((item) => {
     if (item.parentId && excludeParentIds.includes(item.parentId)) {
       if (item.children.length) {
-        excludeParentIds.push(item.id)
+        excludeParentIds.push(item.id);
       }
-      return false
+      return false;
     }
 
-    return true
-  })
+    return true;
+  });
 }

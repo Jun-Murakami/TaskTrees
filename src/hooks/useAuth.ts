@@ -6,7 +6,6 @@ import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/s
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 
-
 // Firebaseの設定
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
@@ -37,7 +36,6 @@ export const useAuth = () => {
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
-
 
   // ログイン状態の監視
   useEffect(() => {
@@ -84,7 +82,6 @@ export const useAuth = () => {
   const handleDeleteAccount = async () => {
     const user = auth.currentUser;
     if (user) {
-
       setIsLoading(true);
 
       // Promiseを保持するための配列を用意
@@ -97,9 +94,9 @@ export const useAuth = () => {
         await get(treeMembersRef)
           .then((snapshot) => {
             if (snapshot.exists()) {
-              const members = snapshot.val()
+              const members = snapshot.val();
               // 自分のユーザーID以外が含まれていたらメンバーから自分を削除
-              if (members && Object.keys(members).filter(uid => uid !== user.uid).length > 0) {
+              if (members && Object.keys(members).filter((uid) => uid !== user.uid).length > 0) {
                 const newMembers = { ...members };
                 delete newMembers[user.uid];
                 set(treeMembersRef, newMembers)
@@ -139,7 +136,7 @@ export const useAuth = () => {
                   }
                 };
                 // deleteAllFilesInUserDirectoryを非同期で実行し、Promiseを配列に追加
-                deletePromises.push(deleteAllFilesInUserDirectory().catch(error => console.error(error)));
+                deletePromises.push(deleteAllFilesInUserDirectory().catch((error) => console.error(error)));
               }
             }
           })

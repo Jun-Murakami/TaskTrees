@@ -15,22 +15,35 @@ export const useError = () => {
   const isLoading = useAppStateStore((state) => state.isLoading);
 
   // エラーハンドリング ---------------------------------------------------------------------------
-  const handleError = useCallback((error: unknown) => {
-    if (!isLoading) return;
-    if (error instanceof Error) {
-      setSystemMessage('ログアウトしました。 : \n\n' + error.message);
-    } else {
-      setSystemMessage('ログアウトしました。: \n\n' + error);
-    }
-    setCurrentTree(null);
-    setCurrentTreeName(null);
-    setCurrentTreeMembers(null);
-    setItems([]);
-    setIsAccordionExpanded(false);
-    signOut(getAuth());
-    setIsLoggedIn(false);
-    if (setIsLoading && isLoading) setIsLoading(false);
-  }, [setSystemMessage, setItems, setIsLoggedIn, setIsLoading, setCurrentTree, setCurrentTreeName, setCurrentTreeMembers, setIsAccordionExpanded, isLoading]);
+  const handleError = useCallback(
+    (error: unknown) => {
+      if (!isLoading) return;
+      if (error instanceof Error) {
+        setSystemMessage('ログアウトしました。 : \n\n' + error.message);
+      } else {
+        setSystemMessage('ログアウトしました。: \n\n' + error);
+      }
+      setCurrentTree(null);
+      setCurrentTreeName(null);
+      setCurrentTreeMembers(null);
+      setItems([]);
+      setIsAccordionExpanded(false);
+      signOut(getAuth());
+      setIsLoggedIn(false);
+      if (setIsLoading && isLoading) setIsLoading(false);
+    },
+    [
+      setSystemMessage,
+      setItems,
+      setIsLoggedIn,
+      setIsLoading,
+      setCurrentTree,
+      setCurrentTreeName,
+      setCurrentTreeMembers,
+      setIsAccordionExpanded,
+      isLoading,
+    ]
+  );
 
   return { handleError };
 };
