@@ -85,7 +85,7 @@ export const useAuth = () => {
       setIsLoading(true);
 
       // Promiseを保持するための配列を用意
-      const deletePromises = [];
+      const deletePromises: Promise<void>[] = [];
       // treesListを反復処理して、ユーザーのツリーを削除
       for (const tree of treesList) {
         const treeRef = ref(db, `trees/${tree.id}`);

@@ -102,7 +102,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
 
   // メンバーの追加
   const handleAddUserToTree = async () => {
-    if (!currentTree) return;
+    if (!currentTree) return Promise.resolve();
     const email = await showInputDialog(
       '追加する編集メンバーのメールアドレスを入力してください。共有メンバーはこのアプリにユーザー登録されている必要があります。',
       'Add Member',
@@ -110,8 +110,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
       null,
       false
     );
-    if (!email) return;
-    setIsLoading(true);
+    if (!email) return Promise.resolve();
     const functions = getFunctions();
     const addUserToTreeCallable = httpsCallable(functions, 'addUserToTree');
     try {
@@ -120,24 +119,25 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
         treeId: currentTree,
       });
       setIsLoading(false);
-      return result.data;
+      return Promise.resolve(result.data);
     } catch (error) {
       await showDialog(
         'メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。\n\n' + error,
         'IInformation'
       );
       setIsLoading(false);
+      return Promise.reject(error);
     }
   };
 
   // メンバーの削除
   const handleDeleteUserFromTree = async (uid: string, email: string) => {
-    if (!currentTree) return;
+    if (!currentTree) return Promise.resolve();
     const user = getAuth().currentUser;
     let result;
     if (currentTreeMembers && currentTreeMembers.length === 1) {
       await showDialog('最後のメンバーを削除することはできません。', 'Information');
-      return;
+      return Promise.resolve();
     }
     if (user && user.uid === uid) {
       result = await showDialog(
@@ -162,12 +162,14 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
           userId: uid,
         });
         setIsLoading(false);
-        return result.data;
+        return Promise.resolve(result.data);
       } catch (error) {
         await showDialog('メンバーの削除に失敗しました。\n\n' + error, 'Error');
         setIsLoading(false);
+        return Promise.reject(error);
       }
     }
+    return Promise.resolve();
   };
 
   // ツリーの削除

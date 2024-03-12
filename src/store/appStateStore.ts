@@ -19,7 +19,7 @@ type AppState = {
   setIsAccordionExpanded: (isAccordionExpanded: boolean) => void;
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
   setContainerWidth: (containerWidth: number) => void;
-}
+};
 
 export const useAppStateStore = create<AppState>((set) => ({
   darkMode: false,
