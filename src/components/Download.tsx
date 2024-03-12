@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Typography, Stack, Button } from '@mui/material';
+import { Typography, Stack, Button,Box } from '@mui/material';
 import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import AppleIcon from '@mui/icons-material/Apple';
 import ReplyIcon from '@mui/icons-material/Reply';
@@ -10,12 +10,12 @@ export function Download() {
 
   useEffect(() => {
     fetch('/version.json')
-      .then((response) => response.json())
+      .then((response) => response.json( ))
       .then((data) => setVersion(data.version));
   }, []);
 
   return (
-    <>
+    <Box sx={{textAlign: 'center'}}>
       <Typography variant='h3' sx={{ margin: 10 }}>
         <img
           src='/TaskTrees.svg'
@@ -72,6 +72,6 @@ export function Download() {
       >
         アプリのトップに戻る
       </Button>
-    </>
+    </Box>
   );
 }
