@@ -55,10 +55,10 @@ export const useTreeManagement = () => {
       if (!user || !isLoggedIn || !db) {
         return;
       }
-      setIsLoading(true);
       const treeListRef = ref(db, `users/${user.uid}/treeList`);
       const unsubscribe = onValue(treeListRef, (snapshot) => {
         if (snapshot.exists()) {
+          setIsLoading(true);
           const data: string[] = snapshot.val();
           let treesListAccumulator: TreesList = [];
           const promises = data.map((treeId) =>
@@ -72,6 +72,7 @@ export const useTreeManagement = () => {
                     // データが存在する場合のみonValueで監視を開始
                     onValue(treeTitleRef, (snapshot) => {
                       if (snapshot.exists()) {
+                        setIsLoading(true);
                         treesListAccumulator = treesListAccumulator.map((t) =>
                           t.id === treeId ? { ...t, name: snapshot.val() } : t
                         );
@@ -125,7 +126,6 @@ export const useTreeManagement = () => {
 
   useEffect(() => {
     if (currentTree) {
-      setIsLoading(true);
       setLastSelectedItemId(null);
       // デバウンスで前のツリーの状態変更が残っていたら保存
       if (
@@ -150,6 +150,7 @@ export const useTreeManagement = () => {
           (snapshot) => {
             // データが存在する場合は取得し、itemsにセット
             if (snapshot.exists()) {
+              setIsLoading(true);
               const data: TreeItem[] = snapshot.val();
               const itemsWithChildren = ensureChildrenProperty(data);
               // 取得したデータがTreeItem[]型であることを確認
@@ -233,6 +234,7 @@ export const useTreeManagement = () => {
       const treeNameRef = ref(getDatabase(), `trees/${tree.id}/name`);
       return onValue(treeNameRef, (snapshot) => {
         if (snapshot.exists()) {
+          setIsLoading(true);
           const updatedTreesList = treesList.map((t) => (t.id === tree.id ? { ...t, name: snapshot.val() as string } : t));
           // 現在のtreesListと更新後のtreesListが異なる場合のみ更新
           if (JSON.stringify(treesList) !== JSON.stringify(updatedTreesList)) {
@@ -245,7 +247,7 @@ export const useTreeManagement = () => {
     return () => {
       unsubscribeTreeNames.forEach((unsubscribe) => unsubscribe());
     };
-  }, [treesList, setTreesList]);
+  }, [treesList, setTreesList, setIsLoading]);
 
   // ローカルitemsの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
