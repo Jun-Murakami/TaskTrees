@@ -215,10 +215,10 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
           backgroundColor: darkMode
             ? isAccordionExpanded
               ? 'rgba(18, 18, 18, 0.8)'
-              : 'rgba(18, 18, 18, 0.5)'
+              : 'rgba(18, 18, 18, 0.6)'
             : isAccordionExpanded
             ? 'rgba(255, 255, 255, 0.8)'
-            : 'rgba(255, 255, 255, 0.5)',
+            : 'rgba(255, 255, 255, 0.6)',
 
           backdropFilter: 'blur(8px)',
           borderRadius: '0 0 8px 8px !important',
