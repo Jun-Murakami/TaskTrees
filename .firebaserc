@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "tasktree-fb",
+    "default": "tasktrees-fb",
     "production": "tasktree-s"
   }
 }

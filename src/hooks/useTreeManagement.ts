@@ -329,7 +329,9 @@ export const useTreeManagement = () => {
       const deleteAttachedFilesRecursively = async (items: TreeItem[]) => {
         for (const item of items) {
           if (item.attachedFile) {
-            await deleteFile(item.attachedFile, true);
+            if (currentTree) {
+              await deleteFile(item.attachedFile, currentTree, true);
+            }
           }
           if (item.children) {
             await deleteAttachedFilesRecursively(item.children);

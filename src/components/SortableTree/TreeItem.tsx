@@ -98,16 +98,16 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
         event.preventDefault();
         event.stopPropagation();
         setIsDragOver(false);
-        if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+        if (event.dataTransfer.files && event.dataTransfer.files.length > 0 && currentTree) {
           const files = Array.from(event.dataTransfer.files);
-          const fileName = await uploadFile(files[0]);
+          const fileName = await uploadFile(files[0], currentTree);
           if (fileName) {
             handleAttachFile(id, fileName);
           }
           event.dataTransfer.clearData();
         }
       },
-      [uploadFile, handleAttachFile, id]
+      [uploadFile, handleAttachFile, id, currentTree]
     );
 
     const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {

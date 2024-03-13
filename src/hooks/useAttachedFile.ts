@@ -3,16 +3,16 @@ import type { TreeItem } from '../types/types';
 import { useDialogStore } from '../store/dialogStore';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 export const useAttachedFile = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const showDialog = useDialogStore((state) => state.showDialog);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
-  const currentTree = useTreeStateStore((state) => state.currentTree);
 
   // ファイルをFirebaseStorageにアップロードする処理 ------------------------------------------------
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (file: File, targetTree: UniqueIdentifier): Promise<string | undefined> => {
     setIsLoading(true);
     // ファイルサイズを取得
     const fileSize = file.size / 1024 / 1024;
@@ -30,7 +30,7 @@ export const useAttachedFile = () => {
 
     while (fileExists) {
       try {
-        const fileRef = ref(storage, `trees/${currentTree}/${fileName}`);
+        const fileRef = ref(storage, `trees/${targetTree}/${fileName}`);
         await getDownloadURL(fileRef);
         // ファイルが存在する場合、ファイル名を変更
         counter++;
@@ -43,7 +43,7 @@ export const useAttachedFile = () => {
 
     // 新しいファイル名でアップロード
     try {
-      const newFileRef = ref(storage, `trees/${currentTree}/${fileName}`);
+      const newFileRef = ref(storage, `trees/${targetTree}/${fileName}`);
       await uploadBytes(newFileRef, file);
       setIsLoading(false);
       return fileName;
@@ -55,11 +55,11 @@ export const useAttachedFile = () => {
   };
 
   // ファイルをダウンロードする関数 ------------------------------------------------
-  const downloadFile = async (fileName: string) => {
+  const downloadFile = async (fileName: string, targetTree: UniqueIdentifier): Promise<void> => {
     try {
       setIsLoading(true);
       const storage = getStorage();
-      const fileRef = ref(storage, `trees/${currentTree}/${fileName}`);
+      const fileRef = ref(storage, `trees/${targetTree}/${fileName}`);
       const url = await getDownloadURL(fileRef);
       // Blobを使用してファイルをダウンロード
       const response = await fetch(url);
@@ -102,7 +102,7 @@ export const useAttachedFile = () => {
     return items;
   };
   // 本編 ------------------------------------------------
-  const deleteFile = async (fileName: string, isSilent: boolean = false) => {
+  const deleteFile = async (fileName: string, targetTree: UniqueIdentifier, isSilent: boolean = false) => {
     if (!isSilent) {
       const result = await showDialog(`添付ファイル「${fileName}」を削除しますか？`, 'Delete File', true);
       if (!result) return;
@@ -110,12 +110,14 @@ export const useAttachedFile = () => {
     try {
       setIsLoading(true);
       const storage = getStorage();
-      const fileRef = ref(storage, `trees/${currentTree}/${fileName}`);
+      const fileRef = ref(storage, `trees/${targetTree}/${fileName}`);
       await deleteObject(fileRef);
       // ファイル削除後、itemsを更新。children[]の中のattachedFileも再帰的に削除する
       const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
       const updatedItems = await deleteAttachedFile(newItems, fileName);
-      setItems(updatedItems);
+      if (!isSilent) {
+        setItems(updatedItems);
+      }
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);

@@ -78,6 +78,7 @@ export function MenuItems({
   const anchorElCopy = useRef<HTMLButtonElement>(null);
   const anchorElMove = useRef<HTMLButtonElement>(null);
 
+  const currentTree = useTreeStateStore((state) => state.currentTree);
   const treesList = useTreeStateStore((state) => state.treesList);
   const treesListWithoutId = treesList.filter((tree) => tree.id !== currenTreeId);
 
@@ -111,7 +112,7 @@ export function MenuItems({
     input.accept = '*/*';
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+      if (!file || !currentTree) return;
       if (attachedFile) {
         const result = await showDialog(
           '既存の添付ファイルは上書きされます。新しいファイルを添付しますか？',
@@ -119,11 +120,11 @@ export function MenuItems({
           true
         );
         if (!result) return;
-        await deleteFile(attachedFile, true);
+        await deleteFile(attachedFile, currentTree, true);
       }
 
       //ファイルをアップロード
-      const fileName = await uploadFile(file);
+      const fileName = await uploadFile(file, currentTree);
       if (!fileName) return;
       //ファイルを添付
       handleAttachFile && handleAttachFile(id, fileName);
@@ -399,7 +400,7 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
 
   useEffect(() => {
     if (prevAttachedFileRef.current !== attachedFile) {
-      if (attachedFile?.match(/\.(jpg|jpeg|png|gif|svg)$/i) && currentTree) {
+      if (attachedFile?.match(/\.(jpg|jpeg|png|gif|svg|webp|tif|tiff|bmp|ico|cur)$/i) && currentTree) {
         const storage = getStorage();
         const imageRef = ref(storage, `trees/${currentTree}/${attachedFile}`);
         getDownloadURL(imageRef)
@@ -458,7 +459,8 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
           onClick={() => {
             downloadFile &&
               (async () => {
-                await downloadFile(attachedFile);
+                if (!currentTree) return;
+                await downloadFile(attachedFile, currentTree);
               })();
             handleParentClose();
           }}
@@ -473,7 +475,8 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
           onClick={() => {
             deleteFile &&
               (async () => {
-                await deleteFile(attachedFile);
+                if (!currentTree) return;
+                await deleteFile(attachedFile, currentTree);
               })();
             handleParentClose();
           }}

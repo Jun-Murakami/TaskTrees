@@ -19,6 +19,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 admin.initializeApp();
 
+// メンバーのメールアドレスを取得
 exports.getMemberEmails = functions.https.onCall(async (data: { treeId: string }) => {
   const { treeId } = data;
   try {
@@ -43,7 +44,7 @@ exports.getMemberEmails = functions.https.onCall(async (data: { treeId: string }
   }
 });
 
-
+// メンバーをツリーに追加
 exports.addUserToTree = functions.https.onCall(async (data: { email: string; treeId: string }) => {
   const { email, treeId } = data;
   if (!treeId) {
@@ -93,6 +94,7 @@ exports.addUserToTree = functions.https.onCall(async (data: { email: string; tre
   }
 });
 
+// ユーザーのメールアドレスを取得
 exports.getUserEmails = functions.https.onCall(async (data: { userIds: string[] }) => {
   const { userIds } = data;
   try {
@@ -112,6 +114,7 @@ exports.getUserEmails = functions.https.onCall(async (data: { userIds: string[] 
   }
 });
 
+// ツリーからユーザーを削除
 exports.removeUserFromTree = functions.https.onCall(async (data: { treeId: string; userId: string }) => {
   const { treeId, userId } = data;
   if (!treeId) {
@@ -168,6 +171,7 @@ interface ServerTreeItem {
   done?: boolean;
 }
 
+// 新しいツリーを作成
 exports.createNewTree = functions.https.onCall(async (data: { items: ServerTreeItem[], name: string, members: { [key: string]: boolean } }) => {
   const { items, name, members } = data;
   if (!name) {
@@ -192,5 +196,25 @@ exports.createNewTree = functions.https.onCall(async (data: { items: ServerTreeI
   } catch (error) {
     console.error('Error creating new tree:', error);
     throw new functions.https.HttpsError('unknown', 'Failed to create new tree');
+  }
+});
+
+// ストレージ内のファイルをコピー
+exports.copyFileInStorage = functions.https.onCall(async (data: { sourcePath: string, destinationPath: string }) => {
+  const { sourcePath, destinationPath } = data;
+  if (!sourcePath || !destinationPath) {
+    throw new functions.https.HttpsError('invalid-argument', 'The function must be called with valid "sourcePath" and "destinationPath".');
+  }
+  try {
+    const storage = admin.storage();
+    const sourceBucket = storage.bucket();
+    const destinationBucket = storage.bucket();
+
+    await sourceBucket.file(sourcePath).copy(destinationBucket.file(destinationPath));
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error copying file:', error);
+    throw new functions.https.HttpsError('unknown', 'Failed to copy file');
   }
 });
