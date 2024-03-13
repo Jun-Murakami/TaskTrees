@@ -189,7 +189,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
       sx={{
         position: 'fixed',
         top: 0,
-        zIndex: 1200,
+        zIndex: 1000,
         width: '100%',
         '@media (min-width: 1546px)': {
           left: '50%',

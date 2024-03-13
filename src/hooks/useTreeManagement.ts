@@ -240,6 +240,7 @@ export const useTreeManagement = () => {
           if (JSON.stringify(treesList) !== JSON.stringify(updatedTreesList)) {
             setTreesList(updatedTreesList);
           }
+          setIsLoading(false);
         }
       });
     });
