@@ -185,7 +185,29 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '900px', marginX: 'auto', marginBottom: isAccordionExpanded ? { xs: 2, sm: 0 } : 0 }}>
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 0,
+        zIndex: 1200,
+        width: '100%',
+        '@media (min-width: 1546px)': {
+          left: '50%',
+          transform: 'translateX(-50%)',
+          maxWidth: '900px',
+        },
+        '@media (min-width: 1249px) and (max-width: 1546px)': {
+          left: { xs: '50%', sm: '315px' },
+          maxWidth: '900px',
+        },
+        '@media (max-width: 1249px)': {
+          left: { xs: '50%', sm: '315px' },
+          transform: { xs: 'translateX(-50%)', sm: 'none' },
+          maxWidth: { xs: 'calc(100vw - (100vw - 100%) - 30px)', sm: 'calc(100vw - (100vw - 100%) - 330px)' },
+        },
+        marginX: 'auto',
+      }}
+    >
       <Accordion
         sx={{
           marginBottom: 2,
