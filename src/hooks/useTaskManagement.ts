@@ -237,7 +237,7 @@ export const useTaskManagement = () => {
     const updatedItems = await removeDoneDescendants(targetItems, 'trash');
     for (const file of deleteList) {
       if (!currentTree) return;
-      await deleteFile(file, currentTree);
+      await deleteFile(file, currentTree, true);
     }
     setItems(updatedItems);
     setIsLoading(false);
