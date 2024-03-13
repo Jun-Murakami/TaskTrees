@@ -81,7 +81,7 @@ export function Download() {
                   border: 1,
                   p: 2,
                   borderRadius: 3,
-                  bgcolor: 'rgba(255,255,255,0.8)',
+                  bgcolor: 'rgba(255,255,255,0.85)',
                   backdropFilter: 'blur(10px)',
                   textAlign: 'center',
                 }}
@@ -95,8 +95,7 @@ export function Download() {
                   <br />
                 </Typography>
                 <Typography variant='caption'>
-                  ※プログラムが未署名であることによる警告です。
-                  <a href='https://github.com/Jun-Murakami/TaskTrees'>ソースコードを公開</a>しているので、
+                  ※プログラムが未署名であることによる警告です。ソースコードを公開しているので、
                   <br />
                   不安がある場合はご自身で確認の上ビルドしてください。(MacOS版は署名済み)
                 </Typography>
