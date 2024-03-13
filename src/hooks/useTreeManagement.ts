@@ -55,6 +55,7 @@ export const useTreeManagement = () => {
       if (!user || !isLoggedIn || !db) {
         return;
       }
+      setIsLoading(true);
       const treeListRef = ref(db, `users/${user.uid}/treeList`);
       const unsubscribe = onValue(treeListRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -126,6 +127,7 @@ export const useTreeManagement = () => {
 
   useEffect(() => {
     if (currentTree) {
+      setIsLoading(true);
       setLastSelectedItemId(null);
       // デバウンスで前のツリーの状態変更が残っていたら保存
       if (
@@ -230,6 +232,7 @@ export const useTreeManagement = () => {
     if (treesList.length === 0) {
       return;
     }
+    setIsLoading(true);
     const unsubscribeTreeNames = treesList.map((tree) => {
       const treeNameRef = ref(getDatabase(), `trees/${tree.id}/name`);
       return onValue(treeNameRef, (snapshot) => {
