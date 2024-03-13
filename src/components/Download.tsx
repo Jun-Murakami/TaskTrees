@@ -95,7 +95,8 @@ export function Download() {
                   <br />
                 </Typography>
                 <Typography variant='caption'>
-                  ※プログラムが未署名であることによる警告です。ソースコードを公開しているので、
+                  ※プログラムが未署名であることによる警告です。
+                  <a href='https://github.com/Jun-Murakami/TaskTrees'>ソースコードを公開</a>しているので、
                   <br />
                   不安がある場合はご自身で確認の上ビルドしてください。(MacOS版は署名済み)
                 </Typography>
