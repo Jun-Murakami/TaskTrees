@@ -25,31 +25,31 @@ const breakpointsValues = {
 
 const windowsScrollbarStyles = {
   '&::-webkit-scrollbar': {
-    width: '12px',
-    borderRadius: '8px',
+    width: '10px',
+    borderRadius: '5px',
   },
   '&::-webkit-scrollbar-track': {
-    boxShadow: 'inset 0 0 8px rgba(0,0,0,0.3)',
+    boxShadow: 'inset 0 0 8px rgba(0,0,0,0.2)',
   },
   '&::-webkit-scrollbar-thumb': {
-    backgroundColor: '#aaa',
-    color: '#aaa',
-    borderRadius: '8px',
+    backgroundColor: '#bbb',
+    color: '#bbb',
+    borderRadius: '5px',
   },
 };
 
 const windowsScrollbarStylesDark = {
   '&::-webkit-scrollbar': {
-    width: '12px',
-    borderRadius: '8px',
+    width: '10px',
+    borderRadius: '5px',
   },
   '&::-webkit-scrollbar-track': {
-    boxShadow: 'inset 0 0 8px rgba(255,255,255,0.3)',
+    boxShadow: 'inset 0 0 8px rgba(255,255,255,0.2)',
   },
   '&::-webkit-scrollbar-thumb': {
-    backgroundColor: '#666',
-    color: '#666',
-    borderRadius: '8px',
+    backgroundColor: '#444',
+    color: '#444',
+    borderRadius: '5px',
   },
 };
 
