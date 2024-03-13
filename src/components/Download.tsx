@@ -76,7 +76,16 @@ export function Download() {
         <Popper id={id} open={open} anchorEl={anchorEl} transition placement='top'>
           {({ TransitionProps }) => (
             <Fade {...TransitionProps} timeout={350}>
-              <Box sx={{ border: 1, p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.95)', textAlign: 'center' }}>
+              <Box
+                sx={{
+                  border: 1,
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: 'rgba(255,255,255,0.8)',
+                  backdropFilter: 'blur(10px)',
+                  textAlign: 'center',
+                }}
+              >
                 <img src='/InstallNoteWin.png' style={{ width: '800px', height: 'auto' }} />
                 <Typography variant='body2'>
                   Windowsの場合、インストール時にセキュリティ警告が表示されます。
