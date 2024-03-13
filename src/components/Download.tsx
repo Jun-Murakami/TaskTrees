@@ -1,21 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Typography, Stack, Button,Box } from '@mui/material';
+import { Typography, Stack, Button, Box, Popper, Fade } from '@mui/material';
 import MicrosoftIcon from '@mui/icons-material/Microsoft';
 import AppleIcon from '@mui/icons-material/Apple';
 import ReplyIcon from '@mui/icons-material/Reply';
 
 export function Download() {
-  const [version, setVersion] = useState('');
-  //publicルートのversion.jsonからバージョン番号を取得
+  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [version, setVersion] = useState(''); //publicルートのversion.jsonからバージョン番号を取得
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+    setOpen((previousOpen) => !previousOpen);
+  };
+
+  const canBeOpen = open && Boolean(anchorEl);
+  const id = canBeOpen ? 'transition-popper' : undefined;
 
   useEffect(() => {
     fetch('/version.json')
-      .then((response) => response.json( ))
+      .then((response) => response.json())
       .then((data) => setVersion(data.version));
   }, []);
 
   return (
-    <Box sx={{textAlign: 'center'}}>
+    <Box sx={{ textAlign: 'center' }}>
       <Typography variant='h3' sx={{ margin: 10 }}>
         <img
           src='/TaskTrees.svg'
@@ -61,6 +70,30 @@ export function Download() {
         >
           MacOS (Intel)
         </Button>
+        <Button variant='text' size='small' sx={{ mt: 2 }} onMouseEnter={handleClick} onMouseLeave={handleClick}>
+          ※インストール時のセキュリティ警告について
+        </Button>
+        <Popper id={id} open={open} anchorEl={anchorEl} transition placement='top'>
+          {({ TransitionProps }) => (
+            <Fade {...TransitionProps} timeout={350}>
+              <Box sx={{ border: 1, p: 2, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.95)', textAlign: 'center' }}>
+                <img src='/InstallNoteWin.png' style={{ width: '800px', height: 'auto' }} />
+                <Typography variant='body2'>
+                  Windowsの場合、インストール時にセキュリティ警告が表示されます。
+                  <br />
+                  その際は「詳細情報」をクリックし、「実行」を選択してください。
+                  <br />
+                  <br />
+                </Typography>
+                <Typography variant='caption'>
+                  ※プログラムが未署名であることによる警告です。ソースコードを公開しているので、
+                  <br />
+                  不安がある場合はご自身で確認の上ビルドしてください。(MacOS版は署名済み)
+                </Typography>
+              </Box>
+            </Fade>
+          )}
+        </Popper>
       </Stack>
       <Button
         sx={{ marginTop: 5 }}
