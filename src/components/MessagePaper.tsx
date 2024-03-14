@@ -18,7 +18,7 @@ export const MessagePaper = () => {
       <Button href='/download' size='small' variant='outlined' sx={{ maxWidth: 300, mt: 2 }}>
         デスクトップアプリのダウンロード
       </Button>{' '}
-      <Typography variant='caption' sx={{ width: '100%', minWidth: '100%', mt: 1 }}>
+      <Typography variant='caption' sx={{ width: '100%', minWidth: '100%', mt: 1, textAlign: 'center' }}>
         <a href='mailto:app@bucketrelay.com' target='_blank' rel='noreferrer'>
           ©{new Date().getFullYear()} Jun Murakami
         </a>{' '}
@@ -28,7 +28,6 @@ export const MessagePaper = () => {
         </a>{' '}
         | <a href='/privacy-policy'>Privacy policy</a>
       </Typography>
-      <Typography variant='caption' sx={{ width: '100%' }}></Typography>
     </Stack>
   );
 };
