@@ -174,9 +174,9 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       boxSizing: 'border-box',
       ...(clone && {
         zIndex: 1000,
-        opacity: 0.9,
+        opacity: 0.7,
         position: 'absolute',
-        width: '250px',
+        width: '200px',
         boxShadow: '0px 15px 15px 0 rgba(34, 33, 81, 0.1)',
         '& textarea': {
           overflow: 'hidden',
@@ -190,27 +190,10 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
         }),
       ...(ghost && {
         zIndex: -1,
-        padding: 0,
-        height: '8px',
-        borderColor: theme.palette.primary.main,
         backgroundColor: theme.palette.primary.main,
-        '&:before': {
-          zIndex: -1,
-          position: 'absolute',
-          left: '-8px',
-          top: '-4px',
-          display: 'block',
-          content: '""',
-          width: '12px',
-          height: '12px',
-          borderRadius: '50%',
-          border: '1px solid',
-          borderColor: theme.palette.primary.main,
-          backgroundColor: theme.palette.background.default,
-        },
+        opacity: 0.7,
         '> *': {
-          opacity: 0,
-          height: 0,
+          color: theme.palette.background.default,
         },
       }),
     });
