@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { DraggableAttributes, DraggableSyntheticListeners, UniqueIdentifier } from '@dnd-kit/core';
-import { useMediaQuery, ListItemText, ListItemButton, Button } from '@mui/material';
+import { ListItemText, ListItemButton, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { TreesListItem } from '../../types/types';
@@ -20,7 +20,6 @@ export type SortableSourceProps = {
 export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, handleListClick, setDrawerState }) => {
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <ListItemButton
@@ -31,49 +30,24 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
       }}
       sx={{ opacity: 1, height: 50 }}
     >
-      {isMobile ? (
-        <>
-          <ListItemText secondary={item.name} />
-          <Button
-            ref={handlerProps?.ref}
-            sx={{
-              cursor: handlerProps ? 'grab' : 'grabbing',
-              color: theme.palette.grey[500],
-              width: '20px',
-              minWidth: '20px',
-              height: '20px',
-              ml: '10px',
-              touchAction: 'none',
-              zIndex: 1500,
-            }}
-            {...handlerProps?.attributes}
-            {...handlerProps?.listeners}
-          >
-            <DragHandleIcon />
-          </Button>
-        </>
-      ) : (
-        <>
-          <Button
-            ref={handlerProps?.ref}
-            sx={{
-              cursor: handlerProps ? 'grab' : 'grabbing',
-              color: theme.palette.grey[500],
-              width: '20px',
-              minWidth: '20px',
-              height: '20px',
-              mr: '10px',
-              touchAction: 'none',
-              zIndex: 1500,
-            }}
-            {...handlerProps?.attributes}
-            {...handlerProps?.listeners}
-          >
-            <DragHandleIcon />
-          </Button>
-          <ListItemText secondary={item.name} />
-        </>
-      )}
+      <Button
+        ref={handlerProps?.ref}
+        sx={{
+          cursor: handlerProps ? 'grab' : 'grabbing',
+          color: theme.palette.grey[500],
+          width: '20px',
+          minWidth: '20px',
+          height: '20px',
+          mr: '10px',
+          touchAction: 'none',
+          zIndex: 1500,
+        }}
+        {...handlerProps?.attributes}
+        {...handlerProps?.listeners}
+      >
+        <DragHandleIcon />
+      </Button>
+      <ListItemText secondary={item.name} />
     </ListItemButton>
   );
 };

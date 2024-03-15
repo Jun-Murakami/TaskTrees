@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { useMediaQuery, IconButton, Menu, MenuItem, Divider, Box } from '@mui/material';
+import { IconButton, Menu, MenuItem, Divider, Box } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
@@ -84,7 +83,6 @@ export function MenuItems({
   const treesListWithoutId = treesList.filter((tree) => tree.id !== currenTreeId);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleParentClick = () => {
     setOpenParentMenu(!openParentMenu);
@@ -139,7 +137,7 @@ export function MenuItems({
   return (
     <>
       <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
-        {isMobile ? <MoreHorizIcon /> : <MoreVertIcon />}
+        <MoreVertIcon />
       </IconButton>
       <Menu
         anchorEl={anchorElParent.current}
@@ -265,7 +263,6 @@ export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashP
   const anchorElParent = useRef<HTMLButtonElement>(null);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleParentClick = () => {
     setOpenParentMenu(!openParentMenu);
@@ -278,7 +275,7 @@ export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashP
   return (
     <>
       <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
-        {isMobile ? <MoreHorizIcon /> : <MoreVertIcon />}
+        <MoreVertIcon />
       </IconButton>
       <Menu
         anchorEl={anchorElParent.current}
@@ -323,7 +320,6 @@ export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescenda
   const anchorElParent = useRef<HTMLButtonElement>(null);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleParentClick = () => {
     setOpenParentMenu(!openParentMenu);
@@ -336,7 +332,7 @@ export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescenda
   return (
     <>
       <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
-        {isMobile ? <MoreHorizIcon /> : <MoreVertIcon />}
+        <MoreVertIcon />
       </IconButton>
       <Menu
         anchorEl={anchorElParent.current}
