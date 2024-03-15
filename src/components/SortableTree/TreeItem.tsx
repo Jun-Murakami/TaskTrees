@@ -53,7 +53,6 @@ export interface TreeItemContentProps extends TreeItemProps {
   setIsDragOver: (isDragOver: boolean) => void;
   isFocusedOrHovered: boolean;
   setIsFocusedOrHovered: (isFocusedOrHovered: boolean) => void;
-  isItemDescendantOfTrash?: boolean;
 }
 
 const TreeItemContent = memo(
