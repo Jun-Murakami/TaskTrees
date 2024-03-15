@@ -211,12 +211,20 @@ const TreeItemContent = memo(
     // メモ化の条件を設定
     // propsの一部のみを比較するなど、必要に応じて最適化
     return (
+      prevProps.id === nextProps.id &&
+      prevProps.isDragOver === nextProps.isDragOver &&
+      prevProps.isFocusedOrHovered === nextProps.isFocusedOrHovered &&
       prevProps.value === nextProps.value &&
       prevProps.done === nextProps.done &&
       prevProps.attachedFile === nextProps.attachedFile &&
       prevProps.childCount === nextProps.childCount &&
       prevProps.clone === nextProps.clone &&
       prevProps.collapsed === nextProps.collapsed &&
+      prevProps.currentTree === nextProps.currentTree &&
+      prevProps.darkMode === nextProps.darkMode &&
+      prevProps.handleProps === nextProps.handleProps &&
+      prevProps.indentationWidth === nextProps.indentationWidth &&
+      prevProps.onCollapse === nextProps.onCollapse &&
       prevProps.depth === nextProps.depth &&
       prevProps.disableInteraction === nextProps.disableInteraction &&
       prevProps.disableSelection === nextProps.disableSelection &&
