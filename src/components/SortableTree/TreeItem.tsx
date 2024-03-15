@@ -211,6 +211,7 @@ const TreeItemContent = memo(
     // propsの一部のみを比較するなど、必要に応じて最適化
     return (
       prevProps.value === nextProps.value &&
+      prevProps.style === nextProps.style &&
       prevProps.done === nextProps.done &&
       prevProps.attachedFile === nextProps.attachedFile &&
       prevProps.childCount === nextProps.childCount &&
