@@ -1,6 +1,5 @@
-import { forwardRef, HTMLAttributes, useState, useEffect, useRef, useCallback } from 'react';
+import { forwardRef, HTMLAttributes, useState, useEffect, useRef, useCallback, memo } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
-import { isDescendantOfTrash } from './utilities';
 import { useTheme } from '@mui/material/styles';
 import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -43,7 +42,193 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   onSelect?: (id: UniqueIdentifier) => void;
   isNewTask?: boolean;
   addedTaskId?: UniqueIdentifier | null;
+  isItemDescendantOfTrash?: boolean;
 }
+
+export interface TreeItemContentProps extends TreeItemProps {
+  currentTree: UniqueIdentifier | null;
+  darkMode: boolean;
+  inputRef: React.RefObject<HTMLInputElement>;
+  isDragOver: boolean;
+  setIsDragOver: (isDragOver: boolean) => void;
+  isFocusedOrHovered: boolean;
+  setIsFocusedOrHovered: (isFocusedOrHovered: boolean) => void;
+  isItemDescendantOfTrash?: boolean;
+}
+
+const TreeItemContent = memo(
+  ({
+    id,
+    value,
+    done,
+    attachedFile,
+    childCount,
+    clone,
+    collapsed,
+    currentTree,
+    darkMode,
+    handleProps,
+    indentationWidth,
+    inputRef,
+    isDragOver,
+    isFocusedOrHovered,
+    setIsFocusedOrHovered,
+    onCollapse,
+    onRemove,
+    onChange,
+    onChangeDone,
+    onCopyItems,
+    onMoveItems,
+    onRestoreItems,
+    handleAttachFile,
+    removeTrashDescendants,
+    removeTrashDescendantsWithDone,
+    onSelect,
+    isItemDescendantOfTrash,
+  }: TreeItemContentProps) => {
+    const theme = useTheme();
+
+    // ボタンの共通スタイルを定義
+    const buttonStyle = {
+      width: `${indentationWidth}px`,
+      minWidth: `${indentationWidth}px`,
+      height: '30px',
+      marginTop: '0px',
+    };
+
+    return (
+      <>
+        {id !== 'trash' ? (
+          <Button
+            sx={{
+              color: theme.palette.grey[500],
+              cursor: 'grab',
+              ...buttonStyle,
+              touchAction: 'none',
+            }}
+            onClick={() => id !== undefined && onSelect?.(id)}
+            {...handleProps}
+          >
+            <DragHandleIcon />
+          </Button>
+        ) : (
+          <Button sx={{ color: theme.palette.text.secondary, ...buttonStyle }} onClick={() => id !== undefined && onSelect?.(id)}>
+            <DeleteIcon />
+          </Button>
+        )}
+        {onCollapse && (
+          <Button
+            sx={{
+              ...buttonStyle,
+              color: theme.palette.grey[500],
+            }}
+            onClick={() => {
+              onCollapse?.();
+              id !== undefined && onSelect?.(id);
+            }}
+          >
+            <KeyboardArrowDownIcon
+              sx={{
+                transition: 'transform 250ms ease',
+                transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+              }}
+            />
+          </Button>
+        )}
+        {id !== 'trash' ? (
+          <>
+            <Checkbox
+              sx={{ ...buttonStyle, color: darkMode ? theme.palette.grey[400] : theme.palette.grey[600] }}
+              checked={done}
+              onClick={() => id !== undefined && onSelect?.(id)}
+              onChange={(e) => onChangeDone?.(e.target.checked)}
+            />
+            <TextField
+              inputRef={inputRef}
+              variant='standard'
+              value={value}
+              onChange={(e) => onChange?.(e.target.value)}
+              onClick={() => id !== undefined && onSelect?.(id)}
+              multiline
+              fullWidth
+              sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.75, sm: 1 } }}
+              InputProps={{
+                disableUnderline: !isFocusedOrHovered,
+                style: {
+                  padding: 0,
+                  margin: 0,
+                  paddingTop: '3px',
+                  paddingBottom: '3px',
+                  fontSize: '0.9rem',
+                },
+              }}
+              onFocus={() => setIsFocusedOrHovered(true)}
+              onBlur={() => {
+                setTimeout(() => setIsFocusedOrHovered(false), 300);
+              }}
+            />
+            {!clone && isDragOver && (
+              <IconButton
+                sx={{
+                  color: theme.palette.grey[500],
+                  ...buttonStyle,
+                }}
+              >
+                <AttachFileIcon />
+              </IconButton>
+            )}
+            {!clone && attachedFile && <MenuItemsAttachedFile attachedFile={attachedFile} />}
+            {!clone && onRemove && !isItemDescendantOfTrash ? (
+              <MenuItems
+                onRemove={onRemove}
+                handleAttachFile={handleAttachFile}
+                onCopyItems={onCopyItems}
+                onMoveItems={onMoveItems}
+                currenTreeId={currentTree}
+                id={id}
+                attachedFile={attachedFile}
+              />
+            ) : (
+              <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />
+            )}
+          </>
+        ) : (
+          <>
+            <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px', width: '100%' }}> ゴミ箱 </Typography>
+            {!clone && id === 'trash' && removeTrashDescendants && (
+              <MenuItemsTrashRoot
+                removeTrashDescendants={removeTrashDescendants}
+                removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
+              />
+            )}
+          </>
+        )}
+        {clone && childCount && childCount > 1 ? <Badge badgeContent={childCount} color='primary' /> : null}
+      </>
+    );
+  },
+  (prevProps, nextProps) => {
+    // メモ化の条件を設定
+    // propsの一部のみを比較するなど、必要に応じて最適化
+    return (
+      prevProps.value === nextProps.value &&
+      prevProps.done === nextProps.done &&
+      prevProps.attachedFile === nextProps.attachedFile &&
+      prevProps.childCount === nextProps.childCount &&
+      prevProps.clone === nextProps.clone &&
+      prevProps.collapsed === nextProps.collapsed &&
+      prevProps.depth === nextProps.depth &&
+      prevProps.disableInteraction === nextProps.disableInteraction &&
+      prevProps.disableSelection === nextProps.disableSelection &&
+      prevProps.ghost === nextProps.ghost &&
+      prevProps.indicator === nextProps.indicator &&
+      prevProps.indentationWidth === nextProps.indentationWidth &&
+      prevProps.isNewTask === nextProps.isNewTask &&
+      prevProps.addedTaskId === nextProps.addedTaskId &&
+      prevProps.isItemDescendantOfTrash === nextProps.isItemDescendantOfTrash
+    );
+  }
+);
 
 export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
   (
@@ -77,12 +262,12 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       onSelect,
       isNewTask,
       addedTaskId,
+      isItemDescendantOfTrash,
       ...props
     },
     ref
   ) => {
     const theme = useTheme();
-    const items = useTreeStateStore((state) => state.items);
     const currentTree = useTreeStateStore((state) => state.currentTree);
     const [isDragOver, setIsDragOver] = useState(false);
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
@@ -136,14 +321,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       const timer = setTimeout(() => setIsFocusedOrHovered(false), 300);
       return () => clearTimeout(timer);
     }, []);
-
-    // ボタンの共通スタイルを定義
-    const buttonStyle = {
-      width: `${indentationWidth}px`,
-      minWidth: `${indentationWidth}px`,
-      height: '30px',
-      marginTop: '0px',
-    };
 
     const stackStyles = (clone: boolean | undefined, ghost: boolean | undefined) => ({
       width: '100%',
@@ -251,115 +428,37 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
         >
-          {id !== 'trash' ? (
-            <Button
-              sx={{
-                color: theme.palette.grey[500],
-                cursor: 'grab',
-                ...buttonStyle,
-                touchAction: 'none',
-              }}
-              onClick={() => id !== undefined && onSelect?.(id)}
-              {...handleProps}
-            >
-              <DragHandleIcon />
-            </Button>
-          ) : (
-            <Button
-              sx={{ color: theme.palette.text.secondary, ...buttonStyle }}
-              onClick={() => id !== undefined && onSelect?.(id)}
-            >
-              <DeleteIcon />
-            </Button>
-          )}
-          {onCollapse && (
-            <Button
-              sx={{
-                ...buttonStyle,
-                color: theme.palette.grey[500],
-              }}
-              onClick={() => {
-                onCollapse?.();
-                id !== undefined && onSelect?.(id);
-              }}
-            >
-              <KeyboardArrowDownIcon
-                sx={{
-                  transition: 'transform 250ms ease',
-                  transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-                }}
-              />
-            </Button>
-          )}
-          {id !== 'trash' ? (
-            <>
-              <Checkbox
-                sx={{ ...buttonStyle, color: darkMode ? theme.palette.grey[400] : theme.palette.grey[600] }}
-                checked={done}
-                onClick={() => id !== undefined && onSelect?.(id)}
-                onChange={(e) => onChangeDone?.(e.target.checked)}
-              />
-              <TextField
-                inputRef={inputRef}
-                variant='standard'
-                value={value}
-                onChange={(e) => onChange?.(e.target.value)}
-                onClick={() => id !== undefined && onSelect?.(id)}
-                multiline
-                fullWidth
-                sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.75, sm: 1 } }}
-                InputProps={{
-                  disableUnderline: !isFocusedOrHovered,
-                  style: {
-                    padding: 0,
-                    margin: 0,
-                    paddingTop: '3px',
-                    paddingBottom: '3px',
-                    fontSize: '0.9rem',
-                  },
-                }}
-                onFocus={() => setIsFocusedOrHovered(true)}
-                onBlur={() => {
-                  setTimeout(() => setIsFocusedOrHovered(false), 300);
-                }}
-              />
-              {!clone && isDragOver && (
-                <IconButton
-                  sx={{
-                    color: theme.palette.grey[500],
-                    ...buttonStyle,
-                  }}
-                >
-                  <AttachFileIcon />
-                </IconButton>
-              )}
-              {!clone && attachedFile && <MenuItemsAttachedFile attachedFile={attachedFile} />}
-              {!clone && onRemove && !isDescendantOfTrash(items, id) ? (
-                <MenuItems
-                  onRemove={onRemove}
-                  handleAttachFile={handleAttachFile}
-                  onCopyItems={onCopyItems}
-                  onMoveItems={onMoveItems}
-                  currenTreeId={currentTree}
-                  id={id}
-                  attachedFile={attachedFile}
-                />
-              ) : (
-                <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />
-              )}
-            </>
-          ) : (
-            <>
-              <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px', width: '100%' }}> ゴミ箱 </Typography>
-              {!clone && id === 'trash' && removeTrashDescendants && (
-                <MenuItemsTrashRoot
-                  removeTrashDescendants={removeTrashDescendants}
-                  removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
-                />
-              )}
-            </>
-          )}
-          {clone && childCount && childCount > 1 ? <Badge badgeContent={childCount} color='primary' /> : null}
+          <TreeItemContent
+            id={id}
+            value={value}
+            depth={depth}
+            done={done}
+            attachedFile={attachedFile}
+            childCount={childCount}
+            clone={clone}
+            collapsed={collapsed}
+            currentTree={currentTree}
+            darkMode={darkMode}
+            handleProps={handleProps}
+            indentationWidth={indentationWidth}
+            inputRef={inputRef}
+            isDragOver={isDragOver}
+            isFocusedOrHovered={isFocusedOrHovered}
+            setIsFocusedOrHovered={setIsFocusedOrHovered}
+            setIsDragOver={setIsDragOver}
+            onCollapse={onCollapse}
+            onRemove={onRemove}
+            onChange={onChange}
+            onChangeDone={onChangeDone}
+            onCopyItems={onCopyItems}
+            onMoveItems={onMoveItems}
+            onRestoreItems={onRestoreItems}
+            handleAttachFile={handleAttachFile}
+            removeTrashDescendants={removeTrashDescendants}
+            removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
+            onSelect={onSelect}
+            isItemDescendantOfTrash={isItemDescendantOfTrash}
+          />
         </Stack>
       </ListItem>
     );

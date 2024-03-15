@@ -20,7 +20,16 @@ import {
   UniqueIdentifier,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { buildTree, flattenTree, getProjection, getChildCount, removeChildrenOf, setProperty, findMaxId } from './utilities';
+import {
+  buildTree,
+  flattenTree,
+  getProjection,
+  getChildCount,
+  removeChildrenOf,
+  setProperty,
+  findMaxId,
+  isDescendantOfTrash,
+} from './utilities';
 import type { FlattenedItem, SensorContext, TreeItems } from '../../types/types';
 import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './SortableTreeItem';
@@ -219,6 +228,7 @@ export function SortableTree({
               removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
               onSelect={handleSelect}
               addedTaskId={addedTaskId}
+              isItemDescendantOfTrash={isDescendantOfTrash(items, id)}
             />
           ))}
         {createPortal(
@@ -234,6 +244,7 @@ export function SortableTree({
                 handleAttachFile={handleAttachFile}
                 done={activeItem.done}
                 isNewTask={activeId === activeNewTaskId}
+                isItemDescendantOfTrash={isDescendantOfTrash(items, activeId)}
               />
             ) : null}
           </DragOverlay>,
