@@ -1,7 +1,7 @@
 import { forwardRef, HTMLAttributes, useState, useEffect, useRef, useCallback, memo } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useTheme } from '@mui/material/styles';
-import { ListItem, Stack, Badge, TextField, Checkbox, Button, Typography, IconButton } from '@mui/material';
+import { useMediaQuery, ListItem, Stack, Badge, TextField, Checkbox, Button, Typography, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -86,6 +86,7 @@ const TreeItemContent = memo(
     isItemDescendantOfTrash,
   }: TreeItemContentProps) => {
     const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     // ボタンの共通スタイルを定義
     const buttonStyle = {
@@ -98,18 +99,20 @@ const TreeItemContent = memo(
     return (
       <>
         {id !== 'trash' ? (
-          <Button
-            sx={{
-              color: theme.palette.grey[500],
-              cursor: 'grab',
-              ...buttonStyle,
-              touchAction: 'none',
-            }}
-            onClick={() => id !== undefined && onSelect?.(id)}
-            {...handleProps}
-          >
-            <DragHandleIcon />
-          </Button>
+          !isMobile && (
+            <Button
+              sx={{
+                color: theme.palette.grey[500],
+                cursor: 'grab',
+                ...buttonStyle,
+                touchAction: 'none',
+              }}
+              onClick={() => id !== undefined && onSelect?.(id)}
+              {...handleProps}
+            >
+              <DragHandleIcon />
+            </Button>
+          )
         ) : (
           <Button sx={{ color: theme.palette.text.secondary, ...buttonStyle }} onClick={() => id !== undefined && onSelect?.(id)}>
             <DeleteIcon />
@@ -178,15 +181,31 @@ const TreeItemContent = memo(
             )}
             {!clone && attachedFile && <MenuItemsAttachedFile attachedFile={attachedFile} />}
             {!clone && onRemove && !isItemDescendantOfTrash ? (
-              <MenuItems
-                onRemove={onRemove}
-                handleAttachFile={handleAttachFile}
-                onCopyItems={onCopyItems}
-                onMoveItems={onMoveItems}
-                currenTreeId={currentTree}
-                id={id}
-                attachedFile={attachedFile}
-              />
+              <>
+                <MenuItems
+                  onRemove={onRemove}
+                  handleAttachFile={handleAttachFile}
+                  onCopyItems={onCopyItems}
+                  onMoveItems={onMoveItems}
+                  currenTreeId={currentTree}
+                  id={id}
+                  attachedFile={attachedFile}
+                />
+                {isMobile && (
+                  <Button
+                    sx={{
+                      color: theme.palette.grey[500],
+                      cursor: 'grab',
+                      ...buttonStyle,
+                      touchAction: 'none',
+                    }}
+                    onClick={() => id !== undefined && onSelect?.(id)}
+                    {...handleProps}
+                  >
+                    <DragHandleIcon />
+                  </Button>
+                )}
+              </>
             ) : (
               <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />
             )}
