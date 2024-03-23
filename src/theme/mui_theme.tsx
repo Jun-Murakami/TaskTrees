@@ -69,6 +69,12 @@ export const theme = createTheme({
   },
   typography: {
     fontFamily: fontFamilySet,
+    h3: {
+      fontSize: '35px',
+    },
+    caption: {
+      fontSize: '11px',
+    },
   },
   components: {
     MuiCssBaseline: {
@@ -95,6 +101,12 @@ export const darkTheme = createTheme({
   },
   typography: {
     fontFamily: fontFamilySet,
+    h3: {
+      fontSize: '35px',
+    },
+    caption: {
+      fontSize: '11px',
+    },
   },
   components: {
     MuiCssBaseline: {
