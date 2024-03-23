@@ -1,7 +1,8 @@
 import { Typography, Box, Button } from '@mui/material';
 import ReplyIcon from '@mui/icons-material/Reply';
+import { useTheme } from '@mui/material/styles';
 import ReactMarkdown from 'react-markdown';
-import TaskTreesLogo from '/TaskTrees.svg';
+import { TaskTreeLogoIcon } from './TaskTreesLogo';
 
 const ppMarkdown = `
 村上純（以下、「管理者」といいます。）は、本ウェブサイト上で提供するサービス（以下、「本サービス」といいます。）における、ユーザーの個人情報の取扱いについて、以下のとおりプライバシーポリシー（以下、「本ポリシー」といいます。）を定めます。  
@@ -77,10 +78,11 @@ const ppMarkdown = `
 `;
 
 export function PrivacyPolicy() {
+  const theme = useTheme();
   return (
     <Box sx={{ textAlign: 'center' }}>
       <Typography sx={{ mt: 5, marginBottom: 0, justifyContent: 'center', alignItems: 'center', display: 'flex' }} variant='h3'>
-        <img src={TaskTreesLogo} alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
+        <TaskTreeLogoIcon sx={{ width: '35px', height: '35px', marginRight: '10px', color: theme.palette.primary.main }} />
         TaskTrees
       </Typography>
       <Typography variant='h5' sx={{ marginY: 5 }}>

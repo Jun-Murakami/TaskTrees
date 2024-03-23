@@ -22,6 +22,7 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
+import { TaskTreeLogoIcon } from './TaskTreesLogo';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useTreeManagement } from '../hooks/useTreeManagement';
@@ -128,7 +129,7 @@ export function TreeSettingsAccordion() {
           }}
         >
           <Stack direction='row' sx={{ height: 40, width: '100%', margin: '0 auto' }}>
-            <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '28px', height: '28px', marginTop: 5 }} />
+            <TaskTreeLogoIcon sx={{ width: '28px', height: '28px', color: theme.palette.primary.main, mt: 0.5 }} />
             {isAccordionExpanded ? (
               <TextField
                 id='outlined-basic'
