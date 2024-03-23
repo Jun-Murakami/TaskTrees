@@ -78,13 +78,9 @@ const ppMarkdown = `
 
 export function PrivacyPolicy() {
   return (
-    <Box sx={{textAlign: 'center'}}>
-      <Typography variant='h3' sx={{ margin: 10 }}>
-        <img
-          src={TaskTreesLogo}
-          alt='Task Tree'
-          style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
-        />
+    <Box sx={{ textAlign: 'center' }}>
+      <Typography sx={{ mt: 5, marginBottom: 0, justifyContent: 'center', alignItems: 'center', display: 'flex' }} variant='h3'>
+        <img src={TaskTreesLogo} alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
         TaskTrees
       </Typography>
       <Typography variant='h5' sx={{ marginY: 5 }}>
@@ -101,6 +97,7 @@ export function PrivacyPolicy() {
         onClick={() => {
           window.location.href = '/';
         }}
+        sx={{ mb: 10 }}
       >
         アプリのトップに戻る
       </Button>
