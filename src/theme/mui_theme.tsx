@@ -1,5 +1,5 @@
 import { createTheme } from '@mui/material/styles';
-import '@fontsource/m-plus-1p';
+import '@fontsource/biz-udpgothic';
 
 const fontFamilySet = [
   '"BIZ UDPGothic"',
