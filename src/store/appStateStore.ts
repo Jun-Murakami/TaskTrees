@@ -11,6 +11,7 @@ type AppState = {
   isAccordionExpanded: boolean;
   isFocusedTreeName: boolean;
   containerWidth: number;
+  searchKey: string;
   setLocalTimestamp: (localTimestamp: number) => void;
   setDarkMode: (darkMode: boolean) => void;
   setHideDoneItems: (hideDoneItems: boolean) => void;
@@ -21,6 +22,7 @@ type AppState = {
   setIsAccordionExpanded: (isAccordionExpanded: boolean) => void;
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
   setContainerWidth: (containerWidth: number) => void;
+  setSearchKey: (searchKey: string) => void;
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
@@ -34,6 +36,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   isAccordionExpanded: false,
   isFocusedTreeName: false,
   containerWidth: 0,
+  searchKey: '',
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
   setDarkMode: (darkMode) => set({ darkMode }),
   setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),
@@ -44,4 +47,5 @@ export const useAppStateStore = create<AppState>((set) => ({
   setIsAccordionExpanded: (isAccordionExpanded) => set({ isAccordionExpanded }),
   setIsFocusedTreeName: (isFocusedTreeName) => set({ isFocusedTreeName }),
   setContainerWidth: (containerWidth) => set({ containerWidth }),
+  setSearchKey: (searchKey) => set({ searchKey }),
 }));

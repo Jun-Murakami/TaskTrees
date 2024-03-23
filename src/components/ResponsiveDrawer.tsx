@@ -14,6 +14,7 @@ import {
   FormControlLabel,
   Switch,
   Typography,
+  TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -36,6 +37,8 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
+  const searchKey = useAppStateStore((state) => state.searchKey);
+  const setSearchKey = useAppStateStore((state) => state.setSearchKey);
   const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
 
   const currentTree = useTreeStateStore((state) => state.currentTree);
@@ -107,7 +110,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       <List sx={{ height: '100%' }}>
         {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}
       </List>
-      <Box sx={{ display: { xs: 'block', sm: 'none' }, height: '175px', minHeight: '175px' }} />
+      <Box sx={{ display: { xs: 'block', sm: 'none' }, height: '270px', minHeight: '270px' }} />
     </>
   );
 
@@ -202,7 +205,6 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
               display: { xs: 'block', sm: 'none' },
               '& .MuiDrawer-paper': {
                 pt: '60px',
-                pb: '175px',
                 boxSizing: 'border-box',
                 width: drawerWidth,
               },
@@ -220,8 +222,8 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
                 pt: '60px',
                 boxSizing: 'border-box',
                 width: drawerWidth,
-                height: 'calc(100% - 115px)',
-                maxHeight: 'calc(100% - 115px)',
+                height: 'calc(100% - 170px)',
+                maxHeight: 'calc(100% - 170px)',
               },
             }}
             open
@@ -246,6 +248,18 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           ...(isMenuVisible ? { display: 'block' } : { display: { xs: 'none', sm: 'block' } }),
         }}
       >
+        <Divider />
+        <List>
+          <ListItem disablePadding sx={{ px: 2 }}>
+            <TextField
+              label='ツリー内を検索'
+              value={searchKey}
+              size='small'
+              fullWidth
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchKey(event.target.value)}
+            />
+          </ListItem>
+        </List>
         <Divider />
         <List>
           <ListItem disablePadding sx={{ pl: 2 }}>
