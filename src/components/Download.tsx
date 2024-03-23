@@ -25,12 +25,8 @@ export function Download() {
 
   return (
     <Box sx={{ textAlign: 'center' }}>
-      <Typography variant='h3' sx={{ margin: 10 }}>
-        <img
-          src='/TaskTrees.svg'
-          alt='Task Tree'
-          style={{ width: '35px', height: '35px', marginTop: '30px', marginRight: '10px' }}
-        />
+      <Typography sx={{ margin: 10, justifyContent: 'center', alignItems: 'center', display: 'flex' }} variant='h3'>
+        <img src='/TaskTrees.svg' alt='Task Tree' style={{ width: '35px', height: '35px', marginRight: '10px' }} />
         TaskTrees
       </Typography>
       <Typography variant='h5' sx={{ mt: 1, mb: 0 }}>
