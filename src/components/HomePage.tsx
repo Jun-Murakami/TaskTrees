@@ -142,7 +142,6 @@ export function HomePage() {
               </Typography>
             </Box>
           )}
-
           <MessagePaper />
         </Box>
       )}

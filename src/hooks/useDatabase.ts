@@ -6,13 +6,15 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase, ref, set, get } from 'firebase/database';
 import { useError } from './useError';
 
+// データベースに関連するカスタムフック
+// 他の場所にはデータベースの処理は書かないようにする
+
 export const useDatabase = () => {
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
-  // エラーハンドリング
-  const { handleError } = useError();
-  // タイムスタンプの取得
 
-  // データベースにタイムスタンプを保存する関数 ---------------------------------------------------------------------------
+  const { handleError } = useError();
+
+  // タイムスタンプをデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveTimeStampDb = () => {
     const user = getAuth().currentUser;
     if (!user) {
@@ -108,8 +110,68 @@ export const useDatabase = () => {
     }
   }
 
-  // treeListを反復して、データベースからitemsとnameを取得する関数 ---------------------------------------------------------------------------
-  // treeDataがTreesListItemIncludingItems型かチェックする関数
+  // データベースからツリーリストを取得する関数 ---------------------------------------------------------------------------
+  const loadTreesListFromDb = async (userId: string): Promise<string[] | null> => {
+    const userTreeListRef = ref(getDatabase(), `users/${userId}/treeList`);
+    return await get(userTreeListRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          return snapshot.val();
+        }
+        return null;
+      })
+      .catch(() => {
+        return null;
+      });
+  }
+
+  // データベースからツリーの名前のみを取得する関数 ---------------------------------------------------------------------------
+  const loadTreeNameFromDb = async (targetTree: UniqueIdentifier): Promise<string | null> => {
+    const treeTitleRef = ref(getDatabase(), `trees/${targetTree}/name`);
+    return await get(treeTitleRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          return snapshot.val();
+        }
+        return null;
+      })
+      .catch(() => {
+        return null;
+      });
+  }
+
+  // データベースからツリーのitemsのみを取得する関数 ---------------------------------------------------------------------------
+  const loadItemsFromDb = async (targetTree: UniqueIdentifier): Promise<TreeItems | null> => {
+    const treeItemsRef = ref(getDatabase(), `trees/${targetTree}/items`);
+    return await get(treeItemsRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          return snapshot.val();
+        }
+        return null;
+      })
+      .catch(() => {
+        return null;
+      });
+  }
+
+  // データベースからツリーメンバーのみを取得する関数 ---------------------------------------------------------------------------
+  const loadMembersFromDb = async (targetTree: UniqueIdentifier): Promise<string[] | null> => {
+    const treeMembersRef = ref(getDatabase(), `trees/${targetTree}/members`);
+    return await get(treeMembersRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          return snapshot.val();
+        }
+        return null;
+      })
+      .catch(() => {
+        return null;
+      });
+  }
+
+  // treeListを反復して、データベースからすべてのitemsとnameを取得する関数 ---------------------------------------------------------------------------
+  // treeDataがTreesListItemIncludingItems型かチェックするutil関数
   const isValiedTreesListItemIncludingItems = async (arg: unknown): Promise<boolean> => {
     return (
       typeof arg === 'object' &&
@@ -159,5 +221,5 @@ export const useDatabase = () => {
     return null;
   };
 
-  return { saveItemsDb, saveTreesListDb, saveCurrentTreeNameDb, loadAllTreesDataFromDb, deleteTreeFromDb, saveTimeStampDb };
+  return { saveItemsDb, saveTreesListDb, saveCurrentTreeNameDb, loadTreesListFromDb, loadTreeNameFromDb, loadItemsFromDb, loadMembersFromDb, loadAllTreesDataFromDb, deleteTreeFromDb, saveTimeStampDb };
 };

@@ -1,9 +1,21 @@
 import { createTheme } from '@mui/material/styles';
 import '@fontsource/biz-udpgothic';
+import '@fontsource/m-plus-1p';
+
+// ユーザーのデバイスのDPIを検出
+const dpi = window.devicePixelRatio;
+
+let mainFont = '"BIZ UDPGothic"';
+
+if (dpi >= 1.5) {
+  // 1.5倍以上のDPIの場合、M PLIUS 1Pにする
+  mainFont = '"M PLUS 1p"';
+}
+
+console.log(`DPI: ${dpi}, Font: ${mainFont}`);
 
 const fontFamilySet = [
-  '"BIZ UDPGothic"',
-  '"M PLUS 1p"',
+  `${mainFont}`,
   '-apple-system',
   'BlinkMacSystemFont',
   '"Segoe UI"',
@@ -15,6 +27,16 @@ const fontFamilySet = [
   '"Segoe UI Emoji"',
   '"Segoe UI Symbol"',
 ].join(',');
+
+const typographyStyles = {
+  fontFamily: fontFamilySet,
+  h3: {
+    fontSize: '35px',
+  },
+  caption: {
+    fontSize: '11px',
+  },
+};
 
 const breakpointsValues = {
   xs: 0,
@@ -67,15 +89,7 @@ export const theme = createTheme({
       main: '#ef0a0a',
     },
   },
-  typography: {
-    fontFamily: fontFamilySet,
-    h3: {
-      fontSize: '35px',
-    },
-    caption: {
-      fontSize: '11px',
-    },
-  },
+  typography: typographyStyles,
   components: {
     MuiCssBaseline: {
       styleOverrides: {
@@ -99,15 +113,7 @@ export const darkTheme = createTheme({
       main: '#ef0a0a',
     },
   },
-  typography: {
-    fontFamily: fontFamilySet,
-    h3: {
-      fontSize: '35px',
-    },
-    caption: {
-      fontSize: '11px',
-    },
-  },
+  typography: typographyStyles,
   components: {
     MuiCssBaseline: {
       styleOverrides: {

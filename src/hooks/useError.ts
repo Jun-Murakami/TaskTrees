@@ -3,6 +3,9 @@ import { getAuth, signOut } from 'firebase/auth';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 
+// エラーハンドリングに関連するカスタムフック
+// ログインページに戻るクリティカルなエラーが発生した場合に使用
+
 export const useError = () => {
   const setSystemMessage = useAppStateStore((state) => state.setSystemMessage);
   const setItems = useTreeStateStore((state) => state.setItems);

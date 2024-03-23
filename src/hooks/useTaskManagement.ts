@@ -18,6 +18,9 @@ import { useTreeStateStore } from '../store/treeStateStore';
 import { useAppStateStore } from '../store/appStateStore';
 import { useDialogStore } from '../store/dialogStore';
 
+// タスクの追加、削除、復元、コピー、移動、done状態の変更を行う
+// 一部にデータベースの処理を含む
+
 export const useTaskManagement = () => {
   const items = useTreeStateStore((state) => state.items);
   const currentTree = useTreeStateStore((state) => state.currentTree);
@@ -28,9 +31,14 @@ export const useTaskManagement = () => {
 
   const { deleteFile } = useAttachedFile();
 
-
   // タスクを追加する ------------------------------
   // ※ SortableTreeコンポーネントに移動した
+
+  // アイテムのテキスト値を変更する ------------------------------
+  const handleValueChange = (id: UniqueIdentifier, newValue: string) => {
+    const newItems = setProperty(items, id, 'value', () => newValue);
+    setItems(newItems);
+  }
 
   // タスクの削除 ------------------------------
   function handleRemove(id: UniqueIdentifier | undefined) {
@@ -389,12 +397,6 @@ export const useTaskManagement = () => {
       showDialog('エラーが発生しました。\n\n' + error, 'Error');
     }
   };
-
-  // アイテムのテキスト値を変更する ------------------------------
-  const handleValueChange = (id: UniqueIdentifier, newValue: string) => {
-    const newItems = setProperty(items, id, 'value', () => newValue);
-    setItems(newItems);
-  }
 
   // アイテムのdone状態を変更する ------------------------------
   // 子孫のdone状態を更新する

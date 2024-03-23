@@ -17,7 +17,7 @@ export const useObserve = () => {
   const prevItems = useTreeStateStore((state) => state.prevItems);
   const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
 
-  const { loadTreesListFromDb, loadCurrentTreeDataFromDb } = useTreeManagement();
+  const { loadTreesList, loadCurrentTreeData } = useTreeManagement();
   const { saveItemsDb } = useDatabase();
   const { loadSettingsFromDb } = useAppStateManagement();
   const { handleError } = useError();
@@ -30,7 +30,7 @@ export const useObserve = () => {
     }
     setIsLoading(true);
     loadSettingsFromDb();
-    loadTreesListFromDb();
+    loadTreesList();
     const timestampRef = ref(getDatabase(), `users/${user.uid}/timestamp`);
     onValue(timestampRef, (snapshot) => {
       setIsLoading(true);
@@ -39,10 +39,10 @@ export const useObserve = () => {
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
         setLocalTimestamp(serverTimestamp);
         loadSettingsFromDb();
-        loadTreesListFromDb();
+        loadTreesList();
         const currentTree = useTreeStateStore.getState().currentTree;
         if (currentTree) {
-          loadCurrentTreeDataFromDb(currentTree);
+          loadCurrentTreeData(currentTree);
         }
 
       }

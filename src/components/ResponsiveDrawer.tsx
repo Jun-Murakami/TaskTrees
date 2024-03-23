@@ -43,7 +43,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
   const treesList = useTreeStateStore((state) => state.treesList);
 
   const { saveAppSettingsDb } = useAppStateManagement();
-  const { loadCurrentTreeDataFromDb, handleCreateNewTree } = useTreeManagement();
+  const { loadCurrentTreeData, handleCreateNewTree } = useTreeManagement();
 
   useEffect(() => {
     if (drawerState) {
@@ -92,7 +92,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   // ツリーのリストから選択されたツリーを表示する
   const handleListClick = async (treeId: UniqueIdentifier): Promise<void> => {
-    await loadCurrentTreeDataFromDb(treeId);
+    await loadCurrentTreeData(treeId);
     setCurrentTree(treeId);
     if (isAccordionExpanded) {
       // 0.5秒後にフォーカスをセット
