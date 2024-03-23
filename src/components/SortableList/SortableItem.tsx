@@ -9,7 +9,7 @@ import { TreesListItem } from '../../types/types';
 export type SortableItemProps = {
   isPreviewMode: boolean;
   item: TreesListItem;
-  handleListClick: (treeId: UniqueIdentifier) => void;
+  handleListClick: (treeId: UniqueIdentifier) => Promise<void>;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
