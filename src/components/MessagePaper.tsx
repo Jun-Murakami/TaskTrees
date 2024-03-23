@@ -5,7 +5,7 @@ export const MessagePaper = () => {
     <Stack sx={{ maxWidth: 300, margin: 'auto', marginTop: 4 }}>
       <Paper>
         <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-          2024.03.24 検索機能を追加しました。
+          2024.03.24 ツリー内の検索機能を追加しました。
           <br />
           <br />
           2024.03.10 ファイルの添付機能を追加しました。タスクにファイルをドロップして添付できます。（25MBまで）
