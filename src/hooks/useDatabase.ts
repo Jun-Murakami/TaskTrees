@@ -1,4 +1,5 @@
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { useAppStateStore } from '../store/appStateStore';
 import { TreeItems, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
 import { isTreeItemArray } from '../components/SortableTree/utilities';
 import { getAuth } from 'firebase/auth';
@@ -6,13 +7,27 @@ import { getDatabase, ref, set, get } from 'firebase/database';
 import { useError } from './useError';
 
 export const useDatabase = () => {
+  const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
   // エラーハンドリング
   const { handleError } = useError();
+  // タイムスタンプの取得
 
-  // ----------------------------------------------------------------------
-  // itemsの保存だけはデバウンスを掛けたいので、useTreeManagement.tsで実装
-  // その他はイベントハンドラ内でこれらの関数を呼び出す
-  // ----------------------------------------------------------------------
+  // データベースにタイムスタンプを保存する関数 ---------------------------------------------------------------------------
+  const saveTimeStampDb = () => {
+    const user = getAuth().currentUser;
+    if (!user) {
+      return;
+    }
+    try {
+      const newTimestamp = Date.now();
+      setLocalTimestamp(newTimestamp);
+      const timestampRef = ref(getDatabase(), `users/${user.uid}/timestamp`);
+      set(timestampRef, newTimestamp);
+      return newTimestamp;
+    } catch (error) {
+      handleError('タイムスタンプの保存に失敗しました。\n\n' + error);
+    }
+  };
 
   // itemsをデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveItemsDb = (newItems: TreeItems, targetTree: UniqueIdentifier) => {
@@ -29,9 +44,10 @@ export const useDatabase = () => {
       const treeStateRef = ref(getDatabase(), `trees/${targetTree}/items`);
       // 更新対象が存在するかチェック
       get(treeStateRef)
-        .then((snapshot) => {
+        .then(async (snapshot) => {
           if (snapshot.exists()) {
             // 存在する場合、更新を実行
+            saveTimeStampDb();
             set(treeStateRef, newItems).catch((error) => {
               handleError('データベースの保存に失敗しました。code:3\n\n' + error);
             });
@@ -56,6 +72,7 @@ export const useDatabase = () => {
     }
     try {
       const userTreeListRef = ref(getDatabase(), `users/${user.uid}/treeList`);
+      saveTimeStampDb();
       set(
         userTreeListRef,
         newTreesList.map((tree) => tree.id)
@@ -73,15 +90,27 @@ export const useDatabase = () => {
     }
     try {
       const treeNameRef = ref(getDatabase(), `trees/${targetTree}/name`);
+      saveTimeStampDb();
       set(treeNameRef, editedTreeName);
     } catch (error) {
       handleError('ツリー名の変更をデータベースに保存できませんでした。\n\n' + error);
     }
   };
 
+  // データベースからツリーを削除する関数 ---------------------------------------------------------------------------
+  const deleteTreeFromDb = (targetTree: UniqueIdentifier) => {
+    const treeRef = ref(getDatabase(), `trees/${targetTree}`);
+    try {
+      saveTimeStampDb();
+      set(treeRef, null);
+    } catch (error) {
+      handleError('ツリーの削除に失敗しました。\n\n' + error);
+    }
+  }
+
   // treeListを反復して、データベースからitemsとnameを取得する関数 ---------------------------------------------------------------------------
   // treeDataがTreesListItemIncludingItems型かチェックする関数
-  const isValiedTreesListItemIncludingItems = (arg: unknown): arg is TreesListItemIncludingItems => {
+  const isValiedTreesListItemIncludingItems = async (arg: unknown): Promise<boolean> => {
     return (
       typeof arg === 'object' &&
       arg !== null &&
@@ -108,7 +137,7 @@ export const useDatabase = () => {
           const treeSnapshot = await get(treeRef);
           if (treeSnapshot.exists()) {
             const treeData = treeSnapshot.val();
-            if (treeData && !isValiedTreesListItemIncludingItems(treeData)) {
+            if (treeData && !await isValiedTreesListItemIncludingItems(treeData)) {
               const treeItemsIncludingItems: TreesListItemIncludingItems = {
                 id: treesListItem.id,
                 name: treeData.name,
@@ -130,5 +159,5 @@ export const useDatabase = () => {
     return null;
   };
 
-  return { saveItemsDb, saveTreesListDb, saveCurrentTreeNameDb, loadAllTreesDataFromDb };
+  return { saveItemsDb, saveTreesListDb, saveCurrentTreeNameDb, loadAllTreesDataFromDb, deleteTreeFromDb, saveTimeStampDb };
 };

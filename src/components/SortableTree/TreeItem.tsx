@@ -39,7 +39,6 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   handleAttachFile(id: UniqueIdentifier, fileName: string): void;
   removeTrashDescendants?: () => Promise<void>;
   removeTrashDescendantsWithDone?: () => Promise<void>;
-  onSelect?: (id: UniqueIdentifier) => void;
   isNewTask?: boolean;
   addedTaskId?: UniqueIdentifier | null;
   isItemDescendantOfTrash?: boolean;
@@ -82,7 +81,6 @@ const TreeItemContent = memo(
     handleAttachFile,
     removeTrashDescendants,
     removeTrashDescendantsWithDone,
-    onSelect,
     isItemDescendantOfTrash,
   }: TreeItemContentProps) => {
     const theme = useTheme();
@@ -105,13 +103,12 @@ const TreeItemContent = memo(
               ...buttonStyle,
               touchAction: 'none',
             }}
-            onClick={() => id !== undefined && onSelect?.(id)}
             {...handleProps}
           >
             <DragHandleIcon />
           </Button>
         ) : (
-          <Button sx={{ color: theme.palette.text.secondary, ...buttonStyle }} onClick={() => id !== undefined && onSelect?.(id)}>
+          <Button sx={{ color: theme.palette.text.secondary, ...buttonStyle }}>
             <DeleteIcon />
           </Button>
         )}
@@ -123,7 +120,6 @@ const TreeItemContent = memo(
             }}
             onClick={() => {
               onCollapse?.();
-              id !== undefined && onSelect?.(id);
             }}
           >
             <KeyboardArrowDownIcon
@@ -139,15 +135,15 @@ const TreeItemContent = memo(
             <Checkbox
               sx={{ ...buttonStyle, color: darkMode ? theme.palette.grey[400] : theme.palette.grey[600] }}
               checked={done}
-              onClick={() => id !== undefined && onSelect?.(id)}
               onChange={(e) => onChangeDone?.(e.target.checked)}
             />
             <TextField
               inputRef={inputRef}
               variant='standard'
               value={value}
-              onChange={(e) => onChange?.(e.target.value)}
-              onClick={() => id !== undefined && onSelect?.(id)}
+              onChange={(e) => {
+                onChange?.(e.target.value);
+              }}
               multiline
               fullWidth
               sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.75, sm: 1 } }}
@@ -223,10 +219,20 @@ const TreeItemContent = memo(
       prevProps.isDragOver === nextProps.isDragOver &&
       prevProps.isFocusedOrHovered === nextProps.isFocusedOrHovered &&
       prevProps.onCollapse === nextProps.onCollapse &&
+      prevProps.onRemove === nextProps.onRemove &&
+      prevProps.onChange === nextProps.onChange &&
+      prevProps.onChangeDone === nextProps.onChangeDone &&
+      prevProps.onCopyItems === nextProps.onCopyItems &&
+      prevProps.onMoveItems === nextProps.onMoveItems &&
+      prevProps.onRestoreItems === nextProps.onRestoreItems &&
+      prevProps.handleAttachFile === nextProps.handleAttachFile &&
+      prevProps.removeTrashDescendants === nextProps.removeTrashDescendants &&
+      prevProps.removeTrashDescendantsWithDone === nextProps.removeTrashDescendantsWithDone &&
       prevProps.depth === nextProps.depth &&
       prevProps.disableInteraction === nextProps.disableInteraction &&
       prevProps.disableSelection === nextProps.disableSelection &&
       prevProps.ghost === nextProps.ghost &&
+      prevProps.handleProps === nextProps.handleProps &&
       prevProps.indicator === nextProps.indicator &&
       prevProps.indentationWidth === nextProps.indentationWidth &&
       prevProps.isNewTask === nextProps.isNewTask &&
@@ -265,7 +271,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       handleAttachFile,
       removeTrashDescendants,
       removeTrashDescendantsWithDone,
-      onSelect,
       isNewTask,
       addedTaskId,
       isItemDescendantOfTrash,
@@ -462,7 +467,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             handleAttachFile={handleAttachFile}
             removeTrashDescendants={removeTrashDescendants}
             removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
-            onSelect={onSelect}
             isItemDescendantOfTrash={isItemDescendantOfTrash}
           />
         </Stack>

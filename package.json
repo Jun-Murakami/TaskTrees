@@ -16,11 +16,13 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
+    "@fontsource/biz-udpgothic": "^5.0.18",
     "@fontsource/m-plus-1p": "^5.0.18",
     "@mui/icons-material": "^5.15.12",
     "@mui/material": "^5.15.12",
     "firebase": "^10.8.1",
     "immer": "^10.0.3",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
@@ -28,6 +30,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.0",
     "@types/react": "^18.2.63",
     "@types/react-dom": "^18.2.20",
     "@typescript-eslint/eslint-plugin": "^7.1.1",

@@ -14,15 +14,11 @@ import {
 import { ref, getDatabase, get, set } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAttachedFile } from './useAttachedFile';
-import { useTaskStateStore } from '../store/taskStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useAppStateStore } from '../store/appStateStore';
 import { useDialogStore } from '../store/dialogStore';
 
 export const useTaskManagement = () => {
-  const lastSelectedItemId = useTaskStateStore((state) => state.lastSelectedItemId);
-  const setLastSelectedItemId = useTaskStateStore((state) => state.setLastSelectedItemId);
-
   const items = useTreeStateStore((state) => state.items);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const setItems = useTreeStateStore((state) => state.setItems);
@@ -32,74 +28,12 @@ export const useTaskManagement = () => {
 
   const { deleteFile } = useAttachedFile();
 
-  // 選択したアイテムのIDを記憶する
-  const handleSelect = (id: UniqueIdentifier) => {
-    setLastSelectedItemId(id);
-  };
 
   // タスクを追加する ------------------------------
-  // ネストされたアイテムからアイテムを検索する
-  const containsItemId = (items: TreeItems, itemId: UniqueIdentifier): boolean => {
-    return items.some((item) => item.id === itemId || containsItemId(item.children, itemId));
-  };
-  // ネストされたアイテムにアイテムを追加する
-  const addItemToNestedChildren = (items: TreeItems, parentId: UniqueIdentifier, newItem: TreeItem): TreeItem[] => {
-    return items.map((item) => {
-      if (item.id === parentId) {
-        if (!item.children) {
-          item.children = [];
-        }
-        item.children.push(newItem);
-        return item;
-      } else if (item.children) {
-        item.children = addItemToNestedChildren(item.children, parentId, newItem);
-        return item;
-      }
-      return item;
-    });
-  };
-  // 本編
-  const handleAddTask = () => {
-    const newTaskId = findMaxId(items) + 1;
-    const newTask = {
-      id: newTaskId.toString(),
-      value: '',
-      done: false,
-      children: [],
-    };
-
-    if (
-      lastSelectedItemId === 'trash' ||
-      (lastSelectedItemId !== null && isDescendantOfTrash(items, lastSelectedItemId)) ||
-      lastSelectedItemId === null
-    ) {
-      // 選択アイテムが無い場合、新しいタスクを先頭に追加
-      const newItems = [...items]; // 現在のアイテムのコピーを作成
-      const trashIndex = newItems.findIndex((item) => item.id === 'trash');
-      if (trashIndex >= 0) {
-        newItems.unshift(newTask);
-      } else {
-        // ゴミ箱が存在しない場合、何もしない
-        console.error('ゴミ箱が存在しません');
-        return;
-      }
-      setItems(newItems); // 更新されたアイテムの配列をセット
-    } else {
-      // itemsをchildren内を含めて再帰的に検索し、選択したアイテムのidが存在しない場合はツリーの最初に追加
-      if (!containsItemId(items, lastSelectedItemId)) {
-        const newItems = [...items]; // 現在のアイテムのコピーを作成
-        newItems.unshift(newTask); // 配列の先頭に追加
-        setItems(newItems); // 更新されたアイテムの配列をセット
-      } else {
-        // 選択したアイテムの直下に新しいアイテムを追加
-        const updatedItems = addItemToNestedChildren(items, lastSelectedItemId, newTask);
-        setItems(updatedItems);
-      }
-    }
-  };
+  // ※ SortableTreeコンポーネントに移動した
 
   // タスクの削除 ------------------------------
-  async function handleRemove(id: UniqueIdentifier | undefined) {
+  function handleRemove(id: UniqueIdentifier | undefined) {
     if (!id) return;
     const currentItems = items;
     const itemToRemove = findItemDeep(currentItems, id);
@@ -123,9 +57,9 @@ export const useTaskManagement = () => {
             item.children.forEach(listUpAttachedFiles);
           };
           listUpAttachedFiles(itemToRemoveCopy);
-          attachedFiles.forEach(async (attachedFile) => {
+          attachedFiles.forEach((attachedFile) => {
             if (!currentTree) return;
-            await deleteFile(attachedFile, currentTree);
+            deleteFile(attachedFile, currentTree);
           });
         } catch (error) {
           showDialog('添付ファイルの削除に失敗しました。\n\n' + error, 'Error');
@@ -174,7 +108,7 @@ export const useTaskManagement = () => {
         await deleteFile(attachedFile, currentTree, true);
       });
     } catch (error) {
-      showDialog('添付ファイルの削除に失敗しました。\n\n' + error, 'Error');
+      await showDialog('添付ファイルの削除に失敗しました。\n\n' + error, 'Error');
     }
     const itemsWithoutTrashDescendants = targetItems.filter(
       (item) => !isDescendantOfTrash(targetItems, item.id) || item.id === 'trash'
@@ -205,7 +139,6 @@ export const useTaskManagement = () => {
 
     const addAttachedFilesToDeleteList = async (item: TreeItem) => {
       if (item.attachedFile) {
-        console.log('attachedFile:', item.attachedFile);
         deleteList.push(item.attachedFile);
       }
       item.children.forEach(addAttachedFilesToDeleteList);
@@ -217,7 +150,7 @@ export const useTaskManagement = () => {
         if (item.id === parentId) {
           const filteredChildren: TreeItem[] = [];
           for (const child of item.children) {
-            if (!((await child.done) && !child.children.some((grandchild) => !grandchild.done))) {
+            if (!((child.done) && !child.children.some((grandchild) => !grandchild.done))) {
               child.children = await removeDoneDescendants(child.children, child.id);
               filteredChildren.push(child);
             } else {
@@ -281,7 +214,7 @@ export const useTaskManagement = () => {
       // DBからコピー先のアイテムを取得
       const treeItemsRef = ref(getDatabase(), `trees/${targetTreeId}/items`);
       get(treeItemsRef)
-        .then((snapshot) => {
+        .then(async (snapshot) => {
           if (snapshot.exists()) {
             const data: TreeItem[] = snapshot.val();
             const itemsWithChildren = ensureChildrenProperty(data);
@@ -318,7 +251,7 @@ export const useTaskManagement = () => {
                   const sourcePath = `trees/${currentTree}/${attachedFile}`;
                   const destinationPath = `trees/${targetTreeId}/${attachedFile}`;
                   try {
-                    await copyFileInStorage({ sourcePath, destinationPath });
+                    copyFileInStorage({ sourcePath, destinationPath });
                   } catch (error) {
                     throw new Error('添付ファイルのコピーに失敗しました。\n\n' + error);
                   }
@@ -334,10 +267,14 @@ export const useTaskManagement = () => {
                   .concat(itemsWithChildren.slice(itemsWithChildren.indexOf(trashIndex)))
                 : itemsWithChildren.concat(reIdItemsCopy);
               if (newItems && trashIndex) {
-                //コピー先のDBにコピー用アイテムを追加
-                set(treeItemsRef, newItems).catch((error) => {
-                  throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error);
-                });
+                if (targetTreeId === currentTree) {
+                  setItems(newItems);
+                } else {
+                  //コピー先のDBにコピー用アイテムを追加
+                  set(treeItemsRef, newItems).catch((error) => {
+                    throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error);
+                  });
+                }
                 return true;
               } else {
                 throw new Error('コピー用アイテムの抽出に失敗しました。');
@@ -407,12 +344,12 @@ export const useTaskManagement = () => {
               if (attachedFiles.length > 0) {
                 const functions = getFunctions();
                 const copyFileInStorage = httpsCallable(functions, 'copyFileInStorage');
-                attachedFiles.forEach(async (attachedFile) => {
+                attachedFiles.forEach((attachedFile) => {
                   const sourcePath = `trees/${currentTree}/${attachedFile}`;
                   const destinationPath = `trees/${targetTreeId}/${attachedFile}`;
                   try {
-                    await copyFileInStorage({ sourcePath, destinationPath });
-                    await deleteFile(attachedFile, currentTree, true);
+                    copyFileInStorage({ sourcePath, destinationPath });
+                    deleteFile(attachedFile, currentTree, true);
                   } catch (error) {
                     throw new Error('添付ファイルのコピーに失敗しました。\n\n' + error);
                   }
@@ -454,14 +391,14 @@ export const useTaskManagement = () => {
   };
 
   // アイテムのテキスト値を変更する ------------------------------
-  function handleValueChange(id: UniqueIdentifier, newValue: string) {
+  const handleValueChange = (id: UniqueIdentifier, newValue: string) => {
     const newItems = setProperty(items, id, 'value', () => newValue);
     setItems(newItems);
   }
 
   // アイテムのdone状態を変更する ------------------------------
   // 子孫のdone状態を更新する
-  function updateChildrenDone(items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems {
+  const updateChildrenDone = (items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems => {
     return items.map((item) => {
       // アイテム自体かその子孫が対象のIDと一致する場合、done状態を更新
       if (item.id === targetId) {
@@ -478,9 +415,10 @@ export const useTaskManagement = () => {
     });
   }
   // 本編
-  function handleDoneChange(id: UniqueIdentifier, done: boolean) {
+  const handleDoneChange = (id: UniqueIdentifier, done: boolean) => {
+    const currentItems = useTreeStateStore.getState().items;
     // アイテム自体のdone状態を更新
-    const updatedItems = setProperty(items, id, 'done', () => done);
+    const updatedItems = setProperty(currentItems, id, 'done', () => done);
     // 子要素のdone状態も更新
     const newItems = updateChildrenDone(updatedItems, id, done);
     setItems(newItems);
@@ -488,13 +426,12 @@ export const useTaskManagement = () => {
 
   // アイテムにファイルを添付する ------------------------------
   const handleAttachFile = (id: UniqueIdentifier, fileName: string) => {
-    const newItems = setProperty(items, id, 'attachedFile', () => fileName);
+    const currentItems = useTreeStateStore.getState().items;
+    const newItems = setProperty(currentItems, id, 'attachedFile', () => fileName);
     setItems(newItems);
   };
 
   return {
-    handleSelect,
-    handleAddTask,
     handleRemove,
     handleValueChange,
     handleDoneChange,

@@ -2,6 +2,7 @@ import { createTheme } from '@mui/material/styles';
 import '@fontsource/m-plus-1p';
 
 const fontFamilySet = [
+  '"BIZ UDPGothic"',
   '"M PLUS 1p"',
   '-apple-system',
   'BlinkMacSystemFont',

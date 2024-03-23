@@ -69,16 +69,9 @@ interface SortableTreeProps {
   indentationWidth?: number;
   indicator?: boolean;
   removable?: boolean;
-  hideDoneItems?: boolean;
 }
 
-export function SortableTree({
-  collapsible,
-  indicator = false,
-  indentationWidth = 30,
-  removable,
-  hideDoneItems = false,
-}: SortableTreeProps) {
+export function SortableTree({ collapsible, indicator = false, indentationWidth = 30, removable }: SortableTreeProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeNewTaskId, setActiveNewTaskId] = useState<UniqueIdentifier>('-1');
   const [addedTaskId, setAddedTaskId] = useState<UniqueIdentifier | null>(null);
@@ -93,10 +86,10 @@ export function SortableTree({
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const isLoading = useAppStateStore((state) => state.isLoading);
+  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
 
   // タスクを管理するカスタムフック
   const {
-    handleSelect,
     handleRemove,
     handleValueChange,
     handleDoneChange,
@@ -226,7 +219,6 @@ export function SortableTree({
               handleAttachFile={handleAttachFile}
               removeTrashDescendants={removeTrashDescendants}
               removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
-              onSelect={handleSelect}
               addedTaskId={addedTaskId}
               isItemDescendantOfTrash={isDescendantOfTrash(items, id)}
             />

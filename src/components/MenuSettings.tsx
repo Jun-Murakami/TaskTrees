@@ -17,28 +17,22 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { useAppStateManagement } from '../hooks/useAppStateManagement';
+import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 
-interface MenuSettingsProps {
-  handleFileUpload: (file: File) => void;
-  handleDownloadAppState: () => Promise<void>;
-  handleDownloadAllTrees: (isSilent?: boolean) => Promise<string>;
-  handleLogout: () => void;
-}
-
-export function MenuSettings({
-  handleFileUpload,
-  handleDownloadAppState,
-  handleDownloadAllTrees,
-  handleLogout,
-}: MenuSettingsProps) {
+export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
+  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
   const currentTree = useTreeStateStore((state) => state.currentTree);
+
+  const { saveAppSettingsDb } = useAppStateManagement();
+  const { handleDownloadAllTrees, handleFileUpload, handleDownloadTreeState } = useTreeManagement();
 
   const open = Boolean(anchorEl);
 
@@ -178,8 +172,8 @@ export function MenuSettings({
         <input
           type='file'
           ref={hiddenFileInput}
-          onChange={(event) => {
-            handleFileUpload(event.target.files![0]);
+          onChange={async (event) => {
+            await handleFileUpload(event.target.files![0]);
             handleClose();
           }}
           style={{ display: 'none' }}
@@ -201,7 +195,7 @@ export function MenuSettings({
           <Tooltip title='現在のツリーのデータをバックアップ' placement='right'>
             <MenuItem
               onClick={async () => {
-                await handleDownloadAppState();
+                handleDownloadTreeState();
                 handleClose();
               }}
             >
@@ -233,6 +227,7 @@ export function MenuSettings({
                 <MaterialUISwitch
                   checked={darkMode}
                   onChange={() => {
+                    saveAppSettingsDb(!darkMode, hideDoneItems);
                     setDarkMode(!darkMode);
                   }}
                 />

@@ -22,40 +22,25 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
-import { useInputDialogStore } from '../store/dialogStore';
-import { useDialogStore } from '../store/dialogStore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getAuth } from 'firebase/auth';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
-import { useDatabase } from '../hooks/useDatabase';
+import { useTreeManagement } from '../hooks/useTreeManagement';
 
-interface TreeSettingsAccordionProps {
-  deleteTree: (treeId: string) => void;
-}
-
-export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps) {
+export function TreeSettingsAccordion() {
   const darkMode = useAppStateStore((state) => state.darkMode);
-  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
   const isFocusedTreeName = useAppStateStore((state) => state.isFocusedTreeName);
   const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
 
-  const treesList = useTreeStateStore((state) => state.treesList);
-  const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
-  const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const currentTreeMembers = useTreeStateStore((state) => state.currentTreeMembers);
 
   const [editedTreeName, setEditedTreeName] = useState<string | null>(currentTreeName || '');
   const [isComposing, setIsComposing] = useState(false);
 
-  const showDialog = useDialogStore((state) => state.showDialog);
-  const showInputDialog = useInputDialogStore((state) => state.showDialog);
-
-  const { saveCurrentTreeNameDb, saveTreesListDb } = useDatabase();
+  const { handleTreeNameSubmit, handleAddUserToTree, handleDeleteUserFromTree, handleDeleteTree } = useTreeManagement();
 
   const theme = useTheme();
 
@@ -80,110 +65,6 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
       setIsFocusedTreeName(false);
     }
   }, [isFocusedTreeName, setIsFocusedTreeName]);
-
-  // ツリー名の変更
-  const handleTreeNameSubmit = () => {
-    if (editedTreeName !== null && editedTreeName !== '' && editedTreeName !== currentTreeName) {
-      setCurrentTreeName(editedTreeName);
-      saveCurrentTreeNameDb(editedTreeName, currentTree);
-      if (treesList) {
-        const newList = treesList.map((tree) => {
-          if (tree.id === currentTree) {
-            return { ...tree, name: editedTreeName };
-          }
-          return tree;
-        });
-        setTreesList(newList);
-        saveTreesListDb(newList);
-      }
-    } else {
-      setEditedTreeName(currentTreeName);
-    }
-  };
-
-  // メンバーの追加
-  const handleAddUserToTree = async () => {
-    if (!currentTree) return Promise.resolve();
-    const email = await showInputDialog(
-      '追加する編集メンバーのメールアドレスを入力してください。共有メンバーはこのアプリにユーザー登録されている必要があります。',
-      'Add Member',
-      'Email',
-      null,
-      false
-    );
-    if (!email) return Promise.resolve();
-    const functions = getFunctions();
-    const addUserToTreeCallable = httpsCallable(functions, 'addUserToTree');
-    try {
-      const result = await addUserToTreeCallable({
-        email,
-        treeId: currentTree,
-      });
-      setIsLoading(false);
-      return Promise.resolve(result.data);
-    } catch (error) {
-      await showDialog(
-        'メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。\n\n' + error,
-        'IInformation'
-      );
-      setIsLoading(false);
-      return Promise.reject(error);
-    }
-  };
-
-  // メンバーの削除
-  const handleDeleteUserFromTree = async (uid: string, email: string) => {
-    if (!currentTree) return Promise.resolve();
-    const user = getAuth().currentUser;
-    let result;
-    if (currentTreeMembers && currentTreeMembers.length === 1) {
-      await showDialog('最後のメンバーを削除することはできません。', 'Information');
-      return Promise.resolve();
-    }
-    if (user && user.uid === uid) {
-      result = await showDialog(
-        '自分自身を削除すると、このツリーにアクセスできなくなります。実行しますか？',
-        'Confirmation Required',
-        true
-      );
-    } else {
-      result = await showDialog(
-        `メンバー' ${email} 'をこのツリーの編集メンバーから削除します。実行しますか？`,
-        'Confirmation Required',
-        true
-      );
-    }
-    if (result) {
-      setIsLoading(true);
-      const functions = getFunctions();
-      const removeUserFromTreeCallable = httpsCallable(functions, 'removeUserFromTree');
-      try {
-        const result = await removeUserFromTreeCallable({
-          treeId: currentTree,
-          userId: uid,
-        });
-        setIsLoading(false);
-        return Promise.resolve(result.data);
-      } catch (error) {
-        await showDialog('メンバーの削除に失敗しました。\n\n' + error, 'Error');
-        setIsLoading(false);
-        return Promise.reject(error);
-      }
-    }
-    return Promise.resolve();
-  };
-
-  // ツリーの削除
-  const handleDeleteTree = async () => {
-    const result = await showDialog(
-      'すべての編集メンバーからツリーが削除されます。この操作は元に戻せません。実行しますか？',
-      'Confirmation Required',
-      true
-    );
-    if (result) {
-      deleteTree(currentTree as string);
-    }
-  };
 
   return (
     <Box
@@ -224,10 +105,12 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
           borderRadius: '0 0 8px 8px !important',
         }}
         expanded={isAccordionExpanded}
-        onChange={() => {
+        onChange={async () => {
           {
             if (isAccordionExpanded) {
-              handleTreeNameSubmit();
+              if (editedTreeName && editedTreeName !== '') {
+                await handleTreeNameSubmit(editedTreeName);
+              }
             }
             setIsAccordionExpanded(!isAccordionExpanded);
           }
@@ -241,6 +124,7 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
             height: 40,
             paddingY: isAccordionExpanded ? '60px' : '30px',
             paddingX: 2,
+            backgroundColor: 'transparent !important',
           }}
         >
           <Stack direction='row' sx={{ height: 40, width: '100%', margin: '0 auto' }}>
@@ -263,7 +147,9 @@ export function TreeSettingsAccordion({ deleteTree }: TreeSettingsAccordionProps
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !isComposing) {
                     e.preventDefault(); // エンターキーのデフォルト動作を防ぐ
-                    handleTreeNameSubmit();
+                    if (editedTreeName && editedTreeName !== '') {
+                      handleTreeNameSubmit(editedTreeName);
+                    }
                     setIsAccordionExpanded(false);
                   }
                 }}

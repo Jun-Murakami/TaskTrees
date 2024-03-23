@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
+import { useObserve } from './useObserve';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 
@@ -37,12 +38,18 @@ export const useAuth = () => {
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
 
+  const { observeTimeStamp } = useObserve();
+
   // ログイン状態の監視
   useEffect(() => {
     setIsLoading(true);
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
       setIsLoading(false);
+      if (user) {
+        // タイムスタンプの監視を開始して初期設定をロード
+        observeTimeStamp();
+      }
     });
 
     return () => unsubscribe();

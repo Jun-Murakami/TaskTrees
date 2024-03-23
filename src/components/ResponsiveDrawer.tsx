@@ -18,40 +18,32 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { useAppStateManagement } from '../hooks/useAppStateManagement';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { useTreeManagement } from '../hooks/useTreeManagement';
 import { SortableList } from './SortableList/SortableList';
 import { MenuSettings } from './MenuSettings';
 
 const drawerWidth = 300;
 
-interface ResponsiveDrawerProps {
-  handleCreateNewTree: () => void;
-  handleListClick: (treeId: UniqueIdentifier) => void;
-  handleFileUpload: (file: File) => void;
-  handleDownloadAppState: () => Promise<void>;
-  handleDownloadAllTrees: (isSilent?: boolean) => Promise<string>;
-  handleLogout: () => void;
-}
-
-export function ResponsiveDrawer({
-  handleCreateNewTree,
-  handleListClick,
-  handleFileUpload,
-  handleDownloadAppState,
-  handleDownloadAllTrees,
-  handleLogout,
-}: ResponsiveDrawerProps) {
+export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void }) {
   const [drawerState, setDrawerState] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isSwipe, setIsSwipe] = useState(false);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
+  const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
+  const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
 
   const currentTree = useTreeStateStore((state) => state.currentTree);
+  const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
   const treesList = useTreeStateStore((state) => state.treesList);
+
+  const { saveAppSettingsDb } = useAppStateManagement();
+  const { loadCurrentTreeDataFromDb, handleCreateNewTree } = useTreeManagement();
 
   useEffect(() => {
     if (drawerState) {
@@ -98,9 +90,16 @@ export function ResponsiveDrawer({
     setDrawerState(open);
   };
 
-  // 完了したアイテムを非表示にする
-  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setHideDoneItems(event.target.checked);
+  // ツリーのリストから選択されたツリーを表示する
+  const handleListClick = async (treeId: UniqueIdentifier): Promise<void> => {
+    await loadCurrentTreeDataFromDb(treeId);
+    setCurrentTree(treeId);
+    if (isAccordionExpanded) {
+      // 0.5秒後にフォーカスをセット
+      setTimeout(() => {
+        setIsFocusedTreeName(true);
+      }, 500);
+    }
   };
 
   const drawerItems = (
@@ -172,8 +171,8 @@ export function ResponsiveDrawer({
                   marginRight: 1,
                 },
               }}
-              onClick={() => {
-                handleCreateNewTree();
+              onClick={async () => {
+                await handleCreateNewTree();
                 setDrawerState(false);
               }}
             >
@@ -251,7 +250,15 @@ export function ResponsiveDrawer({
         <List>
           <ListItem disablePadding sx={{ pl: 2 }}>
             <FormControlLabel
-              control={<Switch checked={hideDoneItems} onChange={handleSwitchChange} />}
+              control={
+                <Switch
+                  checked={hideDoneItems}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    setHideDoneItems(event.target.checked);
+                    saveAppSettingsDb(darkMode, event.target.checked);
+                  }}
+                />
+              }
               label={
                 <Typography
                   sx={{
@@ -269,12 +276,7 @@ export function ResponsiveDrawer({
         </List>
         <Divider />
         <List>
-          <MenuSettings
-            handleFileUpload={handleFileUpload}
-            handleDownloadAppState={handleDownloadAppState}
-            handleDownloadAllTrees={handleDownloadAllTrees}
-            handleLogout={handleLogout}
-          />
+          <MenuSettings handleLogout={handleLogout} />
         </List>
       </Box>
     </>

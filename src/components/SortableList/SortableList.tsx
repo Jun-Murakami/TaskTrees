@@ -10,7 +10,7 @@ import { SortableSource } from './SortableSource';
 import { SortableItem } from './SortableItem';
 
 interface SortableListProps {
-  handleListClick: (treeId: UniqueIdentifier) => void;
+  handleListClick: (treeId: UniqueIdentifier) => Promise<void>;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 }
 

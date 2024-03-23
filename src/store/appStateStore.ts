@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 type AppState = {
+  localTimestamp: number;
   darkMode: boolean;
   hideDoneItems: boolean;
   systemMessage: string | null;
@@ -10,6 +11,7 @@ type AppState = {
   isAccordionExpanded: boolean;
   isFocusedTreeName: boolean;
   containerWidth: number;
+  setLocalTimestamp: (localTimestamp: number) => void;
   setDarkMode: (darkMode: boolean) => void;
   setHideDoneItems: (hideDoneItems: boolean) => void;
   setSystemMessage: (systemMessage: string | null) => void;
@@ -22,6 +24,7 @@ type AppState = {
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
+  localTimestamp: 0,
   darkMode: false,
   hideDoneItems: false,
   systemMessage: null,
@@ -31,6 +34,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   isAccordionExpanded: false,
   isFocusedTreeName: false,
   containerWidth: 0,
+  setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
   setDarkMode: (darkMode) => set({ darkMode }),
   setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),
   setSystemMessage: (systemMessage) => set({ systemMessage }),

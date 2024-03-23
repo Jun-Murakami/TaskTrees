@@ -13,20 +13,24 @@ export type SortableSourceProps = {
     attributes: DraggableAttributes;
     listeners: DraggableSyntheticListeners;
   };
-  handleListClick: (treeId: UniqueIdentifier) => void;
+  handleListClick: (treeId: UniqueIdentifier) => Promise<void>;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, handleListClick, setDrawerState }) => {
   const currentTree = useTreeStateStore((state) => state.currentTree);
+
+  const handleListItemButtonClick = async () => {
+    await handleListClick(item.id);
+    setDrawerState(false);
+  };
   const theme = useTheme();
 
   return (
     <ListItemButton
       selected={currentTree === item.id}
-      onClick={() => {
-        handleListClick(item.id);
-        setDrawerState(false);
+      onClick={async () => {
+        await handleListItemButtonClick();
       }}
       sx={{ opacity: 1, height: 50 }}
     >
