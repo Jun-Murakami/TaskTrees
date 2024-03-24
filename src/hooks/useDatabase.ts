@@ -108,7 +108,7 @@ export const useDatabase = () => {
     } catch (error) {
       handleError('ツリーの削除に失敗しました。\n\n' + error);
     }
-  }
+  };
 
   // データベースからツリーリストを取得する関数 ---------------------------------------------------------------------------
   const loadTreesListFromDb = async (userId: string): Promise<string[] | null> => {
@@ -123,7 +123,7 @@ export const useDatabase = () => {
       .catch(() => {
         return null;
       });
-  }
+  };
 
   // データベースからツリーの名前のみを取得する関数 ---------------------------------------------------------------------------
   const loadTreeNameFromDb = async (targetTree: UniqueIdentifier): Promise<string | null> => {
@@ -138,7 +138,7 @@ export const useDatabase = () => {
       .catch(() => {
         return null;
       });
-  }
+  };
 
   // データベースからツリーのitemsのみを取得する関数 ---------------------------------------------------------------------------
   const loadItemsFromDb = async (targetTree: UniqueIdentifier): Promise<TreeItems | null> => {
@@ -153,7 +153,7 @@ export const useDatabase = () => {
       .catch(() => {
         return null;
       });
-  }
+  };
 
   // データベースからツリーメンバーのみを取得する関数 ---------------------------------------------------------------------------
   const loadMembersFromDb = async (targetTree: UniqueIdentifier): Promise<string[] | null> => {
@@ -168,7 +168,7 @@ export const useDatabase = () => {
       .catch(() => {
         return null;
       });
-  }
+  };
 
   // treeListを反復して、データベースからすべてのitemsとnameを取得する関数 ---------------------------------------------------------------------------
   // treeDataがTreesListItemIncludingItems型かチェックするutil関数
@@ -199,7 +199,7 @@ export const useDatabase = () => {
           const treeSnapshot = await get(treeRef);
           if (treeSnapshot.exists()) {
             const treeData = treeSnapshot.val();
-            if (treeData && !await isValiedTreesListItemIncludingItems(treeData)) {
+            if (treeData && !(await isValiedTreesListItemIncludingItems(treeData))) {
               const treeItemsIncludingItems: TreesListItemIncludingItems = {
                 id: treesListItem.id,
                 name: treeData.name,
@@ -221,5 +221,16 @@ export const useDatabase = () => {
     return null;
   };
 
-  return { saveItemsDb, saveTreesListDb, saveCurrentTreeNameDb, loadTreesListFromDb, loadTreeNameFromDb, loadItemsFromDb, loadMembersFromDb, loadAllTreesDataFromDb, deleteTreeFromDb, saveTimeStampDb };
+  return {
+    saveItemsDb,
+    saveTreesListDb,
+    saveCurrentTreeNameDb,
+    loadTreesListFromDb,
+    loadTreeNameFromDb,
+    loadItemsFromDb,
+    loadMembersFromDb,
+    loadAllTreesDataFromDb,
+    deleteTreeFromDb,
+    saveTimeStampDb,
+  };
 };
