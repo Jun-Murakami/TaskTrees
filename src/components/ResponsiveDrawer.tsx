@@ -21,6 +21,7 @@ import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ClearIcon from '@mui/icons-material/Clear';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateManagement } from '../hooks/useAppStateManagement';
 import { useAppStateStore } from '../store/appStateStore';
@@ -36,6 +37,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isSwipe, setIsSwipe] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(0);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
@@ -109,58 +111,117 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
     }
   };
 
+  // searchDocument関数の改善：マッチングノードとキーワードの位置を保持するデータ構造を返します。
   const searchDocument = () => {
-    const matchingNodes: Node[] = [];
-    const walker = document.createTreeWalker(document.getElementById('root')!, NodeFilter.SHOW_TEXT, {
+    const matchingNodes: { node: Node; matchIndexes: number[] }[] = [];
+    const walker = document.createTreeWalker(document.getElementById('tree-container')!, NodeFilter.SHOW_TEXT, {
       acceptNode: (node) => {
-        return node.nodeValue!.toLowerCase().includes(searchKey.toLowerCase())
-          ? NodeFilter.FILTER_ACCEPT
-          : NodeFilter.FILTER_SKIP;
+        if (!node.nodeValue) return NodeFilter.FILTER_SKIP;
+        const matchIndexes: number[] = [];
+        const lowerCaseText = node.nodeValue.toLowerCase();
+        let startIndex = 0;
+
+        while ((startIndex = lowerCaseText.indexOf(searchKey.toLowerCase(), startIndex)) !== -1) {
+          matchIndexes.push(startIndex);
+          startIndex += searchKey.length;
+        }
+
+        return matchIndexes.length > 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
       },
     });
 
     while (walker.nextNode()) {
-      matchingNodes.push(walker.currentNode);
+      const node = walker.currentNode;
+      if (!node.nodeValue) continue;
+      const matchIndexes: number[] = [];
+      const lowerCaseText = node.nodeValue.toLowerCase();
+      let startIndex = 0;
+
+      while ((startIndex = lowerCaseText.indexOf(searchKey.toLowerCase(), startIndex)) !== -1) {
+        matchIndexes.push(startIndex);
+        startIndex += searchKey.length;
+      }
+
+      if (matchIndexes.length > 0) {
+        matchingNodes.push({
+          node: node,
+          matchIndexes: matchIndexes,
+        });
+      }
     }
 
     return matchingNodes;
   };
 
-  const selectText = (node: Node, searchKey: string) => {
-    const selection = window.getSelection();
-    let textNode = node;
-    // nodeがテキストノードでない場合、テキストノードを探す
-    if (node.nodeType !== Node.TEXT_NODE) {
-      textNode = node.childNodes[0]; // 例として最初の子ノードを使用
+  const selectText = (node: Node, searchKey: string, matchIndex: number) => {
+    let element = node;
+    // nodeがテキストノードの場合、その親要素を取得
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (node.parentNode) {
+        element = node.parentNode;
+      }
     }
-    const text = textNode.nodeValue!;
-    const startIndex = text.toLowerCase().indexOf(searchKey.toLowerCase());
-    const endIndex = startIndex + searchKey.length;
-    const range = document.createRange();
-    //range.selectNode(textNode);
-    range.setStart(textNode, startIndex);
-    range.setEnd(textNode, endIndex);
-    textNode.parentElement?.focus();
-    selection!.removeAllRanges();
-    textNode.parentElement?.focus();
-    selection!.addRange(range);
-    console.log('selection:', selection);
+    const elementTagName = element && 'tagName' in element ? element.tagName : '';
+    // textareaまたはinputの場合の処理
+    if (elementTagName === 'TEXTAREA' || elementTagName === 'INPUT') {
+      console.log('elementTagName:', elementTagName);
+      const htmlInputElement = element as HTMLInputElement | HTMLTextAreaElement;
+      if (matchIndex !== -1) {
+        htmlInputElement.focus();
+        htmlInputElement.setSelectionRange(matchIndex, matchIndex + searchKey.length);
+        console.log('htmlInputElement:', htmlInputElement);
+      }
+    } else {
+      // それ以外の要素（div、spanなど）での選択処理
+      if (node.nodeType === Node.TEXT_NODE && searchKey.length > 0) {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        if (matchIndex !== -1) {
+          range.setStart(node, matchIndex);
+          range.setEnd(node, matchIndex + searchKey.length);
+          selection!.removeAllRanges();
+          selection!.addRange(range);
+        }
+      }
+    }
   };
 
+  // Prev ボタンクリック時の処理
   const handlePrevButtonClick = () => {
     const matches = searchDocument();
     if (matches.length === 0) return;
-    const newIndex = (currentIndex - 1 + matches.length) % matches.length;
+
+    let newIndex = currentIndex;
+    let newMatchIndex = currentMatchIndex - 1;
+    if (newMatchIndex < 0) {
+      // 前のノードに移動
+      newIndex = (currentIndex - 1 + matches.length) % matches.length;
+      // 新しいノードの最後のマッチへ
+      newMatchIndex = matches[newIndex].matchIndexes.length - 1;
+    }
+
     setCurrentIndex(newIndex);
-    selectText(matches[newIndex], searchKey);
+    setCurrentMatchIndex(newMatchIndex);
+    selectText(matches[newIndex].node, searchKey, matches[newIndex].matchIndexes[newMatchIndex]);
   };
 
+  // Next ボタンクリック時の処理
   const handleNextButtonClick = () => {
     const matches = searchDocument();
     if (matches.length === 0) return;
-    const newIndex = (currentIndex + 1) % matches.length;
+
+    let newIndex = currentIndex;
+    let newMatchIndex = currentMatchIndex + 1;
+    if (newMatchIndex >= matches[currentIndex].matchIndexes.length) {
+      // 次のノードに移動
+      newIndex = (currentIndex + 1) % matches.length;
+      // 新しいノードの最初のマッチへ
+      newMatchIndex = 0;
+    }
+
     setCurrentIndex(newIndex);
-    selectText(matches[newIndex], searchKey);
+    setCurrentMatchIndex(newMatchIndex);
+    selectText(matches[newIndex].node, searchKey, matches[newIndex].matchIndexes[newMatchIndex]);
   };
 
   const drawerItems = (
@@ -316,6 +377,13 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
                 size='small'
                 fullWidth
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchKey(event.target.value)}
+                InputProps={{
+                  endAdornment: searchKey ? (
+                    <IconButton size='small' onClick={() => setSearchKey('')} sx={{ mr: -1, color: theme.palette.action.active }}>
+                      <ClearIcon />
+                    </IconButton>
+                  ) : undefined,
+                }}
               />
               <IconButton size='small' sx={{ width: 22, ml: 0.5 }} disabled={searchKey === ''} onClick={handlePrevButtonClick}>
                 <KeyboardArrowUpIcon />

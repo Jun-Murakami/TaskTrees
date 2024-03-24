@@ -58,7 +58,7 @@ export function HomePage() {
               {currentTree ? (
                 <>
                   <TreeSettingsAccordion />
-                  <Box sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: 6 }}>
+                  <Box sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: 6 }} id='tree-container'>
                     <SortableTree collapsible indicator removable />
                   </Box>
                 </>
