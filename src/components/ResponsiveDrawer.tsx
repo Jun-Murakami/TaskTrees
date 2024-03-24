@@ -15,6 +15,7 @@ import {
   Switch,
   Typography,
   TextField,
+  useMediaQuery,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -52,6 +53,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
   const { handlePrevButtonClick, handleNextButtonClick } = useSearch();
 
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
@@ -133,7 +135,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       >
         <Divider />
         <List>
-          <ListItem disablePadding sx={{ pl: 2, pr: 0 }}>
+          <ListItem disablePadding sx={{ pl: 2, pr: { xs: 2, sm: 0 } }}>
             <TextField
               label='ツリー内を検索'
               variant='outlined'
@@ -149,12 +151,16 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
                 ) : undefined,
               }}
             />
-            <IconButton size='small' sx={{ width: 22, ml: 0.5 }} disabled={searchKey === ''} onClick={handlePrevButtonClick}>
-              <KeyboardArrowUpIcon />
-            </IconButton>
-            <IconButton size='small' sx={{ width: 22, mr: 1 }} disabled={searchKey === ''} onClick={handleNextButtonClick}>
-              <KeyboardArrowDownIcon />
-            </IconButton>
+            {!isMobile && (
+              <>
+                <IconButton size='small' sx={{ width: 22, ml: 0.5 }} disabled={searchKey === ''} onClick={handlePrevButtonClick}>
+                  <KeyboardArrowUpIcon />
+                </IconButton>
+                <IconButton size='small' sx={{ width: 22, mr: 1 }} disabled={searchKey === ''} onClick={handleNextButtonClick}>
+                  <KeyboardArrowDownIcon />
+                </IconButton>
+              </>
+            )}
           </ListItem>
         </List>
         <Divider />
