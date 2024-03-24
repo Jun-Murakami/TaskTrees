@@ -135,13 +135,17 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
   const flattenedItems = useMemo(() => {
     const flattenedTree = flattenTree(items);
-    const collapsedItems = flattenedTree.reduce<string[]>(
+    let collapsedItems = flattenedTree.reduce<string[]>(
       (acc, { children, collapsed, id }) => (collapsed && children.length ? [...acc, id.toString()] : acc),
       []
     );
-
+    // searchKeyが空でない場合、collapsedItemsを空の配列にする
+    if (searchKey !== '') {
+      collapsedItems = [];
+    }
     return removeChildrenOf(flattenedTree, activeId ? [activeId.toString(), ...collapsedItems] : collapsedItems);
-  }, [activeId, items]);
+  }, [activeId, items, searchKey]);
+
   const projected = activeId && overId ? getProjection(flattenedItems, activeId, overId, offsetLeft, indentationWidth) : null;
   const sensorContext: SensorContext = useRef({
     items: flattenedItems,

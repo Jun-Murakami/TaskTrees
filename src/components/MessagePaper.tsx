@@ -11,9 +11,6 @@ export const MessagePaper = () => {
           2024.03.10 ファイルの添付機能を追加しました。タスクにファイルをドロップして添付できます。（25MBまで）
           <br />
           <br />
-          2024.03.08 デスクトップ版アプリを正式リリースしました。（Windows,MacOS）
-          <br />
-          <br />
           １ツリーのシンプルな個人用バージョンは<a href='https://tasktree-fb.web.app/'>こちら</a>。
           ツリーデータは相互に移行可能です。
         </Typography>
