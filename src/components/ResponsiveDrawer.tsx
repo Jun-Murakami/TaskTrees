@@ -192,7 +192,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           </ListItem>
         </List>
         <Divider />
-        <List>
+        <List sx={{ py: 0.6 }}>
           <MenuSettings handleLogout={handleLogout} />
         </List>
       </Box>
