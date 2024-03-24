@@ -58,7 +58,7 @@ export function Download() {
           href={`https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v${version}/TaskTrees-${version}_mac_arm64.dmg`}
           download
         >
-          MacOS (Apple Silicon)
+          MacOS (Apple Silicon/M1,M2,M3..)
         </Button>
         <Button
           sx={{ textTransform: 'none' }}
