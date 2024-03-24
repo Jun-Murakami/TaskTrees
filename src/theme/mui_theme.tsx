@@ -11,9 +11,6 @@ if (dpi >= 1.5) {
   // 1.5倍以上のDPIの場合、M PLIUS 1Pにする
   mainFont = '"M PLUS 1p"';
 }
-
-console.log(`DPI: ${dpi}, Font: ${mainFont}`);
-
 const fontFamilySet = [
   `${mainFont}`,
   '-apple-system',
@@ -28,15 +25,22 @@ const fontFamilySet = [
   '"Segoe UI Symbol"',
 ].join(',');
 
-const typographyStyles = {
-  fontFamily: fontFamilySet,
-  h3: {
-    fontSize: '35px',
-  },
-  caption: {
-    fontSize: '11px',
-  },
-};
+let typographyStyles = {};
+if (dpi >= 1.5) {
+  typographyStyles = {
+    fontFamily: fontFamilySet,
+  };
+} else {
+  typographyStyles = {
+    fontFamily: fontFamilySet,
+    h3: {
+      fontSize: '35px',
+    },
+    caption: {
+      fontSize: '11px',
+    },
+  };
+}
 
 const breakpointsValues = {
   xs: 0,
