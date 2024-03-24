@@ -25,7 +25,7 @@ export const useDatabase = () => {
       setLocalTimestamp(newTimestamp);
       const timestampRef = ref(getDatabase(), `users/${user.uid}/timestamp`);
       set(timestampRef, newTimestamp);
-      return newTimestamp;
+      return;
     } catch (error) {
       handleError('タイムスタンプの保存に失敗しました。\n\n' + error);
     }
