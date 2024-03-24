@@ -13,11 +13,14 @@ import {
   Divider,
   FormControlLabel,
   Switch,
+  Stack,
   Typography,
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateManagement } from '../hooks/useAppStateManagement';
 import { useAppStateStore } from '../store/appStateStore';
@@ -32,6 +35,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
   const [drawerState, setDrawerState] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isSwipe, setIsSwipe] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
@@ -103,6 +107,60 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
         setIsFocusedTreeName(true);
       }, 500);
     }
+  };
+
+  const searchDocument = () => {
+    const matchingNodes: Node[] = [];
+    const walker = document.createTreeWalker(document.getElementById('root')!, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        return node.nodeValue!.toLowerCase().includes(searchKey.toLowerCase())
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_SKIP;
+      },
+    });
+
+    while (walker.nextNode()) {
+      matchingNodes.push(walker.currentNode);
+    }
+
+    return matchingNodes;
+  };
+
+  const selectText = (node: Node, searchKey: string) => {
+    const selection = window.getSelection();
+    let textNode = node;
+    // nodeがテキストノードでない場合、テキストノードを探す
+    if (node.nodeType !== Node.TEXT_NODE) {
+      textNode = node.childNodes[0]; // 例として最初の子ノードを使用
+    }
+    const text = textNode.nodeValue!;
+    const startIndex = text.toLowerCase().indexOf(searchKey.toLowerCase());
+    const endIndex = startIndex + searchKey.length;
+    const range = document.createRange();
+    //range.selectNode(textNode);
+    range.setStart(textNode, startIndex);
+    range.setEnd(textNode, endIndex);
+    textNode.parentElement?.focus();
+    selection!.removeAllRanges();
+    textNode.parentElement?.focus();
+    selection!.addRange(range);
+    console.log('selection:', selection);
+  };
+
+  const handlePrevButtonClick = () => {
+    const matches = searchDocument();
+    if (matches.length === 0) return;
+    const newIndex = (currentIndex - 1 + matches.length) % matches.length;
+    setCurrentIndex(newIndex);
+    selectText(matches[newIndex], searchKey);
+  };
+
+  const handleNextButtonClick = () => {
+    const matches = searchDocument();
+    if (matches.length === 0) return;
+    const newIndex = (currentIndex + 1) % matches.length;
+    setCurrentIndex(newIndex);
+    selectText(matches[newIndex], searchKey);
   };
 
   const drawerItems = (
@@ -250,14 +308,22 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       >
         <Divider />
         <List>
-          <ListItem disablePadding sx={{ px: 2 }}>
-            <TextField
-              label='ツリー内を検索'
-              value={searchKey}
-              size='small'
-              fullWidth
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchKey(event.target.value)}
-            />
+          <ListItem disablePadding sx={{ pl: 2, pr: 0 }}>
+            <Stack spacing={0} direction='row' sx={{ width: '100%' }}>
+              <TextField
+                label='ツリー内を検索'
+                value={searchKey}
+                size='small'
+                fullWidth
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchKey(event.target.value)}
+              />
+              <IconButton size='small' sx={{ width: 22, ml: 0.5 }} disabled={searchKey === ''} onClick={handlePrevButtonClick}>
+                <KeyboardArrowUpIcon />
+              </IconButton>
+              <IconButton size='small' sx={{ width: 22, mr: 1 }} disabled={searchKey === ''} onClick={handleNextButtonClick}>
+                <KeyboardArrowDownIcon />
+              </IconButton>
+            </Stack>
           </ListItem>
         </List>
         <Divider />
