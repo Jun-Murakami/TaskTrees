@@ -204,6 +204,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
           .filter(({ value }) => value.toLowerCase().includes(searchKey.toLowerCase()))
+          .filter((item) => (searchKey !== '' ? !isDescendantOfTrash(items, item.id) : true))
           .map(({ id, value, done, attachedFile, children, collapsed, depth }) => (
             <SortableTreeItem
               key={id}
