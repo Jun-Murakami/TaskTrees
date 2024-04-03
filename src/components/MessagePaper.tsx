@@ -15,18 +15,18 @@ export const MessagePaper = () => {
           ツリーデータは相互に移行可能です。
         </Typography>
       </Paper>
-      <Button href='/download' size='small' variant='outlined' sx={{ maxWidth: 300, mt: 2 }}>
-        デスクトップアプリのダウンロード
+      <Button href='https://jun-murakami.web.app/#tasktrees' size='small' variant='outlined' sx={{ maxWidth: 300, mt: 2 }}>
+        アプリのダウンロード
       </Button>{' '}
       <Typography variant='caption' sx={{ width: '100%', minWidth: '100%', mt: 1, textAlign: 'center' }}>
-        <a href='mailto:app@bucketrelay.com' target='_blank' rel='noreferrer'>
+        <a href='https://jun-murakami.web.app/' target='_blank' rel='noreferrer'>
           ©{new Date().getFullYear()} Jun Murakami
         </a>{' '}
         |{' '}
         <a href='https://github.com/Jun-Murakami/TaskTrees' target='_blank' rel='noreferrer'>
           GitHub
         </a>{' '}
-        | <a href='/privacy-policy'>Privacy policy</a>
+        | <a href='https://jun-murakami.web.app/privacy-policy-tasktrees'>Privacy policy</a>
       </Typography>
     </Stack>
   );
