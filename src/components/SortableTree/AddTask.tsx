@@ -14,6 +14,7 @@ interface Props {
 export function AddTask({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
+  const isEditingText = useAppStateStore((state) => state.isEditingText);
 
   const theme = useTheme();
   const matchesSM = useMediaQuery(theme.breakpoints.up('sm'));
@@ -62,7 +63,7 @@ export function AddTask({ id, ...Props }: Props) {
             touchAction: 'none',
             cursor: Props ? 'grab' : 'grabbing',
           }}
-          disabled={isDragging}
+          disabled={isDragging || isEditingText}
         >
           タスクを追加
         </Button>

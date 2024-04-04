@@ -12,6 +12,7 @@ type AppState = {
   isFocusedTreeName: boolean;
   containerWidth: number;
   searchKey: string;
+  isEditingText: boolean;
   setLocalTimestamp: (localTimestamp: number) => void;
   setDarkMode: (darkMode: boolean) => void;
   setHideDoneItems: (hideDoneItems: boolean) => void;
@@ -23,6 +24,7 @@ type AppState = {
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
   setContainerWidth: (containerWidth: number) => void;
   setSearchKey: (searchKey: string) => void;
+  setIsEditingText: (isEditingText: boolean) => void;
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
@@ -37,6 +39,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   isFocusedTreeName: false,
   containerWidth: 0,
   searchKey: '',
+  isEditingText: false,
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
   setDarkMode: (darkMode) => set({ darkMode }),
   setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),
@@ -48,4 +51,5 @@ export const useAppStateStore = create<AppState>((set) => ({
   setIsFocusedTreeName: (isFocusedTreeName) => set({ isFocusedTreeName }),
   setContainerWidth: (containerWidth) => set({ containerWidth }),
   setSearchKey: (searchKey) => set({ searchKey }),
+  setIsEditingText: (isEditingText) => set({ isEditingText }),
 }));

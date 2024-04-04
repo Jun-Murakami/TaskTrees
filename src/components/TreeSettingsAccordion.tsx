@@ -86,7 +86,7 @@ export function TreeSettingsAccordion() {
         '@media (max-width: 1249px)': {
           left: { xs: '50%', sm: '315px' },
           transform: { xs: 'translateX(-50%)', sm: 'none' },
-          maxWidth: { xs: 'calc(100vw - (100vw - 100%) - 30px)', sm: 'calc(100vw - (100vw - 100%) - 330px)' },
+          maxWidth: { xs: '100%', sm: 'calc(100vw - (100vw - 100%) - 330px)' },
         },
         marginX: 'auto',
       }}

@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
 import { ResponsiveDrawer } from './ResponsiveDrawer';
 import { MessagePaper } from './MessagePaper';
 import { TaskTreesLogo } from './TaskTreesLogo';
-import { Button, CircularProgress, Typography, Box } from '@mui/material';
+import { Button, CircularProgress, Typography, TextField, Box, Stack, Divider } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
@@ -15,6 +16,8 @@ import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 
 export function HomePage() {
+  const [email, setEmail] = useState(''); // ログイン用メールアドレス
+  const [password, setPassword] = useState(''); // ログイン用パスワード
   const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
   const systemMessage = useAppStateStore((state) => state.systemMessage); // システムメッセージ
@@ -26,7 +29,7 @@ export function HomePage() {
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
-  const { handleLogin, handleLogout, handleDeleteAccount } = useAuth();
+  const { handleGoogleLogin, handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount } = useAuth();
 
   const theme = useTheme();
 
@@ -34,12 +37,12 @@ export function HomePage() {
 
   return (
     <>
+      {isDialogVisible && <ModalDialog />}
+      {isInputDialogVisible && <InputDialog />}
       {isLoggedIn ? (
         !isWaitingForDelete ? (
           // ログイン後のメイン画面
           <>
-            {isDialogVisible && <ModalDialog />}
-            {isInputDialogVisible && <InputDialog />}
             <ResponsiveDrawer handleLogout={handleLogout} />
             <Box
               sx={{
@@ -116,14 +119,62 @@ export function HomePage() {
         )
       ) : (
         // ログイン前の画面
-        <Box sx={{ textAlign: 'center' }}>
+        <Box sx={{ textAlign: 'center', width: 400, maxWidth: '90vw', marginX: 'auto', paddingY: 4 }}>
           <TaskTreesLogo />
           {isLoading ? (
             <CircularProgress sx={{ marginY: 4, display: 'block', marginX: 'auto' }} />
           ) : (
-            <Button onClick={() => handleLogin()} variant={'contained'}>
-              Googleでログイン
-            </Button>
+            <>
+              <Stack spacing={2}>
+                <TextField
+                  label='メールアドレス'
+                  variant='outlined'
+                  margin='normal'
+                  value={email}
+                  size='small'
+                  fullWidth
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <TextField
+                  label='パスワード'
+                  variant='outlined'
+                  margin='normal'
+                  type='password'
+                  value={password}
+                  size='small'
+                  fullWidth
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <Box sx={{ mt: 4, width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+                  <Button sx={{ width: '48%', left: 0 }} variant='contained' onClick={() => handleEmailLogin(email, password)}>
+                    ログイン
+                  </Button>
+                  <Button
+                    sx={{
+                      width: '48%',
+                      right: 0,
+                      backgroundColor: 'rgba(128, 128, 128, 0.1)',
+                      color: theme.palette.primary.main,
+                    }}
+                    variant='outlined'
+                    onClick={() => handleSignup(email, password)}
+                  >
+                    新規ユーザー登録
+                  </Button>
+                </Box>
+                <Divider>
+                  <Typography variant='caption'>または</Typography>
+                </Divider>
+                <Button onClick={() => handleGoogleLogin()} variant='contained'>
+                  Googleでログイン
+                </Button>
+                <Button onClick={async () => await handleResetPassword()} variant='text' size='small'>
+                  <Typography variant='caption' sx={{ textDecoration: 'underline' }}>
+                    ※ パスワードをお忘れですか？
+                  </Typography>
+                </Button>
+              </Stack>
+            </>
           )}
           {systemMessage && (
             <Box
@@ -132,9 +183,9 @@ export function HomePage() {
                 borderRadius: 4,
                 py: '10px',
                 mx: 'auto',
-                mt: 4,
+                mt: 2,
                 mb: 0,
-                maxWidth: 400,
+                width: '100%',
               }}
             >
               <Typography variant='body2' sx={{ mx: 2, color: theme.palette.primary.main }}>

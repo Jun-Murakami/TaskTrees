@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithRedirect, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
 import { useObserve } from './useObserve';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { useInputDialogStore } from '../store/dialogStore';
 
 // Firebaseの設定
 const firebaseConfig = {
@@ -21,7 +22,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 const db = getDatabase(app);
 
 export const useAuth = () => {
@@ -37,6 +37,8 @@ export const useAuth = () => {
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
+
+  const showInputDialog = useInputDialogStore((state) => state.showDialog);
 
   const { observeTimeStamp } = useObserve();
 
@@ -57,14 +59,81 @@ export const useAuth = () => {
   }, []);
 
   // Googleログイン
-  const handleLogin = () => {
-    signInWithPopup(auth, provider)
+  const handleGoogleLogin = () => {
+    signInWithRedirect(auth, new GoogleAuthProvider())
       .then(() => {
         setIsLoggedIn(true);
         setSystemMessage(null);
       })
       .catch((error) => {
+        setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+      });
+  };
+
+  // メールアドレスとパスワードでのログイン
+  const handleEmailLogin = (email: string, password: string) => {
+    if (email === '' || password === '') {
+      setSystemMessage('メールアドレスとパスワードを入力してください。');
+      return;
+    }
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        setIsLoggedIn(true);
+        setSystemMessage(null);
+      })
+      .catch((error) => {
+        if (error.code === 'auth/invalid-credential') {
+          setSystemMessage('ログインに失敗しました。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+        } else {
+          setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+        }
+      });
+  };
+
+  // メールアドレスとパスワードでサインアップ
+  const handleSignup = (email: string, password: string) => {
+    if (email === '' || password === '') {
+      setSystemMessage('メールアドレスとパスワードを入力してください。');
+      return;
+    }
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        setSystemMessage('メールアドレスの確認メールを送信しました。メールボックスを確認してください。');
+      })
+      .catch((error) => {
         console.error(error);
+        if (error.code === 'auth/email-already-in-use') {
+          setSystemMessage('このメールアドレスは既に使用されています。');
+        } else {
+          setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
+        }
+      });
+  };
+
+  // パスワードをリセット
+  const handleResetPassword = async () => {
+    const result = await showInputDialog(
+      'パスワードをリセットするメールアドレスを入力してください',
+      'Password Reset',
+      'メールアドレス',
+      '',
+      false
+    );
+    console.log(result);
+    if (result === '') {
+      setSystemMessage('メールアドレスを入力してください。');
+      return;
+    }
+    sendPasswordResetEmail(auth, result)
+      .then(() => {
+        setSystemMessage('パスワードリセットメールを送信しました。メールボックスを確認してください。');
+      })
+      .catch((error) => {
+        if (error.code === 'auth/invalid-email') {
+          setSystemMessage('パスワードのリセットに失敗しました。メールアドレスを確認してください。');
+        } else {
+          setSystemMessage('パスワードのリセットに失敗しました。\n\n' + error.code);
+        }
       });
   };
 
@@ -190,5 +259,5 @@ export const useAuth = () => {
     }
     setIsWaitingForDelete(false);
   };
-  return { handleLogin, handleLogout, handleDeleteAccount };
+  return { handleGoogleLogin, handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount };
 };

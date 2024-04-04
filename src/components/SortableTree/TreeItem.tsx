@@ -83,6 +83,7 @@ const TreeItemContent = memo(
     removeTrashDescendantsWithDone,
     isItemDescendantOfTrash,
   }: TreeItemContentProps) => {
+    const setIsEditingText = useAppStateStore((state) => state.setIsEditingText);
     const theme = useTheme();
 
     // ボタンの共通スタイルを定義
@@ -157,8 +158,12 @@ const TreeItemContent = memo(
                   fontSize: '0.9rem',
                 },
               }}
-              onFocus={() => setIsFocusedOrHovered(true)}
+              onFocus={() => {
+                setIsEditingText(true);
+                setIsFocusedOrHovered(true);
+              }}
               onBlur={() => {
+                setIsEditingText(false);
                 setTimeout(() => setIsFocusedOrHovered(false), 300);
               }}
             />
