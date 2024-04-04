@@ -250,7 +250,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           open={drawerState}
           onOpen={toggleDrawer(true)}
           onClose={toggleDrawer(false)}
-          disableSwipeToOpen={false}
+          disableSwipeToOpen={true}
           ModalProps={{
             keepMounted: true, // Better open performance on mobile.
           }}
