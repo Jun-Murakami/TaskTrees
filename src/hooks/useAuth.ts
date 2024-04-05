@@ -62,8 +62,8 @@ export const useAuth = () => {
       await getFirebaseAuth();
     }
     asyncFunc();
-    setIsLoading(true);
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsLoading(true);
       setIsLoggedIn(!!user);
       setIsLoading(false);
       if (user) {
