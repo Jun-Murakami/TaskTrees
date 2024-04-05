@@ -15,6 +15,7 @@ dist-ssr
 .firebaserc
 firebase.json
 *.local
+GoogleService-Info.plist
 
 # Editor directories and files
 .vscode/*
