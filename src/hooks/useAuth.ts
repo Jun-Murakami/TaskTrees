@@ -80,6 +80,7 @@ export const useAuth = () => {
   const handleGoogleLogin = async () => {
     // 1. Create credentials on the native layer
     const result = await FirebaseAuthentication.signInWithGoogle();
+    console.log(result);
     // 2. Sign in on the web layer using the id token
     const credential = GoogleAuthProvider.credential(result.credential?.idToken);
     await signInWithCredential(auth, credential).then(() => {
