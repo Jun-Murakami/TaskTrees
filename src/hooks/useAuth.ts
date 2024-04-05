@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { getApp, initializeApp } from 'firebase/app';
 import {
-  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+  Auth, getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
@@ -58,11 +58,12 @@ export const useAuth = () => {
 
   // ログイン状態の監視
   useEffect(() => {
+    let prevAuth: Auth = getAuth();
     const asyncFunc = async () => {
-      await getFirebaseAuth();
+      prevAuth = await getFirebaseAuth();
     }
     asyncFunc();
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = prevAuth.onAuthStateChanged((user) => {
       setIsLoading(true);
       setIsLoggedIn(!!user);
       setIsLoading(false);
