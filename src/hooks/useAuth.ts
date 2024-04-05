@@ -59,20 +59,20 @@ export const useAuth = () => {
   // ログイン状態の監視
   useEffect(() => {
     const asyncFunc = async () => {
-      const prevAuth = await getFirebaseAuth();
-      setIsLoading(true);
-      const unsubscribe = prevAuth.onAuthStateChanged((user) => {
-        setIsLoggedIn(!!user);
-        setIsLoading(false);
-        if (user) {
-          // タイムスタンプの監視を開始して初期設定をロード
-          observeTimeStamp();
-        }
-      });
-
-      return () => unsubscribe();
+      await getFirebaseAuth();
     }
     asyncFunc();
+    setIsLoading(true);
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsLoggedIn(!!user);
+      setIsLoading(false);
+      if (user) {
+        // タイムスタンプの監視を開始して初期設定をロード
+        observeTimeStamp();
+      }
+    });
+
+    return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
