@@ -63,7 +63,7 @@ export function AddTask({ id, ...Props }: Props) {
             touchAction: 'none',
             cursor: Props ? 'grab' : 'grabbing',
           }}
-          disabled={isDragging || isEditingText}
+          disabled={isDragging || (isEditingText && !matchesSM)}
         >
           タスクを追加
         </Button>
