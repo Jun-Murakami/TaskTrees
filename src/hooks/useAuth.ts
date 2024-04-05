@@ -1,8 +1,12 @@
 import { useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithRedirect, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
+import { getApp, initializeApp } from 'firebase/app';
+import {
+  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+} from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { useObserve } from './useObserve';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
@@ -24,6 +28,16 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
+const getFirebaseAuth = async () => {
+  if (Capacitor.isNativePlatform()) {
+    return initializeAuth(getApp(), {
+      persistence: indexedDBLocalPersistence,
+    });
+  } else {
+    return getAuth();
+  }
+};
+
 export const useAuth = () => {
   const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
@@ -44,50 +58,61 @@ export const useAuth = () => {
 
   // ログイン状態の監視
   useEffect(() => {
-    setIsLoading(true);
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setIsLoggedIn(!!user);
-      setIsLoading(false);
-      if (user) {
-        // タイムスタンプの監視を開始して初期設定をロード
-        observeTimeStamp();
-      }
-    });
+    const asyncFunc = async () => {
+      const prevAuth = await getFirebaseAuth();
+      setIsLoading(true);
+      const unsubscribe = prevAuth.onAuthStateChanged((user) => {
+        setIsLoggedIn(!!user);
+        setIsLoading(false);
+        if (user) {
+          // タイムスタンプの監視を開始して初期設定をロード
+          observeTimeStamp();
+        }
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    }
+    asyncFunc();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Googleログイン
-  const handleGoogleLogin = () => {
-    signInWithRedirect(auth, new GoogleAuthProvider())
-      .then(() => {
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-      })
-      .catch((error) => {
-        setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
-      });
+  const handleGoogleLogin = async () => {
+    // 1. Create credentials on the native layer
+    const result = await FirebaseAuthentication.signInWithGoogle();
+    // 2. Sign in on the web layer using the id token
+    const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+    await signInWithCredential(auth, credential).then(() => {
+      setIsLoggedIn(true);
+      setSystemMessage(null);
+    }).catch((error) => {
+      setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+    });
   };
 
   // メールアドレスとパスワードでのログイン
-  const handleEmailLogin = (email: string, password: string) => {
+  const handleEmailLogin = async (email: string, password: string) => {
     if (email === '' || password === '') {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
+    const result = await FirebaseAuthentication.signInWithEmailAndPassword({
+      email,
+      password,
+    });
+    if (result.credential) {
+      const firebaseCredential = GoogleAuthProvider.credential(result.credential.idToken);
+      await signInWithCredential(auth, firebaseCredential).then(() => {
         setIsLoggedIn(true);
         setSystemMessage(null);
-      })
-      .catch((error) => {
+      }).catch((error) => {
         if (error.code === 'auth/invalid-credential') {
           setSystemMessage('ログインに失敗しました。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
         } else {
           setSystemMessage('ログインに失敗しました。\n\n' + error.code);
         }
       });
+    }
   };
 
   // メールアドレスとパスワードでサインアップ

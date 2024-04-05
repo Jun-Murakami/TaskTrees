@@ -33,7 +33,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   hideDoneItems: false,
   systemMessage: null,
   isLoggedIn: false,
-  isLoading: true,
+  isLoading: false,
   isWaitingForDelete: false,
   isAccordionExpanded: false,
   isFocusedTreeName: false,

@@ -146,7 +146,11 @@ export function HomePage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <Box sx={{ mt: 4, width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-                  <Button sx={{ width: '48%', left: 0 }} variant='contained' onClick={() => handleEmailLogin(email, password)}>
+                  <Button
+                    sx={{ width: '48%', left: 0 }}
+                    variant='contained'
+                    onClick={async () => await handleEmailLogin(email, password)}
+                  >
                     ログイン
                   </Button>
                   <Button
@@ -165,7 +169,7 @@ export function HomePage() {
                 <Divider>
                   <Typography variant='caption'>または</Typography>
                 </Divider>
-                <Button onClick={() => handleGoogleLogin()} variant='contained'>
+                <Button onClick={async () => await handleGoogleLogin()} variant='contained'>
                   Googleでログイン
                 </Button>
                 <Button onClick={async () => await handleResetPassword()} variant='text' size='small'>
