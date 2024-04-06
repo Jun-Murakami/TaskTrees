@@ -73,13 +73,8 @@ export const useAuth = () => {
       if (result.user) {
         setUid(result.user.uid);
         setEmail(result.user.email);
-        console.log(result.user);
       }
       setIsLoading(false);
-      if (result.user) {
-        // タイムスタンプの監視を開始して初期設定をロード
-        observeTimeStamp();
-      }
     });
     return () => {
       FirebaseAuthentication.removeAllListeners();
@@ -88,8 +83,10 @@ export const useAuth = () => {
   }, []);
 
   useEffect(() => {
-    console.log(uid);
-    console.log(email);
+    if (uid && email) {
+      observeTimeStamp();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, email]);
 
   // Googleログイン

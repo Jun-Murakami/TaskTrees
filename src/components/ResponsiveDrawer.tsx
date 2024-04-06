@@ -119,9 +119,9 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
         <Divider />
       </Box>
 
-      <List sx={{ height: '100%', overflowY: 'auto' }}>
-        {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}
-      </List>
+      <Box sx={{ height: 'calc(100% - 166px)', overflowY: 'auto' }}>
+        <List>{treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}</List>
+      </Box>
 
       <Box
         sx={{
