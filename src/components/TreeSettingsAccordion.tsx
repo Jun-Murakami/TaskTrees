@@ -26,6 +26,7 @@ import { TaskTreeLogoIcon } from './TaskTreesLogo';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useTreeManagement } from '../hooks/useTreeManagement';
+import { Capacitor } from '@capacitor/core';
 
 export function TreeSettingsAccordion() {
   const darkMode = useAppStateStore((state) => state.darkMode);
@@ -44,6 +45,7 @@ export function TreeSettingsAccordion() {
   const { handleTreeNameSubmit, handleAddUserToTree, handleDeleteUserFromTree, handleDeleteTree } = useTreeManagement();
 
   const theme = useTheme();
+  const isNative = Capacitor.isNativePlatform();
 
   // TextFieldの値をセット
   const handleTreeNameChange = (e: string) => {
@@ -72,6 +74,7 @@ export function TreeSettingsAccordion() {
       sx={{
         position: 'fixed',
         top: 0,
+        paddingTop: isNative ? 'env(safe-area-inset-top)' : 0,
         zIndex: 1000,
         width: '100%',
         '@media (min-width: 1546px)': {
