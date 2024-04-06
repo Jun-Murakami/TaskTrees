@@ -195,7 +195,7 @@ export function TreeSettingsAccordion() {
                       }}
                     >
                       <ListItemIcon>
-                        <HighlightOffIcon onClick={() => handleDeleteUserFromTree(member.uid, member.email)} />
+                        <HighlightOffIcon onClick={async () => await handleDeleteUserFromTree(member.uid, member.email)} />
                       </ListItemIcon>
                     </ListItemButton>
                   </ListItem>
@@ -213,10 +213,21 @@ export function TreeSettingsAccordion() {
               marginTop: 1,
             }}
           >
-            <Button variant={'outlined'} sx={{ mr: 2 }} startIcon={<AddIcon />} color='inherit' onClick={handleAddUserToTree}>
+            <Button
+              variant={'outlined'}
+              sx={{ mr: 2 }}
+              startIcon={<AddIcon />}
+              color='inherit'
+              onClick={async () => await handleAddUserToTree()}
+            >
               メンバーの追加
             </Button>
-            <Button variant={'outlined'} startIcon={<DeleteForeverIcon />} color='error' onClick={handleDeleteTree}>
+            <Button
+              variant={'outlined'}
+              startIcon={<DeleteForeverIcon />}
+              color='error'
+              onClick={async () => await handleDeleteTree()}
+            >
               ツリーを削除
             </Button>
           </Box>

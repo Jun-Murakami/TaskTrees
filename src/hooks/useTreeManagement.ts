@@ -562,7 +562,7 @@ export const useTreeManagement = () => {
         email,
         treeId: currentTree,
       });
-
+      loadCurrentTreeData(currentTree);
       setIsLoading(false);
       return Promise.resolve(result.data);
     } catch (error) {
@@ -605,6 +605,7 @@ export const useTreeManagement = () => {
           treeId: currentTree,
           userId: rescievedUid,
         });
+        loadCurrentTreeData(currentTree);
         setIsLoading(false);
         return Promise.resolve(result.data);
       } catch (error) {
