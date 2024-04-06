@@ -259,7 +259,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': {
-              pt: '60px',
+              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
               boxSizing: 'border-box',
               width: drawerWidth,
             },
@@ -272,7 +272,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': {
-              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
+              pt: '60px',
               boxSizing: 'border-box',
               width: drawerWidth,
             },
