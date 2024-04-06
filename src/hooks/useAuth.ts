@@ -24,8 +24,7 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+initializeApp(firebaseConfig);
 
 const getFirebaseAuth = async () => {
   if (Capacitor.isNativePlatform()) {
@@ -210,9 +209,9 @@ export const useAuth = () => {
       const deletePromises: Promise<void>[] = [];
       // treesListを反復処理して、ユーザーのツリーを削除
       for (const tree of treesList) {
-        const treeRef = ref(db, `trees/${tree.id}`);
+        const treeRef = ref(getDatabase(), `trees/${tree.id}`);
         // membersをDBから取得して、自分のユーザー以外のユーザーIDが含まれていたらメンバーから自分を削除するだけにする
-        const treeMembersRef = ref(db, `trees/${tree.id}/members`);
+        const treeMembersRef = ref(getDatabase(), `trees/${tree.id}/members`);
         await get(treeMembersRef)
           .then((snapshot) => {
             if (snapshot.exists()) {
@@ -270,7 +269,7 @@ export const useAuth = () => {
           });
       }
       // ユーザーのappStateを削除
-      const appStateRef = await ref(db, `users/${user.uid}`);
+      const appStateRef = await ref(getDatabase(), `users/${user.uid}`);
       await remove(appStateRef)
         .then(() => {
           console.log('データが正常に削除されました。');
