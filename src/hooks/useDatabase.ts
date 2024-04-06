@@ -115,9 +115,11 @@ export const useDatabase = () => {
         if (snapshot.exists()) {
           return snapshot.val();
         }
+        console.log('ツリーリストのDBフェッチに失敗しました。スナップショットが存在しません。');
         return null;
       })
-      .catch(() => {
+      .catch((error) => {
+        console.log('ツリーリストのDBフェッチに失敗しました。\n\n' + error);
         return null;
       });
   };
