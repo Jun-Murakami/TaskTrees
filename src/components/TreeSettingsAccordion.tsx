@@ -26,6 +26,7 @@ import { TaskTreeLogoIcon } from './TaskTreesLogo';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useTreeManagement } from '../hooks/useTreeManagement';
+import { Capacitor } from '@capacitor/core';
 
 export function TreeSettingsAccordion() {
   const darkMode = useAppStateStore((state) => state.darkMode);
@@ -44,6 +45,7 @@ export function TreeSettingsAccordion() {
   const { handleTreeNameSubmit, handleAddUserToTree, handleDeleteUserFromTree, handleDeleteTree } = useTreeManagement();
 
   const theme = useTheme();
+  const isNative = Capacitor.isNativePlatform();
 
   // TextFieldの値をセット
   const handleTreeNameChange = (e: string) => {
@@ -94,6 +96,7 @@ export function TreeSettingsAccordion() {
       <Accordion
         sx={{
           marginTop: 0,
+          paddingTop: isNative ? 'env(safe-area-inset-top)' : 0,
           backgroundColor: darkMode
             ? isAccordionExpanded
               ? 'rgba(18, 18, 18, 0.8)'
@@ -192,7 +195,7 @@ export function TreeSettingsAccordion() {
                       }}
                     >
                       <ListItemIcon>
-                        <HighlightOffIcon onClick={() => handleDeleteUserFromTree(member.uid, member.email)} />
+                        <HighlightOffIcon onClick={async () => await handleDeleteUserFromTree(member.uid, member.email)} />
                       </ListItemIcon>
                     </ListItemButton>
                   </ListItem>
@@ -210,10 +213,21 @@ export function TreeSettingsAccordion() {
               marginTop: 1,
             }}
           >
-            <Button variant={'outlined'} sx={{ mr: 2 }} startIcon={<AddIcon />} color='inherit' onClick={handleAddUserToTree}>
+            <Button
+              variant={'outlined'}
+              sx={{ mr: 2 }}
+              startIcon={<AddIcon />}
+              color='inherit'
+              onClick={async () => await handleAddUserToTree()}
+            >
               メンバーの追加
             </Button>
-            <Button variant={'outlined'} startIcon={<DeleteForeverIcon />} color='error' onClick={handleDeleteTree}>
+            <Button
+              variant={'outlined'}
+              startIcon={<DeleteForeverIcon />}
+              color='error'
+              onClick={async () => await handleDeleteTree()}
+            >
               ツリーを削除
             </Button>
           </Box>

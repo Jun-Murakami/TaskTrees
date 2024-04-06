@@ -3,7 +3,6 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 import { TreeItem, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
 import { isTreeItemArray, ensureChildrenProperty } from '../components/SortableTree/utilities';
 import { initialItems } from '../components/SortableTree/mock';
-import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
@@ -11,11 +10,16 @@ import { useAttachedFile } from './useAttachedFile';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
 import { useDialogStore, useInputDialogStore } from '../store/dialogStore';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 // ツリーの管理に関するカスタムフック
 // データベースに関連する処理はuseDatabaseフックを使用
 
 export const useTreeManagement = () => {
+  const uid = useAppStateStore((state) => state.uid);
+  const email = useAppStateStore((state) => state.email);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
@@ -44,14 +48,13 @@ export const useTreeManagement = () => {
   const { deleteFile } = useAttachedFile();
 
   // ツリーリストをDBから取得する ---------------------------------------------------------------------------
-  const loadTreesList = useCallback(async () => {
+  const loadTreesList = async () => {
     try {
-      const user = getAuth().currentUser;
-      if (!user) {
+      if (!uid) {
         return;
       }
       setIsLoading(true);
-      const treesListFromDb = await loadTreesListFromDb(user.uid);
+      const treesListFromDb = await loadTreesListFromDb(uid);
       let missingTrees: string[] = [];
       if (treesListFromDb) {
         const data: string[] = treesListFromDb;
@@ -87,12 +90,12 @@ export const useTreeManagement = () => {
     } catch (error) {
       handleError('ツリーリストの取得に失敗しました。\n\n' + error);
     }
-  }, [handleError, setIsLoading, setTreesList, showDialog, loadTreesListFromDb, loadTreeNameFromDb]);
+  };
 
   // ターゲットIDのitems、name、membersをDBからロードする ---------------------------------------------------------------------------
 
   // 本編
-  const loadCurrentTreeData = useCallback(async (targetTree: UniqueIdentifier) => {
+  const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
     setIsLoading(true);
     // デバウンスで前のツリーの状態変更が残っていたら保存
     if (
@@ -106,8 +109,7 @@ export const useTreeManagement = () => {
     }
 
     try {
-      const user = getAuth().currentUser;
-      if (!user) {
+      if (!uid) {
         throw new Error('ユーザーがログインしていません。');
       }
 
@@ -175,12 +177,11 @@ export const useTreeManagement = () => {
       setIsLoading(false);
       handleError('ツリーのデータの取得に失敗しました。\n\n' + error);
     }
-  }, [items, prevItems, prevCurrentTree, showDialog, handleError, loadItemsFromDb, loadMembersFromDb, loadTreeNameFromDb, setCurrentTreeMembers, setCurrentTreeName, setIsLoading, setItems, saveItemsDb, setPrevItems, setPrevCurrentTree]);
+  };
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = async (targetTree: UniqueIdentifier) => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return;
     }
     // ツリーを削除する前に現在のツリー内の子要素を含むすべてのattachedFileを再帰的に削除
@@ -258,8 +259,7 @@ export const useTreeManagement = () => {
 
   // 新しいツリーを作成する ---------------------------------------------------------------------------
   const handleCreateNewTree = async () => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return Promise.reject();
     }
 
@@ -268,7 +268,7 @@ export const useTreeManagement = () => {
 
     try {
       const newTreeRef: unknown = await saveNewTree(initialItems, '新しいツリー', {
-        [user?.uid]: true,
+        [uid]: true,
       });
       if (!newTreeRef) {
         throw new Error('新しいツリーの作成に失敗しました。');
@@ -282,10 +282,10 @@ export const useTreeManagement = () => {
       setIsLoading(false);
       setCurrentTree(newTreeRef as UniqueIdentifier);
       setCurrentTreeName('新しいツリー');
-      if (user.email) {
-        setCurrentTreeMembers([{ uid: user.uid, email: user.email }]);
+      if (email) {
+        setCurrentTreeMembers([{ uid: uid, email: email }]);
       } else {
-        setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
+        setCurrentTreeMembers([{ uid: uid, email: 'unknown' }]);
       }
       if (newTreeRef !== null) {
         const newTree = { id: newTreeRef as UniqueIdentifier, name: '新しいツリー' };
@@ -310,8 +310,7 @@ export const useTreeManagement = () => {
 
   // ファイルを読み込んでツリーの状態を復元する ---------------------------------------------------------------------------
   const handleFileUpload = async (file: File) => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return Promise.reject();
     }
     if (!file) {
@@ -355,8 +354,7 @@ export const useTreeManagement = () => {
 
   // 本編
   const handleLoadedContent = async (data: string | null) => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return Promise.reject();
     }
     if (data) {
@@ -391,7 +389,7 @@ export const useTreeManagement = () => {
               treeState.items,
               treeState.name ? treeState.name : '読み込まれたツリー',
               {
-                [user.uid]: true,
+                [uid]: true,
               }
             );
             if (!newTreeRef) {
@@ -422,7 +420,7 @@ export const useTreeManagement = () => {
               treeName = treeState.currentTreeName;
             }
             const newTreeRef: unknown = await saveNewTree(treeState.items, treeName, {
-              [user.uid]: true,
+              [uid]: true,
             });
 
             if (!newTreeRef) {
@@ -433,10 +431,10 @@ export const useTreeManagement = () => {
             setCurrentTreeName(treeName);
             const loadedTreeObject = { id: newTreeRef as UniqueIdentifier, name: treeName };
             const updatedTreesListWithLoadedTree = treesList ? [...treesList, loadedTreeObject] : [loadedTreeObject];
-            if (user.email) {
-              setCurrentTreeMembers([{ uid: user.uid, email: user.email }]);
+            if (email) {
+              setCurrentTreeMembers([{ uid: uid, email: email }]);
             } else {
-              setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
+              setCurrentTreeMembers([{ uid: uid, email: 'unknown' }]);
             }
             if (isLoading) setIsLoading(false);
             setTreesList(updatedTreesListWithLoadedTree);
@@ -478,7 +476,7 @@ export const useTreeManagement = () => {
     return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
   }
 
-  const handleDownloadTreeState = () => {
+  const handleDownloadTreeState = async () => {
     if (!currentTreeName) return;
     const treeState: TreesListItemIncludingItems = { items: items, name: currentTreeName };
     const treeStateJSON = JSON.stringify(treeState, null, 2); // 読みやすい形式でJSONを整形
@@ -491,16 +489,39 @@ export const useTreeManagement = () => {
     } else {
       link.download = `TaskTree_${currentTreeName}_Backup_${getCurrentDateTime()}.json`;
     }
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await Filesystem.writeFile({
+          path: link.download,
+          data: treeStateJSON,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+        });
+        await Share.share({
+          title: 'TaskTrees Backup title',
+          text: 'TaskTrees Backup text',
+          url: result.uri,
+          dialogTitle: 'TaskTrees Backup dialog title',
+        });
+        await Filesystem.deleteFile({
+          path: result.uri,
+          directory: Directory.Documents,
+        });
+        return result.uri;
+      } catch (e) {
+        console.error('Error saving file:', e);
+      }
+    } else {
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
   };
 
   // すべてのツリーをJSONファイルとしてダウンロードする --------------------------------------------------------------------------
   const handleDownloadAllTrees = async (isSilent: boolean = false) => {
-    const user = getAuth().currentUser;
-    if (!user && !treesList) {
+    if (!uid && !treesList) {
       return Promise.reject('');
     }
     try {
@@ -510,22 +531,43 @@ export const useTreeManagement = () => {
         return Promise.reject('');
       }
       if (isSilent) {
-        // JSON形式でダウンロードする
+        // バックエンドにデータを送信するだけの場合
         // 人間に読みやすい形に変換
         const data = JSON.stringify(treesListItemIncludingItems, null, 2);
         return Promise.resolve(data);
       }
+
       // JSON形式でダウンロードする
-      const a = document.createElement('a');
-      // 人間に読みやすい形に変換
-      const file = new Blob([JSON.stringify(treesListItemIncludingItems, null, 2)], {
-        type: 'application/json',
-      });
-      a.href = URL.createObjectURL(file);
-      a.download = `TaskTrees_AllBackup_${getCurrentDateTime()}.json`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-      return Promise.resolve('');
+      const link = document.createElement('a');
+      const treeStateJSON = JSON.stringify(treesListItemIncludingItems, null, 2); // 人間に読みやすい形に変換
+      const file = new Blob([treeStateJSON], { type: 'application/json', });
+      link.href = URL.createObjectURL(file);
+      link.download = `TaskTrees_AllBackup_${getCurrentDateTime()}.json`;
+
+      if (Capacitor.isNativePlatform()) {
+        const result = await Filesystem.writeFile({
+          path: link.download,
+          data: treeStateJSON,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+        });
+        await Share.share({
+          title: 'TaskTrees Backup title',
+          text: 'TaskTrees Backup text',
+          url: result.uri,
+          dialogTitle: 'TaskTrees Backup dialog title',
+        });
+        await Filesystem.deleteFile({
+          path: result.uri,
+          directory: Directory.Documents,
+        });
+      } else {
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        return Promise.resolve('');
+      }
     } catch (error) {
       await showDialog('ツリーのバックアップに失敗しました。\n\n' + error, 'Error');
       return Promise.reject('');
@@ -568,7 +610,7 @@ export const useTreeManagement = () => {
         email,
         treeId: currentTree,
       });
-
+      loadCurrentTreeData(currentTree);
       setIsLoading(false);
       return Promise.resolve(result.data);
     } catch (error) {
@@ -582,15 +624,14 @@ export const useTreeManagement = () => {
   };
 
   // メンバーの削除 ---------------------------------------------------------------------------
-  const handleDeleteUserFromTree = async (uid: string, email: string) => {
+  const handleDeleteUserFromTree = async (rescievedUid: string, rescievedEmail: string) => {
     if (!currentTree) return Promise.resolve();
-    const user = getAuth().currentUser;
     let result;
     if (currentTreeMembers && currentTreeMembers.length === 1) {
       await showDialog('最後のメンバーを削除することはできません。', 'Information');
       return Promise.resolve();
     }
-    if (user && user.uid === uid) {
+    if (uid && uid === rescievedUid) {
       result = await showDialog(
         '自分自身を削除すると、このツリーにアクセスできなくなります。実行しますか？',
         'Confirmation Required',
@@ -598,7 +639,7 @@ export const useTreeManagement = () => {
       );
     } else {
       result = await showDialog(
-        `メンバー' ${email} 'をこのツリーの編集メンバーから削除します。実行しますか？`,
+        `メンバー' ${rescievedEmail} 'をこのツリーの編集メンバーから削除します。実行しますか？`,
         'Confirmation Required',
         true
       );
@@ -610,8 +651,9 @@ export const useTreeManagement = () => {
       try {
         const result = await removeUserFromTreeCallable({
           treeId: currentTree,
-          userId: uid,
+          userId: rescievedUid,
         });
+        loadCurrentTreeData(currentTree);
         setIsLoading(false);
         return Promise.resolve(result.data);
       } catch (error) {

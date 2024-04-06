@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 // エラーハンドリングに関連するカスタムフック
 // ログインページに戻るクリティカルなエラーが発生した場合に使用
@@ -32,6 +33,7 @@ export const useError = () => {
       setItems([]);
       setIsAccordionExpanded(false);
       signOut(getAuth());
+      FirebaseAuthentication.signOut();
       setIsLoggedIn(false);
       if (setIsLoading && isLoading) setIsLoading(false);
     },

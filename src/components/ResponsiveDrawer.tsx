@@ -30,6 +30,7 @@ import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useSearch } from '../hooks/useSearch';
 import { SortableList } from './SortableList/SortableList';
 import { MenuSettings } from './MenuSettings';
+import { Capacitor } from '@capacitor/core';
 
 const drawerWidth = 300;
 
@@ -54,6 +55,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isNative = Capacitor.isNativePlatform();
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
@@ -88,7 +90,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       <Box
         sx={{
           position: 'absolute',
-          top: 0,
+          top: isNative ? 'env(safe-area-inset-top)' : 0,
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
@@ -119,9 +121,9 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
         <Divider />
       </Box>
 
-      <List sx={{ height: '100%', overflowY: 'auto' }}>
-        {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}
-      </List>
+      <Box sx={{ height: 'calc(100% - (166px + env(safe-area-inset-bottom)))', overflowY: 'auto' }}>
+        <List>{treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}</List>
+      </Box>
 
       <Box
         sx={{
@@ -129,7 +131,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
-          bottom: 0,
+          bottom: isNative ? 'env(safe-area-inset-bottom)' : 0,
           backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
         }}
       >
@@ -207,12 +209,12 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { sm: 'none' },
             position: 'fixed',
-            bottom: 30,
+            bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 30px)' : 30,
             right: 100,
             zIndex: 1000,
           }}
         >
-          Tap to open the tree list →
+          タップしてツリーを開く →
         </Typography>
       )}
       <IconButton
@@ -225,7 +227,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           border: `1px solid ${theme.palette.divider}`,
           display: { sm: 'none' },
           position: 'fixed',
-          bottom: 15,
+          bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 15px)' : 15,
           right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,
@@ -257,7 +259,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': {
-              pt: '60px',
+              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
               boxSizing: 'border-box',
               width: drawerWidth,
             },
@@ -270,7 +272,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': {
-              pt: '60px',
+              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
               boxSizing: 'border-box',
               width: drawerWidth,
             },

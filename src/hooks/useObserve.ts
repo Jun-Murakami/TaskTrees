@@ -6,10 +6,10 @@ import { useAppStateManagement } from './useAppStateManagement';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
 import { getDatabase, ref, onValue, } from 'firebase/database';
-import { getAuth } from 'firebase/auth';
 import { useAppStateStore } from '../store/appStateStore';
 
 export const useObserve = () => {
+  const uid = useAppStateStore((state) => state.uid);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const items = useTreeStateStore((state) => state.items);
@@ -23,26 +23,25 @@ export const useObserve = () => {
   const { handleError } = useError();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
-  const observeTimeStamp = () => {
-    const user = getAuth().currentUser;
-    if (!user) {
+  const observeTimeStamp = async () => {
+    if (!uid) {
       return;
     }
     setIsLoading(true);
-    loadSettingsFromDb();
-    loadTreesList();
-    const timestampRef = ref(getDatabase(), `users/${user.uid}/timestamp`);
-    onValue(timestampRef, (snapshot) => {
+    await loadSettingsFromDb();
+    await loadTreesList();
+    const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
+    onValue(timestampRef, async (snapshot) => {
       setIsLoading(true);
       const serverTimestamp = snapshot.val();
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
         setLocalTimestamp(serverTimestamp);
-        loadSettingsFromDb();
-        loadTreesList();
+        await loadSettingsFromDb();
+        await loadTreesList();
         const currentTree = useTreeStateStore.getState().currentTree;
         if (currentTree) {
-          loadCurrentTreeData(currentTree);
+          await loadCurrentTreeData(currentTree);
         }
 
       }
@@ -57,7 +56,7 @@ export const useObserve = () => {
       setPrevItems(items);
       return;
     }
-    if (!getAuth().currentUser || !currentTree || isEqual(items, prevItems)) {
+    if (!uid || !currentTree || isEqual(items, prevItems)) {
       return;
     }
     const debounceSave = setTimeout(() => {

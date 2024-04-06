@@ -1,8 +1,12 @@
 import { useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithRedirect, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
+import { getApp, initializeApp } from 'firebase/app';
+import {
+  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+} from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { useObserve } from './useObserve';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
@@ -20,11 +24,25 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+initializeApp(firebaseConfig);
+
+const getFirebaseAuth = async () => {
+  if (Capacitor.isNativePlatform()) {
+    return initializeAuth(getApp(), {
+      persistence: indexedDBLocalPersistence,
+    });
+  } else {
+    return getAuth();
+  }
+};
+
+const auth = getFirebaseAuth();
 
 export const useAuth = () => {
+  const uid = useAppStateStore((state) => state.uid);
+  const setUid = useAppStateStore((state) => state.setUid);
+  const email = useAppStateStore((state) => state.email);
+  const setEmail = useAppStateStore((state) => state.setEmail);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
@@ -44,59 +62,88 @@ export const useAuth = () => {
 
   // ログイン状態の監視
   useEffect(() => {
-    setIsLoading(true);
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setIsLoggedIn(!!user);
-      setIsLoading(false);
-      if (user) {
-        // タイムスタンプの監視を開始して初期設定をロード
-        observeTimeStamp();
+    const asyncFunc = async () => {
+      await getFirebaseAuth();
+    }
+    asyncFunc();
+    FirebaseAuthentication.addListener('authStateChange', async (result) => {
+      setIsLoading(true);
+      setIsLoggedIn(!!result.user);
+      if (result.user) {
+        setUid(result.user.uid);
+        setEmail(result.user.email);
       }
+      setIsLoading(false);
     });
-
-    return () => unsubscribe();
+    return () => {
+      FirebaseAuthentication.removeAllListeners();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (uid && email) {
+      setIsLoading(true);
+      const asyncFunc = async () => {
+        const setTimeoutPromise = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+        await setTimeoutPromise(1000);
+        await observeTimeStamp();
+      }
+      asyncFunc();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, email]);
+
   // Googleログイン
-  const handleGoogleLogin = () => {
-    signInWithRedirect(auth, new GoogleAuthProvider())
-      .then(() => {
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-      })
-      .catch((error) => {
-        setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
-      });
+  const handleGoogleLogin = async () => {
+    // 1. Create credentials on the native layer
+    const result = await FirebaseAuthentication.signInWithGoogle();
+    // 2. Sign in on the web layer using the id token
+    const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+    await signInWithCredential(await auth, credential).then(() => {
+      setIsLoggedIn(true);
+      setSystemMessage(null);
+    }).catch((error) => {
+      setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+    });
   };
 
   // メールアドレスとパスワードでのログイン
-  const handleEmailLogin = (email: string, password: string) => {
+  const handleEmailLogin = async (email: string, password: string) => {
     if (email === '' || password === '') {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-      })
-      .catch((error) => {
-        if (error.code === 'auth/invalid-credential') {
-          setSystemMessage('ログインに失敗しました。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-        } else {
-          setSystemMessage('ログインに失敗しました。\n\n' + error.code);
-        }
-      });
+    const result = await FirebaseAuthentication.signInWithEmailAndPassword({ email, password }).catch((error) => {
+      if (error.code === 'invalid-email') {
+        setSystemMessage('メールアドレスの形式が正しくありません。');
+      } else if (error.code === 'invalid-credential') {
+        setSystemMessage('ログインに失敗しました。メールアドレスを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+      } else {
+        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+      }
+      return null;
+    });
+    if (!result) return;
+    await signInWithEmailAndPassword(await auth, email, password).then(() => {
+      setIsLoggedIn(true);
+      setSystemMessage(null);
+    }).catch((error) => {
+      if (error.code === 'auth/invalid-credential') {
+        setSystemMessage('ログインに失敗しました。メールアドレスを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+      } else {
+        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+      }
+    });
   };
 
   // メールアドレスとパスワードでサインアップ
-  const handleSignup = (email: string, password: string) => {
+  const handleSignup = async (email: string, password: string) => {
     if (email === '' || password === '') {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    createUserWithEmailAndPassword(auth, email, password)
+    createUserWithEmailAndPassword(await auth, email, password)
       .then(() => {
         setSystemMessage('メールアドレスの確認メールを送信しました。メールボックスを確認してください。');
       })
@@ -124,7 +171,7 @@ export const useAuth = () => {
       setSystemMessage('メールアドレスを入力してください。');
       return;
     }
-    sendPasswordResetEmail(auth, result)
+    sendPasswordResetEmail(await auth, result)
       .then(() => {
         setSystemMessage('パスワードリセットメールを送信しました。メールボックスを確認してください。');
       })
@@ -138,10 +185,13 @@ export const useAuth = () => {
   };
 
   // ログアウト
-  const handleLogout = () => {
-    signOut(auth)
-      .then(() => {
+  const handleLogout = async () => {
+    signOut(await auth)
+      .then(async () => {
+        await FirebaseAuthentication.signOut();
         setIsLoggedIn(false);
+        setUid(null);
+        setEmail(null);
         setItems([]);
         setTreesList([]);
         setCurrentTree(null);
@@ -156,7 +206,8 @@ export const useAuth = () => {
 
   // アカウント削除
   const handleDeleteAccount = async () => {
-    const user = auth.currentUser;
+    const authObject = await getFirebaseAuth();
+    const user = authObject.currentUser;
     if (user) {
       setIsLoading(true);
 
@@ -164,9 +215,9 @@ export const useAuth = () => {
       const deletePromises: Promise<void>[] = [];
       // treesListを反復処理して、ユーザーのツリーを削除
       for (const tree of treesList) {
-        const treeRef = ref(db, `trees/${tree.id}`);
+        const treeRef = ref(getDatabase(), `trees/${tree.id}`);
         // membersをDBから取得して、自分のユーザー以外のユーザーIDが含まれていたらメンバーから自分を削除するだけにする
-        const treeMembersRef = ref(db, `trees/${tree.id}/members`);
+        const treeMembersRef = ref(getDatabase(), `trees/${tree.id}/members`);
         await get(treeMembersRef)
           .then((snapshot) => {
             if (snapshot.exists()) {
@@ -224,7 +275,7 @@ export const useAuth = () => {
           });
       }
       // ユーザーのappStateを削除
-      const appStateRef = await ref(db, `users/${user.uid}`);
+      const appStateRef = await ref(getDatabase(), `users/${user.uid}`);
       await remove(appStateRef)
         .then(() => {
           console.log('データが正常に削除されました。');

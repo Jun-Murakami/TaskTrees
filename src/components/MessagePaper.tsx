@@ -8,7 +8,7 @@ export const MessagePaper = () => {
     currentUrl.startsWith('https://tasktrees-fb.web.app');
 
   return (
-    <Stack sx={{ width: 300, maxWidth: '90vw', margin: 'auto', marginTop: 4 }}>
+    <Stack sx={{ width: 400, maxWidth: '90vw', margin: 'auto', marginTop: 4 }}>
       {shouldDisplay && (
         <>
           <Paper>
@@ -23,7 +23,12 @@ export const MessagePaper = () => {
               ツリーデータは相互に移行可能です。
             </Typography>
           </Paper>
-          <Button href='/download' size='small' variant='outlined' sx={{ maxWidth: 300, mt: 2 }}>
+          <Button
+            href='https://jun-murakami.web.app/#tasktrees'
+            size='small'
+            variant='outlined'
+            sx={{ width: 400, maxWidth: '90vw', mt: 2 }}
+          >
             アプリのダウンロード
           </Button>
         </>
