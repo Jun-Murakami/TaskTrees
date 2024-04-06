@@ -84,7 +84,10 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (uid && email) {
-      observeTimeStamp();
+      const asyncFunc = async () => {
+        await observeTimeStamp();
+      }
+      asyncFunc();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, email]);
@@ -182,6 +185,8 @@ export const useAuth = () => {
       .then(async () => {
         await FirebaseAuthentication.signOut();
         setIsLoggedIn(false);
+        setUid(null);
+        setEmail(null);
         setItems([]);
         setTreesList([]);
         setCurrentTree(null);

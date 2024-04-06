@@ -23,25 +23,25 @@ export const useObserve = () => {
   const { handleError } = useError();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
-  const observeTimeStamp = () => {
+  const observeTimeStamp = async () => {
     if (!uid) {
       return;
     }
     setIsLoading(true);
-    loadSettingsFromDb();
-    loadTreesList();
+    await loadSettingsFromDb();
+    await loadTreesList();
     const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
-    onValue(timestampRef, (snapshot) => {
+    onValue(timestampRef, async (snapshot) => {
       setIsLoading(true);
       const serverTimestamp = snapshot.val();
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
         setLocalTimestamp(serverTimestamp);
-        loadSettingsFromDb();
-        loadTreesList();
+        await loadSettingsFromDb();
+        await loadTreesList();
         const currentTree = useTreeStateStore.getState().currentTree;
         if (currentTree) {
-          loadCurrentTreeData(currentTree);
+          await loadCurrentTreeData(currentTree);
         }
 
       }
