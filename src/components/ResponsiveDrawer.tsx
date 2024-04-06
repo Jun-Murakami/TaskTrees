@@ -121,7 +121,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
         <Divider />
       </Box>
 
-      <Box sx={{ height: 'calc(100% - 166px)', overflowY: 'auto' }}>
+      <Box sx={{ height: 'calc(100% - (166px + env(safe-area-inset-bottom)))', overflowY: 'auto' }}>
         <List>{treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}</List>
       </Box>
 
@@ -209,7 +209,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { sm: 'none' },
             position: 'fixed',
-            bottom: 30,
+            bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 30px)' : 30,
             right: 100,
             zIndex: 1000,
           }}
@@ -227,7 +227,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           border: `1px solid ${theme.palette.divider}`,
           display: { sm: 'none' },
           position: 'fixed',
-          bottom: 15,
+          bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 15px)' : 15,
           right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,

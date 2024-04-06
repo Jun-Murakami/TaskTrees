@@ -6,6 +6,7 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
 import { useAppStateStore } from '../../store/appStateStore';
+import { Capacitor } from '@capacitor/core';
 
 interface Props {
   id: UniqueIdentifier;
@@ -18,6 +19,7 @@ export function AddTask({ id, ...Props }: Props) {
 
   const theme = useTheme();
   const matchesSM = useMediaQuery(theme.breakpoints.up('sm'));
+  const isNative = Capacitor.isNativePlatform();
 
   return (
     <>
@@ -43,7 +45,7 @@ export function AddTask({ id, ...Props }: Props) {
             left: { xs: '50%', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px)' },
           },
           transform: 'translateX(-50%)',
-          bottom: { xs: 20, sm: 'auto' },
+          bottom: { xs: isNative ? 'calc(env(safe-area-inset-bottom) + 20px)' : 20, sm: 'auto' },
           marginBottom: isAccordionExpanded ? { xs: 'auto', sm: 5 } : 'auto',
           zIndex: 900, // スクロール時は他の要素より前面に
           height: { xs: '40px', sm: '50px' },
