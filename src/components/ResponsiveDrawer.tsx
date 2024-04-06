@@ -90,7 +90,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       <Box
         sx={{
           position: 'absolute',
-          top: isNative ? 'env(safe-area-inset-top)' : 0,
+          top: 0,
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
@@ -244,6 +244,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           flexShrink: { sm: 0 },
           borderRight: { xs: 0, sm: `1px solid ${theme.palette.divider}` },
           boxSizing: 'border-box',
+          top: isNative ? 'env(safe-area-inset-top)' : 0,
         }}
       >
         <SwipeableDrawer
