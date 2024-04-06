@@ -110,6 +110,7 @@ export const useDatabase = () => {
   // データベースからツリーリストを取得する関数 ---------------------------------------------------------------------------
   const loadTreesListFromDb = async (userId: string): Promise<string[] | null> => {
     const userTreeListRef = ref(getDatabase(), `users/${userId}/treeList`);
+    console.log('userTreeListRef:', userTreeListRef);
     return await get(userTreeListRef)
       .then((snapshot) => {
         if (snapshot.exists()) {
