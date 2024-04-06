@@ -30,6 +30,7 @@ import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useSearch } from '../hooks/useSearch';
 import { SortableList } from './SortableList/SortableList';
 import { MenuSettings } from './MenuSettings';
+import { Capacitor } from '@capacitor/core';
 
 const drawerWidth = 300;
 
@@ -54,6 +55,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isNative = Capacitor.isNativePlatform();
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
@@ -88,7 +90,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       <Box
         sx={{
           position: 'absolute',
-          top: 'env(safe-area-inset-top)',
+          top: isNative ? 'env(safe-area-inset-top)' : 0,
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
