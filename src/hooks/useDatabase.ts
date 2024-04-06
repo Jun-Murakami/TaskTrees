@@ -2,7 +2,6 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateStore } from '../store/appStateStore';
 import { TreeItems, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
 import { isTreeItemArray } from '../components/SortableTree/utilities';
-import { getAuth } from 'firebase/auth';
 import { getDatabase, ref, set, get } from 'firebase/database';
 import { useError } from './useError';
 
@@ -10,20 +9,20 @@ import { useError } from './useError';
 // 他の場所にはデータベースの処理は書かないようにする
 
 export const useDatabase = () => {
+  const uid = useAppStateStore((state) => state.uid);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
 
   const { handleError } = useError();
 
   // タイムスタンプをデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveTimeStampDb = () => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return;
     }
     try {
       const newTimestamp = Date.now();
       setLocalTimestamp(newTimestamp);
-      const timestampRef = ref(getDatabase(), `users/${user.uid}/timestamp`);
+      const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
       set(timestampRef, newTimestamp);
       return;
     } catch (error) {
@@ -33,7 +32,7 @@ export const useDatabase = () => {
 
   // itemsをデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveItemsDb = (newItems: TreeItems, targetTree: UniqueIdentifier) => {
-    if (!getAuth().currentUser || !targetTree || !newItems) {
+    if (!uid || !targetTree || !newItems) {
       return;
     }
     try {
@@ -68,12 +67,11 @@ export const useDatabase = () => {
 
   // treesListをデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveTreesListDb = (newTreesList: TreesList) => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return;
     }
     try {
-      const userTreeListRef = ref(getDatabase(), `users/${user.uid}/treeList`);
+      const userTreeListRef = ref(getDatabase(), `users/${uid}/treeList`);
       saveTimeStampDb();
       set(
         userTreeListRef,
@@ -86,8 +84,7 @@ export const useDatabase = () => {
 
   // currentTreeNameをデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveCurrentTreeNameDb = (editedTreeName: string, targetTree: UniqueIdentifier | null) => {
-    const user = getAuth().currentUser;
-    if (!user || !targetTree || !editedTreeName) {
+    if (!uid || !targetTree || !editedTreeName) {
       return;
     }
     try {
@@ -188,8 +185,7 @@ export const useDatabase = () => {
   };
   // 本編
   const loadAllTreesDataFromDb = async (treesList: TreesList) => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return;
     }
     try {

@@ -6,6 +6,8 @@ type AppState = {
   hideDoneItems: boolean;
   systemMessage: string | null;
   isLoggedIn: boolean;
+  uid: string | null;
+  email: string | null;
   isLoading: boolean;
   isWaitingForDelete: boolean;
   isAccordionExpanded: boolean;
@@ -18,6 +20,8 @@ type AppState = {
   setHideDoneItems: (hideDoneItems: boolean) => void;
   setSystemMessage: (systemMessage: string | null) => void;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
+  setUid: (uid: string | null) => void;
+  setEmail: (email: string | null) => void;
   setIsLoading: (isLoading: boolean) => void;
   setIsWaitingForDelete: (isWaitingForDelete: boolean) => void;
   setIsAccordionExpanded: (isAccordionExpanded: boolean) => void;
@@ -33,6 +37,8 @@ export const useAppStateStore = create<AppState>((set) => ({
   hideDoneItems: false,
   systemMessage: null,
   isLoggedIn: false,
+  uid: null,
+  email: null,
   isLoading: false,
   isWaitingForDelete: false,
   isAccordionExpanded: false,
@@ -45,6 +51,8 @@ export const useAppStateStore = create<AppState>((set) => ({
   setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),
   setSystemMessage: (systemMessage) => set({ systemMessage }),
   setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
+  setUid: (uid) => set({ uid }),
+  setEmail: (email) => set({ email }),
   setIsLoading: (isLoading) => set({ isLoading }),
   setIsWaitingForDelete: (isWaitingForDelete) => set({ isWaitingForDelete }),
   setIsAccordionExpanded: (isAccordionExpanded) => set({ isAccordionExpanded }),

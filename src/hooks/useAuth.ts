@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { getApp, initializeApp } from 'firebase/app';
 import {
-  Auth, getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
@@ -25,7 +25,6 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getDatabase(app);
 
 const getFirebaseAuth = async () => {
@@ -38,7 +37,13 @@ const getFirebaseAuth = async () => {
   }
 };
 
+const auth = getFirebaseAuth();
+
 export const useAuth = () => {
+  const uid = useAppStateStore((state) => state.uid);
+  const setUid = useAppStateStore((state) => state.setUid);
+  const email = useAppStateStore((state) => state.email);
+  const setEmail = useAppStateStore((state) => state.setEmail);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
@@ -58,33 +63,42 @@ export const useAuth = () => {
 
   // ログイン状態の監視
   useEffect(() => {
-    let prevAuth: Auth = getAuth();
     const asyncFunc = async () => {
-      prevAuth = await getFirebaseAuth();
+      await getFirebaseAuth();
     }
     asyncFunc();
-    const unsubscribe = prevAuth.onAuthStateChanged((user) => {
+    FirebaseAuthentication.addListener('authStateChange', async (result) => {
       setIsLoading(true);
-      setIsLoggedIn(!!user);
+      setIsLoggedIn(!!result.user);
+      if (result.user) {
+        setUid(result.user.uid);
+        setEmail(result.user.email);
+        console.log(result.user);
+      }
       setIsLoading(false);
-      if (user) {
+      if (result.user) {
         // タイムスタンプの監視を開始して初期設定をロード
         observeTimeStamp();
       }
     });
-
-    return () => unsubscribe();
+    return () => {
+      FirebaseAuthentication.removeAllListeners();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    console.log(uid);
+    console.log(email);
+  }, [uid, email]);
 
   // Googleログイン
   const handleGoogleLogin = async () => {
     // 1. Create credentials on the native layer
     const result = await FirebaseAuthentication.signInWithGoogle();
-    console.log(result);
     // 2. Sign in on the web layer using the id token
     const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-    await signInWithCredential(auth, credential).then(() => {
+    await signInWithCredential(await auth, credential).then(() => {
       setIsLoggedIn(true);
       setSystemMessage(null);
     }).catch((error) => {
@@ -104,9 +118,10 @@ export const useAuth = () => {
     });
     if (result.credential) {
       const firebaseCredential = GoogleAuthProvider.credential(result.credential.idToken);
-      await signInWithCredential(auth, firebaseCredential).then(() => {
+      await signInWithCredential(await auth, firebaseCredential).then(() => {
         setIsLoggedIn(true);
         setSystemMessage(null);
+
       }).catch((error) => {
         if (error.code === 'auth/invalid-credential') {
           setSystemMessage('ログインに失敗しました。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
@@ -118,12 +133,12 @@ export const useAuth = () => {
   };
 
   // メールアドレスとパスワードでサインアップ
-  const handleSignup = (email: string, password: string) => {
+  const handleSignup = async (email: string, password: string) => {
     if (email === '' || password === '') {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    createUserWithEmailAndPassword(auth, email, password)
+    createUserWithEmailAndPassword(await auth, email, password)
       .then(() => {
         setSystemMessage('メールアドレスの確認メールを送信しました。メールボックスを確認してください。');
       })
@@ -151,7 +166,7 @@ export const useAuth = () => {
       setSystemMessage('メールアドレスを入力してください。');
       return;
     }
-    sendPasswordResetEmail(auth, result)
+    sendPasswordResetEmail(await auth, result)
       .then(() => {
         setSystemMessage('パスワードリセットメールを送信しました。メールボックスを確認してください。');
       })
@@ -165,9 +180,10 @@ export const useAuth = () => {
   };
 
   // ログアウト
-  const handleLogout = () => {
-    signOut(auth)
-      .then(() => {
+  const handleLogout = async () => {
+    signOut(await auth)
+      .then(async () => {
+        await FirebaseAuthentication.signOut();
         setIsLoggedIn(false);
         setItems([]);
         setTreesList([]);
@@ -183,7 +199,8 @@ export const useAuth = () => {
 
   // アカウント削除
   const handleDeleteAccount = async () => {
-    const user = auth.currentUser;
+    const authObject = await getFirebaseAuth();
+    const user = authObject.currentUser;
     if (user) {
       setIsLoading(true);
 

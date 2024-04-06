@@ -3,7 +3,6 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 import { TreeItem, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
 import { isTreeItemArray, ensureChildrenProperty } from '../components/SortableTree/utilities';
 import { initialItems } from '../components/SortableTree/mock';
-import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
@@ -16,6 +15,8 @@ import { useDialogStore, useInputDialogStore } from '../store/dialogStore';
 // データベースに関連する処理はuseDatabaseフックを使用
 
 export const useTreeManagement = () => {
+  const uid = useAppStateStore((state) => state.uid);
+  const email = useAppStateStore((state) => state.email);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
@@ -46,12 +47,11 @@ export const useTreeManagement = () => {
   // ツリーリストをDBから取得する ---------------------------------------------------------------------------
   const loadTreesList = useCallback(async () => {
     try {
-      const user = getAuth().currentUser;
-      if (!user) {
+      if (!uid) {
         return;
       }
       setIsLoading(true);
-      const treesListFromDb = await loadTreesListFromDb(user.uid);
+      const treesListFromDb = await loadTreesListFromDb(uid);
       let missingTrees: string[] = [];
       if (treesListFromDb) {
         const data: string[] = treesListFromDb;
@@ -87,7 +87,7 @@ export const useTreeManagement = () => {
     } catch (error) {
       handleError('ツリーリストの取得に失敗しました。\n\n' + error);
     }
-  }, [handleError, setIsLoading, setTreesList, showDialog, loadTreesListFromDb, loadTreeNameFromDb]);
+  }, [uid, handleError, setIsLoading, setTreesList, showDialog, loadTreesListFromDb, loadTreeNameFromDb]);
 
   // ターゲットIDのitems、name、membersをDBからロードする ---------------------------------------------------------------------------
 
@@ -106,8 +106,7 @@ export const useTreeManagement = () => {
     }
 
     try {
-      const user = getAuth().currentUser;
-      if (!user) {
+      if (!uid) {
         throw new Error('ユーザーがログインしていません。');
       }
 
@@ -175,12 +174,11 @@ export const useTreeManagement = () => {
       setIsLoading(false);
       handleError('ツリーのデータの取得に失敗しました。\n\n' + error);
     }
-  }, [items, prevItems, prevCurrentTree, showDialog, handleError, loadItemsFromDb, loadMembersFromDb, loadTreeNameFromDb, setCurrentTreeMembers, setCurrentTreeName, setIsLoading, setItems, saveItemsDb, setPrevItems, setPrevCurrentTree]);
+  }, [uid, items, prevItems, prevCurrentTree, showDialog, handleError, loadItemsFromDb, loadMembersFromDb, loadTreeNameFromDb, setCurrentTreeMembers, setCurrentTreeName, setIsLoading, setItems, saveItemsDb, setPrevItems, setPrevCurrentTree]);
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = async (targetTree: UniqueIdentifier) => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return;
     }
     // ツリーを削除する前に現在のツリー内の子要素を含むすべてのattachedFileを再帰的に削除
@@ -258,8 +256,7 @@ export const useTreeManagement = () => {
 
   // 新しいツリーを作成する ---------------------------------------------------------------------------
   const handleCreateNewTree = async () => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return Promise.reject();
     }
 
@@ -268,7 +265,7 @@ export const useTreeManagement = () => {
 
     try {
       const newTreeRef: unknown = await saveNewTree(initialItems, '新しいツリー', {
-        [user?.uid]: true,
+        [uid]: true,
       });
       if (!newTreeRef) {
         throw new Error('新しいツリーの作成に失敗しました。');
@@ -282,10 +279,10 @@ export const useTreeManagement = () => {
       setIsLoading(false);
       setCurrentTree(newTreeRef as UniqueIdentifier);
       setCurrentTreeName('新しいツリー');
-      if (user.email) {
-        setCurrentTreeMembers([{ uid: user.uid, email: user.email }]);
+      if (email) {
+        setCurrentTreeMembers([{ uid: uid, email: email }]);
       } else {
-        setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
+        setCurrentTreeMembers([{ uid: uid, email: 'unknown' }]);
       }
       if (newTreeRef !== null) {
         const newTree = { id: newTreeRef as UniqueIdentifier, name: '新しいツリー' };
@@ -310,8 +307,7 @@ export const useTreeManagement = () => {
 
   // ファイルを読み込んでツリーの状態を復元する ---------------------------------------------------------------------------
   const handleFileUpload = async (file: File) => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return Promise.reject();
     }
     if (!file) {
@@ -355,8 +351,7 @@ export const useTreeManagement = () => {
 
   // 本編
   const handleLoadedContent = async (data: string | null) => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return Promise.reject();
     }
     if (data) {
@@ -391,7 +386,7 @@ export const useTreeManagement = () => {
               treeState.items,
               treeState.name ? treeState.name : '読み込まれたツリー',
               {
-                [user.uid]: true,
+                [uid]: true,
               }
             );
             if (!newTreeRef) {
@@ -422,7 +417,7 @@ export const useTreeManagement = () => {
               treeName = treeState.currentTreeName;
             }
             const newTreeRef: unknown = await saveNewTree(treeState.items, treeName, {
-              [user.uid]: true,
+              [uid]: true,
             });
 
             if (!newTreeRef) {
@@ -433,10 +428,10 @@ export const useTreeManagement = () => {
             setCurrentTreeName(treeName);
             const loadedTreeObject = { id: newTreeRef as UniqueIdentifier, name: treeName };
             const updatedTreesListWithLoadedTree = treesList ? [...treesList, loadedTreeObject] : [loadedTreeObject];
-            if (user.email) {
-              setCurrentTreeMembers([{ uid: user.uid, email: user.email }]);
+            if (email) {
+              setCurrentTreeMembers([{ uid: uid, email: email }]);
             } else {
-              setCurrentTreeMembers([{ uid: user.uid, email: 'unknown' }]);
+              setCurrentTreeMembers([{ uid: uid, email: 'unknown' }]);
             }
             if (isLoading) setIsLoading(false);
             setTreesList(updatedTreesListWithLoadedTree);
@@ -499,8 +494,7 @@ export const useTreeManagement = () => {
 
   // すべてのツリーをJSONファイルとしてダウンロードする --------------------------------------------------------------------------
   const handleDownloadAllTrees = async (isSilent: boolean = false) => {
-    const user = getAuth().currentUser;
-    if (!user && !treesList) {
+    if (!uid && !treesList) {
       return Promise.reject('');
     }
     try {
@@ -582,15 +576,14 @@ export const useTreeManagement = () => {
   };
 
   // メンバーの削除 ---------------------------------------------------------------------------
-  const handleDeleteUserFromTree = async (uid: string, email: string) => {
+  const handleDeleteUserFromTree = async (rescievedUid: string, rescievedEmail: string) => {
     if (!currentTree) return Promise.resolve();
-    const user = getAuth().currentUser;
     let result;
     if (currentTreeMembers && currentTreeMembers.length === 1) {
       await showDialog('最後のメンバーを削除することはできません。', 'Information');
       return Promise.resolve();
     }
-    if (user && user.uid === uid) {
+    if (uid && uid === rescievedUid) {
       result = await showDialog(
         '自分自身を削除すると、このツリーにアクセスできなくなります。実行しますか？',
         'Confirmation Required',
@@ -598,7 +591,7 @@ export const useTreeManagement = () => {
       );
     } else {
       result = await showDialog(
-        `メンバー' ${email} 'をこのツリーの編集メンバーから削除します。実行しますか？`,
+        `メンバー' ${rescievedEmail} 'をこのツリーの編集メンバーから削除します。実行しますか？`,
         'Confirmation Required',
         true
       );
@@ -610,7 +603,7 @@ export const useTreeManagement = () => {
       try {
         const result = await removeUserFromTreeCallable({
           treeId: currentTree,
-          userId: uid,
+          userId: rescievedUid,
         });
         setIsLoading(false);
         return Promise.resolve(result.data);

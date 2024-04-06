@@ -6,10 +6,10 @@ import { useAppStateManagement } from './useAppStateManagement';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
 import { getDatabase, ref, onValue, } from 'firebase/database';
-import { getAuth } from 'firebase/auth';
 import { useAppStateStore } from '../store/appStateStore';
 
 export const useObserve = () => {
+  const uid = useAppStateStore((state) => state.uid);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const items = useTreeStateStore((state) => state.items);
@@ -24,14 +24,13 @@ export const useObserve = () => {
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
   const observeTimeStamp = () => {
-    const user = getAuth().currentUser;
-    if (!user) {
+    if (!uid) {
       return;
     }
     setIsLoading(true);
     loadSettingsFromDb();
     loadTreesList();
-    const timestampRef = ref(getDatabase(), `users/${user.uid}/timestamp`);
+    const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
     onValue(timestampRef, (snapshot) => {
       setIsLoading(true);
       const serverTimestamp = snapshot.val();
@@ -57,7 +56,7 @@ export const useObserve = () => {
       setPrevItems(items);
       return;
     }
-    if (!getAuth().currentUser || !currentTree || isEqual(items, prevItems)) {
+    if (!uid || !currentTree || isEqual(items, prevItems)) {
       return;
     }
     const debounceSave = setTimeout(() => {

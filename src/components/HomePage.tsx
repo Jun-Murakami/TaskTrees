@@ -43,7 +43,7 @@ export function HomePage() {
         !isWaitingForDelete ? (
           // ログイン後のメイン画面
           <>
-            <ResponsiveDrawer handleLogout={handleLogout} />
+            <ResponsiveDrawer handleLogout={async () => await handleLogout()} />
             <Box
               sx={{
                 flexGrow: 1,
@@ -161,7 +161,7 @@ export function HomePage() {
                       color: theme.palette.primary.main,
                     }}
                     variant='outlined'
-                    onClick={() => handleSignup(email, password)}
+                    onClick={async () => await handleSignup(email, password)}
                   >
                     新規ユーザー登録
                   </Button>
