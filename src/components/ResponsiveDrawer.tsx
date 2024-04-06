@@ -244,7 +244,6 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           flexShrink: { sm: 0 },
           borderRight: { xs: 0, sm: `1px solid ${theme.palette.divider}` },
           boxSizing: 'border-box',
-          top: isNative ? 'env(safe-area-inset-top)' : 0,
         }}
       >
         <SwipeableDrawer
@@ -273,6 +272,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': {
+              top: isNative ? 'env(safe-area-inset-top)' : 0,
               pt: '60px',
               boxSizing: 'border-box',
               width: drawerWidth,
