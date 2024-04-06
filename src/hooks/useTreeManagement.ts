@@ -45,7 +45,7 @@ export const useTreeManagement = () => {
   const { deleteFile } = useAttachedFile();
 
   // ツリーリストをDBから取得する ---------------------------------------------------------------------------
-  const loadTreesList = useCallback(async () => {
+  const loadTreesList = async () => {
     try {
       if (!uid) {
         return;
@@ -87,12 +87,12 @@ export const useTreeManagement = () => {
     } catch (error) {
       handleError('ツリーリストの取得に失敗しました。\n\n' + error);
     }
-  }, [uid, handleError, setIsLoading, setTreesList, showDialog, loadTreesListFromDb, loadTreeNameFromDb]);
+  };
 
   // ターゲットIDのitems、name、membersをDBからロードする ---------------------------------------------------------------------------
 
   // 本編
-  const loadCurrentTreeData = useCallback(async (targetTree: UniqueIdentifier) => {
+  const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
     setIsLoading(true);
     // デバウンスで前のツリーの状態変更が残っていたら保存
     if (
@@ -174,7 +174,7 @@ export const useTreeManagement = () => {
       setIsLoading(false);
       handleError('ツリーのデータの取得に失敗しました。\n\n' + error);
     }
-  }, [uid, items, prevItems, prevCurrentTree, showDialog, handleError, loadItemsFromDb, loadMembersFromDb, loadTreeNameFromDb, setCurrentTreeMembers, setCurrentTreeName, setIsLoading, setItems, saveItemsDb, setPrevItems, setPrevCurrentTree]);
+  };
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = async (targetTree: UniqueIdentifier) => {
