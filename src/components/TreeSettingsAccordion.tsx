@@ -74,7 +74,6 @@ export function TreeSettingsAccordion() {
       sx={{
         position: 'fixed',
         top: 0,
-        paddingTop: isNative ? 'env(safe-area-inset-top)' : 0,
         zIndex: 1000,
         width: '100%',
         '@media (min-width: 1546px)': {
@@ -97,6 +96,7 @@ export function TreeSettingsAccordion() {
       <Accordion
         sx={{
           marginTop: 0,
+          paddingTop: isNative ? 'env(safe-area-inset-top)' : 0,
           backgroundColor: darkMode
             ? isAccordionExpanded
               ? 'rgba(18, 18, 18, 0.8)'
