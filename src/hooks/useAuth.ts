@@ -84,6 +84,8 @@ export const useAuth = () => {
   useEffect(() => {
     if (uid && email) {
       const asyncFunc = async () => {
+        const setTimeoutPromise = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+        await setTimeoutPromise(100);
         await observeTimeStamp();
       }
       asyncFunc();
@@ -98,7 +100,6 @@ export const useAuth = () => {
     // 2. Sign in on the web layer using the id token
     const credential = GoogleAuthProvider.credential(result.credential?.idToken);
     await signInWithCredential(await auth, credential).then(() => {
-      console.log(getAuth().currentUser);
       setIsLoggedIn(true);
       setSystemMessage(null);
     }).catch((error) => {
