@@ -131,7 +131,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
-          bottom: 0,
+          bottom: isNative ? 'env(safe-area-inset-bottom)' : 0,
           backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
         }}
       >
