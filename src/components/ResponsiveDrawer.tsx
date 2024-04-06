@@ -272,8 +272,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': {
-              top: isNative ? 'env(safe-area-inset-top)' : 0,
-              pt: '60px',
+              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
               boxSizing: 'border-box',
               width: drawerWidth,
             },
