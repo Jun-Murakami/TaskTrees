@@ -98,6 +98,7 @@ export const useAuth = () => {
     // 2. Sign in on the web layer using the id token
     const credential = GoogleAuthProvider.credential(result.credential?.idToken);
     await signInWithCredential(await auth, credential).then(() => {
+      console.log(getAuth().currentUser);
       setIsLoggedIn(true);
       setSystemMessage(null);
     }).catch((error) => {
