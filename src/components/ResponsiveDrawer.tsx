@@ -214,7 +214,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
             zIndex: 1000,
           }}
         >
-          Tap to open the tree list →
+          タップしてツリーを開く →
         </Typography>
       )}
       <IconButton
@@ -272,7 +272,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': {
-              pt: '60px',
+              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
               boxSizing: 'border-box',
               width: drawerWidth,
             },

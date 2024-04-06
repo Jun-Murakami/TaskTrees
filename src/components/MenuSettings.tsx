@@ -188,21 +188,21 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
             <ListItemIcon>
               <UploadIcon fontSize='small' />
             </ListItemIcon>
-            Import Tree(s)
+            ツリーを読み込む
           </MenuItem>
         </Tooltip>
         {currentTree && (
           <Tooltip title='現在のツリーのデータをバックアップ' placement='right'>
             <MenuItem
               onClick={async () => {
-                handleDownloadTreeState();
+                await handleDownloadTreeState();
                 handleClose();
               }}
             >
               <ListItemIcon>
                 <DownloadIcon fontSize='small' />
               </ListItemIcon>
-              Backup Tree
+              現在のツリーをバックアップ
             </MenuItem>
           </Tooltip>
         )}
@@ -216,7 +216,7 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
             <ListItemIcon>
               <DownloadIcon fontSize='small' />
             </ListItemIcon>
-            Backup All Trees
+            全ツリーをバックアップ
           </MenuItem>
         </Tooltip>
         <Divider />

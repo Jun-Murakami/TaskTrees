@@ -10,6 +10,9 @@ import { useAttachedFile } from './useAttachedFile';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
 import { useDialogStore, useInputDialogStore } from '../store/dialogStore';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 // ツリーの管理に関するカスタムフック
 // データベースに関連する処理はuseDatabaseフックを使用
@@ -473,7 +476,7 @@ export const useTreeManagement = () => {
     return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
   }
 
-  const handleDownloadTreeState = () => {
+  const handleDownloadTreeState = async () => {
     if (!currentTreeName) return;
     const treeState: TreesListItemIncludingItems = { items: items, name: currentTreeName };
     const treeStateJSON = JSON.stringify(treeState, null, 2); // 読みやすい形式でJSONを整形
@@ -486,10 +489,34 @@ export const useTreeManagement = () => {
     } else {
       link.download = `TaskTree_${currentTreeName}_Backup_${getCurrentDateTime()}.json`;
     }
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await Filesystem.writeFile({
+          path: link.download,
+          data: treeStateJSON,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+        });
+        await Share.share({
+          title: 'TaskTrees Backup title',
+          text: 'TaskTrees Backup text',
+          url: result.uri,
+          dialogTitle: 'TaskTrees Backup dialog title',
+        });
+        await Filesystem.deleteFile({
+          path: result.uri,
+          directory: Directory.Documents,
+        });
+        return result.uri;
+      } catch (e) {
+        console.error('Error saving file:', e);
+      }
+    } else {
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
   };
 
   // すべてのツリーをJSONファイルとしてダウンロードする --------------------------------------------------------------------------
@@ -504,22 +531,43 @@ export const useTreeManagement = () => {
         return Promise.reject('');
       }
       if (isSilent) {
-        // JSON形式でダウンロードする
+        // バックエンドにデータを送信するだけの場合
         // 人間に読みやすい形に変換
         const data = JSON.stringify(treesListItemIncludingItems, null, 2);
         return Promise.resolve(data);
       }
+
       // JSON形式でダウンロードする
-      const a = document.createElement('a');
-      // 人間に読みやすい形に変換
-      const file = new Blob([JSON.stringify(treesListItemIncludingItems, null, 2)], {
-        type: 'application/json',
-      });
-      a.href = URL.createObjectURL(file);
-      a.download = `TaskTrees_AllBackup_${getCurrentDateTime()}.json`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-      return Promise.resolve('');
+      const link = document.createElement('a');
+      const treeStateJSON = JSON.stringify(treesListItemIncludingItems, null, 2); // 人間に読みやすい形に変換
+      const file = new Blob([treeStateJSON], { type: 'application/json', });
+      link.href = URL.createObjectURL(file);
+      link.download = `TaskTrees_AllBackup_${getCurrentDateTime()}.json`;
+
+      if (Capacitor.isNativePlatform()) {
+        const result = await Filesystem.writeFile({
+          path: link.download,
+          data: treeStateJSON,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+        });
+        await Share.share({
+          title: 'TaskTrees Backup title',
+          text: 'TaskTrees Backup text',
+          url: result.uri,
+          dialogTitle: 'TaskTrees Backup dialog title',
+        });
+        await Filesystem.deleteFile({
+          path: result.uri,
+          directory: Directory.Documents,
+        });
+      } else {
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        return Promise.resolve('');
+      }
     } catch (error) {
       await showDialog('ツリーのバックアップに失敗しました。\n\n' + error, 'Error');
       return Promise.reject('');

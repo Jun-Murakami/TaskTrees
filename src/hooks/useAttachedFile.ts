@@ -5,6 +5,9 @@ import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useDatabase } from './useDatabase';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 export const useAttachedFile = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
@@ -65,17 +68,37 @@ export const useAttachedFile = () => {
       const storage = getStorage();
       const fileRef = ref(storage, `trees/${targetTree}/${fileName}`);
       const url = await getDownloadURL(fileRef);
-      // Blobを使用してファイルをダウンロード
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = fileName;
-      document.body.appendChild(a); // DOMに追加
-      a.click();
-      window.URL.revokeObjectURL(downloadUrl); // 使用後はURLを解放
-      a.remove(); // DOMから削除
+      if (Capacitor.isNativePlatform()) {
+        const result = await Filesystem.downloadFile({
+          url: url,
+          path: fileName,
+          directory: Directory.Documents,
+        });
+        if (result.path) {
+          await Share.share({
+            title: 'TaskTrees File title',
+            text: 'TaskTrees File text',
+            url: result.path,
+            dialogTitle: 'TaskTrees File dialog title',
+          });
+          await Filesystem.deleteFile({
+            path: result.path,
+            directory: Directory.Documents,
+          });
+        }
+      } else {
+        // Blobを使用してファイルをダウンロード
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName;
+        document.body.appendChild(link); // DOMに追加
+        link.click();
+        window.URL.revokeObjectURL(downloadUrl); // 使用後はURLを解放
+        link.remove(); // DOMから削除
+      }
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);

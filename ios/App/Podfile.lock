@@ -8,6 +8,8 @@ PODS:
   - Capacitor (5.7.4):
     - CapacitorCordova
   - CapacitorCordova (5.7.4)
+  - CapacitorFilesystem (5.2.1):
+    - Capacitor
   - CapacitorFirebaseAuthentication (5.4.1):
     - Capacitor
     - CapacitorFirebaseAuthentication/Lite (= 5.4.1)
@@ -19,6 +21,10 @@ PODS:
   - CapacitorFirebaseAuthentication/Lite (5.4.1):
     - Capacitor
     - FirebaseAuth (~> 10.8)
+  - CapacitorShare (5.0.7):
+    - Capacitor
+  - CapawesomeCapacitorFilePicker (5.3.0):
+    - Capacitor
   - FirebaseAppCheckInterop (10.23.0)
   - FirebaseAuth (10.23.0):
     - FirebaseAppCheckInterop (~> 10.17)
@@ -69,8 +75,11 @@ PODS:
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
   - "CapacitorFirebaseAuthentication (from `../../node_modules/@capacitor-firebase/authentication`)"
   - "CapacitorFirebaseAuthentication/Google (from `../../node_modules/@capacitor-firebase/authentication`)"
+  - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
+  - "CapawesomeCapacitorFilePicker (from `../../node_modules/@capawesome/capacitor-file-picker`)"
 
 SPEC REPOS:
   trunk:
@@ -91,14 +100,23 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorFilesystem:
+    :path: "../../node_modules/@capacitor/filesystem"
   CapacitorFirebaseAuthentication:
     :path: "../../node_modules/@capacitor-firebase/authentication"
+  CapacitorShare:
+    :path: "../../node_modules/@capacitor/share"
+  CapawesomeCapacitorFilePicker:
+    :path: "../../node_modules/@capawesome/capacitor-file-picker"
 
 SPEC CHECKSUMS:
   AppAuth: a13994980c1ec792f7e2e665acd4d4aa6be43240
   Capacitor: 4fe9adf012caceb4c71ffea2f1f4d005cdcbeea7
   CapacitorCordova: a6e87fccc0307dee7aec1560ec9398485f2b0ce7
+  CapacitorFilesystem: 9f3e3c7fea2fff12f46dd5b07a2914f2103e4cfc
   CapacitorFirebaseAuthentication: 4b5146252052345d7c0cd8147dd4f1372a65e99b
+  CapacitorShare: c6a1ebbf0114ff9e863b966cd6052678fa25d480
+  CapawesomeCapacitorFilePicker: 41f486cb4a89c6a7c8a4f5d683dbf96658894182
   FirebaseAppCheckInterop: a1955ce8c30f38f87e7d091630e871e91154d65d
   FirebaseAuth: 22eb85d3853141de7062bfabc131aa7d6335cade
   FirebaseCore: c43f9f0437b50a965e930cac4ad243200d12a984
@@ -110,6 +128,6 @@ SPEC CHECKSUMS:
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
 
-PODFILE CHECKSUM: 708f5f47cfaad295be2da75cfae6742bf3d183fb
+PODFILE CHECKSUM: 046e216df0a95226021b23b58969b94e4b111329
 
 COCOAPODS: 1.15.2

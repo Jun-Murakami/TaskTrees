@@ -11,11 +11,15 @@ import UndoIcon from '@mui/icons-material/Undo';
 import FlakyIcon from '@mui/icons-material/Flaky';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import ImageIcon from '@mui/icons-material/Image';
+import FolderIcon from '@mui/icons-material/Folder';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
 import { useDialogStore } from '../../store/dialogStore';
 import { useAttachedFile } from '../../hooks/useAttachedFile';
+import { Capacitor } from '@capacitor/core';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
 
 interface MenuItemsProps {
   id: UniqueIdentifier;
@@ -69,6 +73,7 @@ export function MenuItems({
   const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
   const [openCopyMenu, setOpenCopyMenu] = useState<boolean>(false);
   const [openMoveMenu, setOpenMoveMenu] = useState<boolean>(false);
+  const [openIOSMenu, setOpenIOSMenu] = useState<boolean>(false);
 
   const showDialog = useDialogStore((state) => state.showDialog);
 
@@ -77,6 +82,7 @@ export function MenuItems({
   const anchorElParent = useRef<HTMLButtonElement>(null);
   const anchorElCopy = useRef<HTMLButtonElement>(null);
   const anchorElMove = useRef<HTMLButtonElement>(null);
+  const anchorEliOS = useRef<HTMLButtonElement>(null);
 
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const treesList = useTreeStateStore((state) => state.treesList);
@@ -103,35 +109,89 @@ export function MenuItems({
   const handleMoveClose = () => {
     setOpenMoveMenu(false);
   };
+  const handleiOSClose = () => {
+    setOpenIOSMenu(false);
+  };
 
   // ファイルをアップロードして添付する処理
   const handleUploadClick = async () => {
-    //ファイルダイアログを開いてファイルを選択
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '*/*';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file || !currentTree) return;
-      if (attachedFile) {
-        const result = await showDialog(
-          '既存の添付ファイルは上書きされます。新しいファイルを添付しますか？',
-          'Information',
-          true
-        );
-        if (!result) return;
-        await deleteFile(attachedFile, currentTree, true);
-      }
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+      setOpenIOSMenu(!openIOSMenu);
+    } else {
+      //ファイルダイアログを開いてファイルを選択
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '*/*';
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file || !currentTree) return;
+        if (attachedFile) {
+          const result = await showDialog(
+            '既存の添付ファイルは上書きされます。新しいファイルを添付しますか？',
+            'Information',
+            true
+          );
+          if (!result) return;
+          await deleteFile(attachedFile, currentTree, true);
+        }
 
-      //ファイルをアップロード
-      const fileName = await uploadFile(file, currentTree);
-      if (!fileName) return;
-      //ファイルを添付
-      handleAttachFile && handleAttachFile(id, fileName);
-    };
-    input.click();
-    //DOMをクリーンナップ
-    input.remove();
+        //ファイルをアップロード
+        const fileName = await uploadFile(file, currentTree);
+        if (!fileName) return;
+        //ファイルを添付
+        handleAttachFile && handleAttachFile(id, fileName);
+      };
+      input.click();
+      //DOMをクリーンナップ
+      input.remove();
+      handleParentClose();
+    }
+  };
+
+  const handleiOSImagePicker = async () => {
+    try {
+      const result = await FilePicker.pickImages({
+        multiple: false, // 複数選択を許可するかどうか
+      });
+      if (result.files.length > 0) {
+        const pickedFile = result.files[0];
+        const blob = pickedFile.blob; // Blobオブジェクトを取得
+        const fileName = pickedFile.name; // ファイル名を取得
+        if (blob && fileName && currentTree) {
+          //ファイルをアップロード
+          const file = new File([blob], fileName); // Fileオブジェクトを生成
+          const uploadedFileName = await uploadFile(file, currentTree);
+          if (!uploadedFileName) return;
+          //ファイルを添付
+          handleAttachFile && handleAttachFile(id, uploadedFileName);
+        }
+      }
+    } catch (e) {
+      console.error('Error picking files', e);
+    }
+  };
+
+  const handleiOSFilePicker = async () => {
+    try {
+      const result = await FilePicker.pickFiles({
+        multiple: false, // 複数選択を許可するかどうか
+      });
+      if (result.files.length > 0) {
+        const pickedFile = result.files[0];
+        const blob = pickedFile.blob; // Blobオブジェクトを取得
+        const fileName = pickedFile.name; // ファイル名を取得
+        if (blob && fileName && currentTree) {
+          //ファイルをアップロード
+          const file = new File([blob], fileName); // Fileオブジェクトを生成
+          const uploadedFileName = await uploadFile(file, currentTree);
+          if (!uploadedFileName) return;
+          //ファイルを添付
+          handleAttachFile && handleAttachFile(id, uploadedFileName);
+        }
+      }
+    } catch (e) {
+      console.error('Error picking files', e);
+    }
   };
 
   return (
@@ -160,17 +220,53 @@ export function MenuItems({
           削除
         </MenuItem>
         <Divider />
-        <MenuItem
-          onClick={async () => {
-            await handleUploadClick();
-            handleParentClose();
-          }}
-        >
-          <ListItemIcon>
-            <AttachFileIcon fontSize='small' />
-          </ListItemIcon>
-          ファイルを添付
-        </MenuItem>
+        <Box ref={anchorEliOS}>
+          <MenuItem
+            onClick={async () => {
+              await handleUploadClick();
+            }}
+          >
+            <ListItemIcon>
+              <AttachFileIcon fontSize='small' />
+            </ListItemIcon>
+            ファイルを添付
+            <Menu
+              anchorEl={anchorEliOS.current}
+              id='menu-item-management-ios'
+              open={openIOSMenu}
+              onClose={() => {
+                handleiOSClose();
+                handleParentClose();
+              }}
+              sx={{
+                elevation: 0,
+              }}
+            >
+              <MenuItem
+                onClick={async () => {
+                  await handleiOSImagePicker();
+                  handleParentClose();
+                }}
+              >
+                <ListItemIcon>
+                  <ImageIcon fontSize='small' />
+                </ListItemIcon>
+                画像ファイルを添付
+              </MenuItem>
+              <MenuItem
+                onClick={async () => {
+                  await handleiOSFilePicker();
+                  handleParentClose();
+                }}
+              >
+                <ListItemIcon>
+                  <FolderIcon fontSize='small' />
+                </ListItemIcon>
+                その他のファイルを添付
+              </MenuItem>
+            </Menu>
+          </MenuItem>
+        </Box>
         <Divider />
         <Box ref={anchorElCopy}>
           <MenuItem

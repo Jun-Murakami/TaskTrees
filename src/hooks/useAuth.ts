@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { getApp, initializeApp } from 'firebase/app';
 import {
-  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
@@ -83,9 +83,10 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (uid && email) {
+      setIsLoading(true);
       const asyncFunc = async () => {
         const setTimeoutPromise = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-        await setTimeoutPromise(100);
+        await setTimeoutPromise(1000);
         await observeTimeStamp();
       }
       asyncFunc();
@@ -113,24 +114,27 @@ export const useAuth = () => {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    const result = await FirebaseAuthentication.signInWithEmailAndPassword({
-      email,
-      password,
+    const result = await FirebaseAuthentication.signInWithEmailAndPassword({ email, password }).catch((error) => {
+      if (error.code === 'invalid-email') {
+        setSystemMessage('メールアドレスの形式が正しくありません。');
+      } else if (error.code === 'invalid-credential') {
+        setSystemMessage('ログインに失敗しました。メールアドレスを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+      } else {
+        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+      }
+      return null;
     });
-    if (result.credential) {
-      const firebaseCredential = GoogleAuthProvider.credential(result.credential.idToken);
-      await signInWithCredential(await auth, firebaseCredential).then(() => {
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-
-      }).catch((error) => {
-        if (error.code === 'auth/invalid-credential') {
-          setSystemMessage('ログインに失敗しました。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-        } else {
-          setSystemMessage('ログインに失敗しました。\n\n' + error.code);
-        }
-      });
-    }
+    if (!result) return;
+    await signInWithEmailAndPassword(await auth, email, password).then(() => {
+      setIsLoggedIn(true);
+      setSystemMessage(null);
+    }).catch((error) => {
+      if (error.code === 'auth/invalid-credential') {
+        setSystemMessage('ログインに失敗しました。メールアドレスを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+      } else {
+        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+      }
+    });
   };
 
   // メールアドレスとパスワードでサインアップ

@@ -36,7 +36,7 @@ export function AddTask({ id, ...Props }: Props) {
         sx={{
           display: { xs: 'flex', sm: 'block' },
           position: 'fixed', // スクロールに応じて位置を固定
-          top: { xs: 'auto', sm: '80px' }, // スクロール時は上部に固定
+          top: { xs: 'auto', sm: isNative ? 'calc(env(safe-area-inset-top) + 80px)' : '80px' }, // スクロール時は上部に固定
           left: '50%',
           '@media (min-width: 1249px) and (max-width: 1546px)': {
             left: { xs: '50%', sm: '765px' },
