@@ -44,7 +44,17 @@ export const useTreeManagement = () => {
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
 
   const { handleError } = useError();
-  const { saveItemsDb, saveTreesListDb, saveCurrentTreeNameDb, loadTreesListFromDb, loadTreeNameFromDb, loadItemsFromDb, loadMembersFromDb, loadAllTreesDataFromDb, deleteTreeFromDb } = useDatabase();
+  const {
+    saveItemsDb,
+    saveTreesListDb,
+    saveCurrentTreeNameDb,
+    loadTreesListFromDb,
+    loadTreeNameFromDb,
+    loadItemsFromDb,
+    loadMembersFromDb,
+    loadAllTreesDataFromDb,
+    deleteTreeFromDb,
+  } = useDatabase();
   const { deleteFile } = useAttachedFile();
 
   // ツリーリストをDBから取得する ---------------------------------------------------------------------------
@@ -86,7 +96,6 @@ export const useTreeManagement = () => {
       if (missingTrees && missingTrees.length > 0) {
         await showDialog('1つ以上のツリーが他のユーザーまたはシステムによって削除されました。\n\n' + missingTrees, 'Information');
       }
-
     } catch (error) {
       handleError('ツリーリストの取得に失敗しました。\n\n' + error);
     }
@@ -98,12 +107,7 @@ export const useTreeManagement = () => {
   const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
     setIsLoading(true);
     // デバウンスで前のツリーの状態変更が残っていたら保存
-    if (
-      prevCurrentTree &&
-      prevCurrentTree !== targetTree &&
-      prevItems.length !== 0 &&
-      prevItems !== items
-    ) {
+    if (prevCurrentTree && prevCurrentTree !== targetTree && prevItems.length !== 0 && prevItems !== items) {
       saveItemsDb(items, prevCurrentTree);
       setPrevItems(items);
     }
@@ -136,7 +140,6 @@ export const useTreeManagement = () => {
       } else {
         setCurrentTreeName(null);
       }
-
 
       // メンバーリストからメールアドレスリストを取得するFirebase関数
       const getMemberEmails = async (memberList: string[]) => {
@@ -512,13 +515,15 @@ export const useTreeManagement = () => {
         return result.uri;
       } catch (e) {
         console.error('Error saving file:', e);
+        return '';
       }
     } else {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    };
+      return '';
+    }
   };
 
   // すべてのツリーをJSONファイルとしてダウンロードする --------------------------------------------------------------------------
@@ -542,7 +547,7 @@ export const useTreeManagement = () => {
       // JSON形式でダウンロードする
       const link = document.createElement('a');
       const treeStateJSON = JSON.stringify(treesListItemIncludingItems, null, 2); // 人間に読みやすい形に変換
-      const file = new Blob([treeStateJSON], { type: 'application/json', });
+      const file = new Blob([treeStateJSON], { type: 'application/json' });
       link.href = URL.createObjectURL(file);
       link.download = `TaskTrees_AllBackup_${getCurrentDateTime()}.json`;
 
@@ -563,6 +568,7 @@ export const useTreeManagement = () => {
           path: result.uri,
           directory: Directory.Documents,
         });
+        return Promise.resolve(result.uri);
       } else {
         document.body.appendChild(link);
         link.click();
@@ -680,6 +686,5 @@ export const useTreeManagement = () => {
     handleDeleteTree,
     loadTreesList,
     loadCurrentTreeData,
-
   };
 };
