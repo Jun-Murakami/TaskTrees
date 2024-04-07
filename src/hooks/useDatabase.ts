@@ -1,7 +1,8 @@
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateStore } from '../store/appStateStore';
+import { useDialogStore } from '../store/dialogStore';
 import { TreeItems, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
-import { isTreeItemArray } from '../components/SortableTree/utilities';
+import { isTreeItemArray, validateTreeItems } from '../components/SortableTree/utilities';
 import { getDatabase, ref, set, get } from 'firebase/database';
 import { useError } from './useError';
 
@@ -11,6 +12,7 @@ import { useError } from './useError';
 export const useDatabase = () => {
   const uid = useAppStateStore((state) => state.uid);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
+  const showDialog = useDialogStore((state) => state.showDialog);
 
   const { handleError } = useError();
 
@@ -38,7 +40,14 @@ export const useDatabase = () => {
     try {
       // newItemsの内容をチェック
       if (!isTreeItemArray(newItems)) {
-        handleError('保存内容のデータが配列ではありません。code:1');
+        showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n※ツリーデータが配列ではありません。', 'Error');
+        return;
+      }
+
+      // newItemsの内容を詳細にチェック
+      const result = validateTreeItems(newItems);
+      if (result !== '') {
+        showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n' + result, 'Error');
         return;
       }
 

@@ -8,6 +8,8 @@ export type TreeItem = {
   value: string;
   done?: boolean;
   attachedFile?: string;
+  depth?: number;
+  parentId?: UniqueIdentifier | null;
 };
 
 export type TreeItems = TreeItem[];

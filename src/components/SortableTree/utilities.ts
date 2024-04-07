@@ -278,3 +278,41 @@ export function removeChildrenOf(items: FlattenedItem[], ids: UniqueIdentifier[]
     return true;
   });
 }
+
+export function validateTreeItems(items: TreeItems): string {
+  const idSet = new Set<UniqueIdentifier>();
+  let trashCount = 0;
+  let errorLog = '';
+
+  function validateItem(item: TreeItem, depth: number): boolean {
+    if (idSet.has(item.id)) {
+      errorLog += `IDが重複しています。: ${item.id}\n`;
+      return false;
+    }
+    idSet.add(item.id);
+
+    if (item.value === "Trash") {
+      trashCount++;
+    }
+
+    for (const child of item.children) {
+      if (!validateItem(child, depth + 1)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  for (const item of items) {
+    if (!validateItem(item, 0)) {
+      return errorLog;
+    }
+  }
+
+  if (trashCount !== 1) {
+    errorLog += `ゴミ箱のデータが不正です。ゴミ箱の数: ${trashCount}\n`;
+  }
+
+  return errorLog;
+}
