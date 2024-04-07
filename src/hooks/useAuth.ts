@@ -214,7 +214,9 @@ export const useAuth = () => {
   const handleLogout = async () => {
     signOut(await auth)
       .then(async () => {
-        await FirebaseAuthentication.signOut();
+        if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+          await FirebaseAuthentication.signOut();
+        }
         setIsLoggedIn(false);
         setUid(null);
         setEmail(null);
