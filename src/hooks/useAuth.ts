@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
-import { Capacitor } from '@capacitor/core';
 import { getApp, initializeApp } from 'firebase/app';
 import {
-  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithRedirect, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
+import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { useObserve } from './useObserve';
 import { useAppStateStore } from '../store/appStateStore';
@@ -62,10 +62,12 @@ export const useAuth = () => {
 
   // ログイン状態の監視
   useEffect(() => {
+    setIsLoading(true);
     const asyncFunc = async () => {
       await getFirebaseAuth();
     }
     asyncFunc();
+    setIsLoading(false);
     FirebaseAuthentication.addListener('authStateChange', async (result) => {
       setIsLoading(true);
       setIsLoggedIn(!!result.user);
@@ -78,8 +80,7 @@ export const useAuth = () => {
     return () => {
       FirebaseAuthentication.removeAllListeners();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
 
   useEffect(() => {
     if (uid && email) {
@@ -96,16 +97,34 @@ export const useAuth = () => {
 
   // Googleログイン
   const handleGoogleLogin = async () => {
-    // 1. Create credentials on the native layer
-    const result = await FirebaseAuthentication.signInWithGoogle();
-    // 2. Sign in on the web layer using the id token
-    const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-    await signInWithCredential(await auth, credential).then(() => {
-      setIsLoggedIn(true);
-      setSystemMessage(null);
-    }).catch((error) => {
-      setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
-    });
+    setIsLoading(true);
+    setSystemMessage('ログイン中...');
+    if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+      // 1. Create credentials on the native layer
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      // 2. Sign in on the web layer using the id token
+      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+      await signInWithCredential(await auth, credential).then(() => {
+        setIsLoggedIn(true);
+        setSystemMessage(null);
+      }).catch((error) => {
+        setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+      }).finally(() => {
+        setIsLoading(false);
+      });
+    } else {
+      const provider = new GoogleAuthProvider();
+      signInWithRedirect(await auth, provider)
+        .then(() => {
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+        }).finally(() => {
+          setIsLoading(false);
+        });
+    }
   };
 
   // メールアドレスとパスワードでのログイン
@@ -114,23 +133,28 @@ export const useAuth = () => {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    const result = await FirebaseAuthentication.signInWithEmailAndPassword({ email, password }).catch((error) => {
-      if (error.code === 'invalid-email') {
-        setSystemMessage('メールアドレスの形式が正しくありません。');
-      } else if (error.code === 'invalid-credential') {
-        setSystemMessage('ログインに失敗しました。メールアドレスを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-      } else {
-        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
-      }
-      return null;
-    });
-    if (!result) return;
+    setSystemMessage('ログイン中...');
+    if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+      const result = await FirebaseAuthentication.signInWithEmailAndPassword({ email, password }).catch((error) => {
+        if (error.code === 'invalid-email') {
+          setSystemMessage('メールアドレスの形式が正しくありません。');
+        } else if (error.code === 'invalid-credential') {
+          setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+        } else {
+          setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+        }
+        return null;
+      });
+      if (!result) return;
+    }
     await signInWithEmailAndPassword(await auth, email, password).then(() => {
       setIsLoggedIn(true);
       setSystemMessage(null);
     }).catch((error) => {
       if (error.code === 'auth/invalid-credential') {
-        setSystemMessage('ログインに失敗しました。メールアドレスを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+      } else if (error.code === 'auth/invalid-login-credentials') {
+        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
       } else {
         setSystemMessage('ログインに失敗しました。\n\n' + error.code);
       }
@@ -145,12 +169,15 @@ export const useAuth = () => {
     }
     createUserWithEmailAndPassword(await auth, email, password)
       .then(() => {
-        setSystemMessage('メールアドレスの確認メールを送信しました。メールボックスを確認してください。');
+        setIsLoggedIn(true);
+        setSystemMessage(null);
       })
       .catch((error) => {
         console.error(error);
         if (error.code === 'auth/email-already-in-use') {
           setSystemMessage('このメールアドレスは既に使用されています。');
+        } else if (error.code === 'auth/weak-password') {
+          setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
         } else {
           setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
         }
@@ -168,7 +195,6 @@ export const useAuth = () => {
     );
     console.log(result);
     if (result === '') {
-      setSystemMessage('メールアドレスを入力してください。');
       return;
     }
     sendPasswordResetEmail(await auth, result)
