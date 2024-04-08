@@ -83,7 +83,7 @@ export const useAuth = () => {
           FirebaseAuthentication.removeAllListeners();
         };
       } else {
-        const auth = await getFirebaseAuth();
+        const auth = getAuth();
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
           setIsLoading(true);
           setIsLoggedIn(!!user);
