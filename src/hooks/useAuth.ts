@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { getApp, initializeApp } from 'firebase/app';
 import {
-  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithRedirect, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
@@ -68,7 +68,6 @@ export const useAuth = () => {
     const asyncFunc = async () => {
       if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
         await getFirebaseAuth();
-
         setIsLoading(false);
         FirebaseAuthentication.addListener('authStateChange', async (result) => {
           setIsLoading(true);
@@ -140,7 +139,7 @@ export const useAuth = () => {
       });
     } else {
       const provider = new GoogleAuthProvider();
-      signInWithRedirect(await auth, provider)
+      signInWithPopup(await auth, provider)
         .then(() => {
           setIsLoggedIn(true);
           setSystemMessage(null);
