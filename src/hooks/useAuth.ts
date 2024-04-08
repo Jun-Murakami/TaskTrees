@@ -50,6 +50,8 @@ export const useAuth = () => {
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete);
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
   const setItems = useTreeStateStore((state) => state.setItems);
+  const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
+  const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
   const treesList = useTreeStateStore((state) => state.treesList);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
@@ -65,30 +67,38 @@ export const useAuth = () => {
     setIsLoading(true);
     const asyncFunc = async () => {
       await getFirebaseAuth();
+      setIsLoading(false);
+      FirebaseAuthentication.addListener('authStateChange', async (result) => {
+        setIsLoading(true);
+        setIsLoggedIn(!!result.user);
+        if (result.user) {
+          setUid(result.user.uid);
+          setEmail(result.user.email);
+        }
+        setIsLoading(false);
+      });
+      return () => {
+        FirebaseAuthentication.removeAllListeners();
+      };
     }
     asyncFunc();
-    setIsLoading(false);
-    FirebaseAuthentication.addListener('authStateChange', async (result) => {
-      setIsLoading(true);
-      setIsLoggedIn(!!result.user);
-      if (result.user) {
-        setUid(result.user.uid);
-        setEmail(result.user.email);
-      }
-      setIsLoading(false);
-    });
-    return () => {
-      FirebaseAuthentication.removeAllListeners();
-    };
   }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
 
   useEffect(() => {
     if (uid && email) {
       setIsLoading(true);
       const asyncFunc = async () => {
-        const setTimeoutPromise = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-        await setTimeoutPromise(1000);
-        await observeTimeStamp();
+        const auth = await getFirebaseAuth();
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+          setIsLoading(true);
+          setIsLoggedIn(!!user);
+          setIsLoading(false);
+          if (user) {
+            // タイムスタンプの監視を開始して初期設定をロード
+            await observeTimeStamp();
+          }
+        });
+        return () => unsubscribe();
       }
       asyncFunc();
     }
@@ -104,7 +114,8 @@ export const useAuth = () => {
       const result = await FirebaseAuthentication.signInWithGoogle();
       // 2. Sign in on the web layer using the id token
       const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-      await signInWithCredential(await auth, credential).then(() => {
+      await signInWithCredential(await auth, credential).then(async () => {
+        setIsLoading(true);
         setIsLoggedIn(true);
         setSystemMessage(null);
       }).catch((error) => {
@@ -135,30 +146,49 @@ export const useAuth = () => {
     }
     setSystemMessage('ログイン中...');
     if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
-      const result = await FirebaseAuthentication.signInWithEmailAndPassword({ email, password }).catch((error) => {
-        if (error.code === 'invalid-email') {
-          setSystemMessage('メールアドレスの形式が正しくありません。');
-        } else if (error.code === 'invalid-credential') {
+      const result = await FirebaseAuthentication.signInWithEmailAndPassword({ email, password })
+        .then(async () => {
+          await signInWithEmailAndPassword(await auth, email, password).then(() => {
+            setIsLoading(true);
+            setIsLoggedIn(true);
+            setSystemMessage(null);
+          }).catch((error) => {
+            if (error.code === 'auth/invalid-credential') {
+              setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+            } else if (error.code === 'auth/invalid-login-credentials') {
+              setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+            } else {
+              setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+            }
+          });
+        })
+        .catch((error) => {
+          if (error.code === 'invalid-email') {
+            setSystemMessage('メールアドレスの形式が正しくありません。');
+          } else if (error.code === 'invalid-credential') {
+            setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+          } else {
+            setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+          }
+          return null;
+        });
+      if (!result) return;
+    } else {
+      signInWithEmailAndPassword(await auth, email, password).then((result) => {
+        console.log(result);
+        setIsLoading(true);
+        setIsLoggedIn(true);
+        setSystemMessage(null);
+      }).catch((error) => {
+        if (error.code === 'auth/invalid-credential') {
+          setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
+        } else if (error.code === 'auth/invalid-login-credentials') {
           setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
         } else {
           setSystemMessage('ログインに失敗しました。\n\n' + error.code);
         }
-        return null;
       });
-      if (!result) return;
     }
-    await signInWithEmailAndPassword(await auth, email, password).then(() => {
-      setIsLoggedIn(true);
-      setSystemMessage(null);
-    }).catch((error) => {
-      if (error.code === 'auth/invalid-credential') {
-        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-      } else if (error.code === 'auth/invalid-login-credentials') {
-        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-      } else {
-        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
-      }
-    });
   };
 
   // メールアドレスとパスワードでサインアップ
@@ -167,21 +197,38 @@ export const useAuth = () => {
       setSystemMessage('メールアドレスとパスワードを入力してください。');
       return;
     }
-    createUserWithEmailAndPassword(await auth, email, password)
-      .then(() => {
-        setIsLoggedIn(true);
-        setSystemMessage(null);
-      })
-      .catch((error) => {
-        console.error(error);
-        if (error.code === 'auth/email-already-in-use') {
-          setSystemMessage('このメールアドレスは既に使用されています。');
-        } else if (error.code === 'auth/weak-password') {
-          setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
-        } else {
-          setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
-        }
-      });
+    if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+      await FirebaseAuthentication.createUserWithEmailAndPassword({ email, password })
+        .then(() => {
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          if (error.code === 'auth/email-already-in-use') {
+            setSystemMessage('このメールアドレスは既に使用されています。');
+          } else if (error.code === 'auth/weak-password') {
+            setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
+          } else {
+            setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
+          }
+        });
+    } else {
+      createUserWithEmailAndPassword(await auth, email, password)
+        .then(() => {
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          console.error(error);
+          if (error.code === 'auth/email-already-in-use') {
+            setSystemMessage('このメールアドレスは既に使用されています。');
+          } else if (error.code === 'auth/weak-password') {
+            setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
+          } else {
+            setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
+          }
+        });
+    }
   };
 
   // パスワードをリセット
@@ -220,6 +267,8 @@ export const useAuth = () => {
         setIsLoggedIn(false);
         setUid(null);
         setEmail(null);
+        setPrevCurrentTree(null);
+        setPrevItems([]);
         setItems([]);
         setTreesList([]);
         setCurrentTree(null);

@@ -152,22 +152,25 @@ export function MenuItems({
     try {
       const result = await FilePicker.pickImages({
         multiple: false, // 複数選択を許可するかどうか
+        readData: true, // Base64データを読み込む
       });
       if (result.files.length > 0) {
         const pickedFile = result.files[0];
-        const blob = pickedFile.blob; // Blobオブジェクトを取得
+        const base64Data = pickedFile.data; // Base64データを取得
         const fileName = pickedFile.name; // ファイル名を取得
-        if (blob && fileName && currentTree) {
-          //ファイルをアップロード
-          const file = new File([blob], fileName); // Fileオブジェクトを生成
+        if (base64Data && fileName && currentTree) {
+          // Base64文字列からBlobオブジェクトを生成
+          const blob = new Blob([Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0))], { type: pickedFile.mimeType });
+          // BlobオブジェクトからFileオブジェクトを生成
+          const file = new File([blob], fileName);
           const uploadedFileName = await uploadFile(file, currentTree);
           if (!uploadedFileName) return;
-          //ファイルを添付
+          // ファイルを添付
           handleAttachFile && handleAttachFile(id, uploadedFileName);
         }
       }
-    } catch (e) {
-      console.error('Error picking files', e);
+    } catch (error) {
+      await showDialog('画像ファイルの選択に失敗しました。' + error, 'Error');
     }
   };
 
@@ -175,22 +178,25 @@ export function MenuItems({
     try {
       const result = await FilePicker.pickFiles({
         multiple: false, // 複数選択を許可するかどうか
+        readData: true, // Base64データを読み込む
       });
       if (result.files.length > 0) {
         const pickedFile = result.files[0];
-        const blob = pickedFile.blob; // Blobオブジェクトを取得
+        const base64Data = pickedFile.data; // Base64データを取得
         const fileName = pickedFile.name; // ファイル名を取得
-        if (blob && fileName && currentTree) {
-          //ファイルをアップロード
-          const file = new File([blob], fileName); // Fileオブジェクトを生成
+        if (base64Data && fileName && currentTree) {
+          // Base64文字列からBlobオブジェクトを生成
+          const blob = new Blob([Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0))], { type: pickedFile.mimeType });
+          // BlobオブジェクトからFileオブジェクトを生成
+          const file = new File([blob], fileName);
           const uploadedFileName = await uploadFile(file, currentTree);
           if (!uploadedFileName) return;
-          //ファイルを添付
+          // ファイルを添付
           handleAttachFile && handleAttachFile(id, uploadedFileName);
         }
       }
-    } catch (e) {
-      console.error('Error picking files', e);
+    } catch (error) {
+      await showDialog('ファイルの選択に失敗しました。' + error, 'Error');
     }
   };
 
@@ -483,6 +489,7 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
 
   const anchorElParent = useRef<HTMLButtonElement>(null);
   const prevAttachedFileRef = useRef<string | null>(null);
+  const currentTreeRef = useRef<UniqueIdentifier | null>(null);
 
   const theme = useTheme();
 
@@ -495,7 +502,7 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
   };
 
   useEffect(() => {
-    if (prevAttachedFileRef.current !== attachedFile) {
+    if (prevAttachedFileRef.current !== attachedFile || currentTreeRef.current !== currentTree) {
       if (attachedFile?.match(/\.(jpg|jpeg|png|gif|svg|webp|tif|tiff|bmp|ico|cur)$/i) && currentTree) {
         const storage = getStorage();
         const imageRef = ref(storage, `trees/${currentTree}/${attachedFile}`);
@@ -512,6 +519,8 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
     }
     // 現在のattachedFileを記録
     prevAttachedFileRef.current = attachedFile;
+    // 現在のcurrentTreeを記録
+    currentTreeRef.current = currentTree;
   }, [attachedFile, currentTree]);
 
   return (

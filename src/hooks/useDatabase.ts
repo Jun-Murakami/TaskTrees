@@ -128,7 +128,7 @@ export const useDatabase = () => {
         return null;
       })
       .catch((error) => {
-        console.log('ツリーリストのDBフェッチに失敗しました。\n\n' + error);
+        console.log('ツリーリストのDBフェッチに失敗しました。\n\nUid:' + userId + error);
         return null;
       });
   };
