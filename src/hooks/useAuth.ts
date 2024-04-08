@@ -66,20 +66,35 @@ export const useAuth = () => {
   useEffect(() => {
     setIsLoading(true);
     const asyncFunc = async () => {
-      await getFirebaseAuth();
-      setIsLoading(false);
-      FirebaseAuthentication.addListener('authStateChange', async (result) => {
-        setIsLoading(true);
-        setIsLoggedIn(!!result.user);
-        if (result.user) {
-          setUid(result.user.uid);
-          setEmail(result.user.email);
-        }
+      if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+        await getFirebaseAuth();
+
         setIsLoading(false);
-      });
-      return () => {
-        FirebaseAuthentication.removeAllListeners();
-      };
+        FirebaseAuthentication.addListener('authStateChange', async (result) => {
+          setIsLoading(true);
+          setIsLoggedIn(!!result.user);
+          if (result.user) {
+            setUid(result.user.uid);
+            setEmail(result.user.email);
+          }
+          setIsLoading(false);
+        });
+        return () => {
+          FirebaseAuthentication.removeAllListeners();
+        };
+      } else {
+        const auth = await getFirebaseAuth();
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+          setIsLoading(true);
+          setIsLoggedIn(!!user);
+          if (user) {
+            setUid(user.uid);
+            setEmail(user.email);
+          }
+          setIsLoading(false);
+        });
+        return () => unsubscribe();
+      }
     }
     asyncFunc();
   }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
