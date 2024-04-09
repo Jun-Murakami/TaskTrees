@@ -103,7 +103,6 @@ export const theme = createTheme({
     },
     MuiTextField: {
       defaultProps: {
-        // TextFieldの全てのインスタンスに対してスペルチェックを無効にする
         inputProps: {
           spellCheck: 'false',
         },
@@ -135,7 +134,6 @@ export const darkTheme = createTheme({
     },
     MuiTextField: {
       defaultProps: {
-        // TextFieldの全てのインスタンスに対してスペルチェックを無効にする
         inputProps: {
           spellCheck: 'false',
         },
