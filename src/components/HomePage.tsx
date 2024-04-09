@@ -144,6 +144,9 @@ export function HomePage() {
                   size='small'
                   fullWidth
                   onChange={(e) => setEmail(e.target.value)}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
                 />
                 <TextField
                   label='パスワード'
@@ -154,6 +157,9 @@ export function HomePage() {
                   size='small'
                   fullWidth
                   onChange={(e) => setPassword(e.target.value)}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
                 />
                 <Box sx={{ mt: 4, width: '100%', display: 'flex', justifyContent: 'space-between' }}>
                   <Button
