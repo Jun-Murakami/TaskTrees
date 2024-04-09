@@ -65,8 +65,8 @@ export const useAuth = () => {
   // ログイン状態の監視
   useEffect(() => {
     setIsLoading(true);
-    const asyncFunc = async () => {
-      if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+    if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+      const asyncFunc = async () => {
         await getFirebaseAuth();
         setIsLoading(false);
         FirebaseAuthentication.addListener('authStateChange', async (result) => {
@@ -81,21 +81,21 @@ export const useAuth = () => {
         return () => {
           FirebaseAuthentication.removeAllListeners();
         };
-      } else {
-        const auth = getAuth();
-        const unsubscribe = auth.onAuthStateChanged(async (user) => {
-          setIsLoading(true);
-          setIsLoggedIn(!!user);
-          if (user) {
-            setUid(user.uid);
-            setEmail(user.email);
-          }
-          setIsLoading(false);
-        });
-        return () => unsubscribe();
-      }
+      };
+      asyncFunc();
+    } else {
+      const auth = getAuth();
+      const unsubscribe = auth.onAuthStateChanged(async (user) => {
+        setIsLoading(true);
+        setIsLoggedIn(!!user);
+        if (user) {
+          setUid(user.uid);
+          setEmail(user.email);
+        }
+        setIsLoading(false);
+      });
+      return () => unsubscribe();
     }
-    asyncFunc();
   }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
 
   useEffect(() => {
