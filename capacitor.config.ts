@@ -9,8 +9,8 @@ const config: CapacitorConfig = {
   },
   plugins: {
     FirebaseAuthentication: {
-      skipNativeAuth: false,
-      providers: ["google.com"],
+      skipNativeAuth: true,
+      providers: ["google.com", "apple.com"],
     },
   },
 };

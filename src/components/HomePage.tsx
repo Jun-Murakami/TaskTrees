@@ -8,6 +8,8 @@ import { TaskTreesLogo } from './TaskTreesLogo';
 import { Button, CircularProgress, Typography, TextField, Box, Stack, Divider } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import GoogleIcon from '@mui/icons-material/Google';
+import AppleIcon from '@mui/icons-material/Apple';
 import { TreeSettingsAccordion } from './TreeSettingsAccordion';
 import { SortableTree } from './SortableTree/SortableTree';
 import { useDialogStore } from '../store/dialogStore';
@@ -29,7 +31,15 @@ export function HomePage() {
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
-  const { handleGoogleLogin, handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount } = useAuth();
+  const {
+    handleGoogleLogin,
+    handleAppleLogin,
+    handleEmailLogin,
+    handleSignup,
+    handleResetPassword,
+    handleLogout,
+    handleDeleteAccount,
+  } = useAuth();
 
   const theme = useTheme();
 
@@ -169,8 +179,11 @@ export function HomePage() {
                 <Divider>
                   <Typography variant='caption'>または</Typography>
                 </Divider>
-                <Button onClick={async () => await handleGoogleLogin()} variant='contained'>
+                <Button onClick={async () => await handleGoogleLogin()} variant='contained' startIcon={<GoogleIcon />}>
                   Googleでログイン
+                </Button>
+                <Button onClick={async () => await handleAppleLogin()} variant='contained' startIcon={<AppleIcon />}>
+                  Appleでログイン
                 </Button>
                 <Button onClick={async () => await handleResetPassword()} variant='text' size='small'>
                   <Typography variant='caption' sx={{ textDecoration: 'underline' }}>
