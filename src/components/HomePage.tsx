@@ -179,10 +179,20 @@ export function HomePage() {
                 <Divider>
                   <Typography variant='caption'>または</Typography>
                 </Divider>
-                <Button onClick={async () => await handleGoogleLogin()} variant='contained' startIcon={<GoogleIcon />}>
+                <Button
+                  onClick={async () => await handleGoogleLogin()}
+                  variant='contained'
+                  startIcon={<GoogleIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
                   Googleでログイン
                 </Button>
-                <Button onClick={async () => await handleAppleLogin()} variant='contained' startIcon={<AppleIcon />}>
+                <Button
+                  onClick={async () => await handleAppleLogin()}
+                  variant='contained'
+                  startIcon={<AppleIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
                   Appleでログイン
                 </Button>
                 <Button onClick={async () => await handleResetPassword()} variant='text' size='small'>

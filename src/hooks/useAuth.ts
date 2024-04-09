@@ -69,7 +69,6 @@ export const useAuth = () => {
       setIsLoading(false);
       if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
         FirebaseAuthentication.addListener('authStateChange', async (result) => {
-          console.log('native authStateChange', result);
           if (result.user) {
             setUid(result.user.uid);
             setEmail(result.user.email);
@@ -79,7 +78,6 @@ export const useAuth = () => {
       }
       const auth = await getFirebaseAuth();
       const unsubscribe = auth.onAuthStateChanged(async (user) => {
-        console.log('web authStateChange', user);
         if (user) {
           setUid(user.uid);
           setEmail(user.email);
@@ -95,22 +93,24 @@ export const useAuth = () => {
   }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
 
   useEffect(() => {
-    if (uid && email) {
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setIsLoading(true);
-      const asyncFunc = async () => {
-        const auth = await getFirebaseAuth();
-        const unsubscribe = auth.onAuthStateChanged(async (user) => {
-          setIsLoading(true);
-          setIsLoggedIn(!!user);
-          setIsLoading(false);
-          if (user) {
-            // タイムスタンプの監視を開始して初期設定をロード
-            await observeTimeStamp();
-          }
-        });
-        return () => unsubscribe();
+      setIsLoggedIn(!!user);
+      setIsLoading(false);
+      if (user) {
+        setUid(user.uid);
+        setEmail(user.email);
       }
-      asyncFunc();
+    });
+
+    return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (uid && email) {
+      observeTimeStamp();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, email]);

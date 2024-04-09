@@ -27,7 +27,6 @@ export const useObserve = () => {
     if (!uid) {
       return;
     }
-    console.log('start observeTimeStamp');
     setIsLoading(true);
     await loadSettingsFromDb();
     await loadTreesList();
