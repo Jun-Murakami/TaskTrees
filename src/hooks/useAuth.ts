@@ -66,7 +66,6 @@ export const useAuth = () => {
 
   // ログイン状態の監視
   useEffect(() => {
-    setIsLoading(true);
     const asyncFunc = async () => {
       if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
         FirebaseAuthentication.addListener('authStateChange', async (result) => {
