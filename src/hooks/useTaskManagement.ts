@@ -238,9 +238,15 @@ export const useTaskManagement = () => {
               const reIdItems = (items: TreeItems, newIdStart: number): TreeItems => {
                 return items.map((item) => {
                   const newId = newIdStart + parseInt(item.id.toString());
+                  let newAttachedFile = item.attachedFile;
+                  if (item.attachedFile) {
+                    // 添付ファイルのパスを新しいツリーIDに更新する処理を追加
+                    newAttachedFile = `trees/${targetTreeId}/${item.attachedFile}`;
+                  }
                   return {
                     ...item,
                     id: newId.toString(),
+                    attachedFile: newAttachedFile, // 更新された添付ファイルのパスを設定
                     children: reIdItems(item.children, newId),
                   };
                 });
@@ -335,9 +341,15 @@ export const useTaskManagement = () => {
               const reIdItems = (items: TreeItems, newIdStart: number): TreeItems => {
                 return items.map((item) => {
                   const newId = newIdStart + parseInt(item.id.toString());
+                  let newAttachedFile = item.attachedFile;
+                  if (item.attachedFile) {
+                    // 添付ファイルのパスを新しいツリーIDに更新する処理を追加
+                    newAttachedFile = `trees/${targetTreeId}/${item.attachedFile}`;
+                  }
                   return {
                     ...item,
                     id: newId.toString(),
+                    attachedFile: newAttachedFile, // 更新された添付ファイルのパスを設定
                     children: reIdItems(item.children, newId),
                   };
                 });
