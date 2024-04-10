@@ -66,13 +66,17 @@ export const useTaskManagement = () => {
           };
           listUpAttachedFiles(itemToRemoveCopy);
           attachedFiles.forEach((attachedFile) => {
-            if (!currentTree) return;
+            if (!currentTree) {
+              setIsLoading(false);
+              return;
+            };
             deleteFile(attachedFile, currentTree);
           });
         } catch (error) {
           showDialog('添付ファイルの削除に失敗しました。\n\n' + error, 'Error');
         }
         setItems(removeItem(currentItems, id));
+        setIsLoading(false);
         return;
       } else if (parentItem) {
         parentItem.children = parentItem.children.filter((child) => child.id !== id);

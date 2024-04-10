@@ -39,6 +39,8 @@ const getFirebaseAuth = async () => {
 const auth = getFirebaseAuth();
 
 export const useAuth = () => {
+  const isOffline = useAppStateStore((state) => state.isOffline);
+  const setIsOffline = useAppStateStore((state) => state.setIsOffline);
   const uid = useAppStateStore((state) => state.uid);
   const setUid = useAppStateStore((state) => state.setUid);
   const email = useAppStateStore((state) => state.email);
@@ -101,6 +103,7 @@ export const useAuth = () => {
       if (user) {
         setUid(user.uid);
         setEmail(user.email);
+        setIsOffline(false);
       }
     });
 
@@ -279,7 +282,7 @@ export const useAuth = () => {
   const handleLogout = async () => {
     signOut(getAuth())
       .then(async () => {
-        if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+        if (Capacitor.isNativePlatform() && FirebaseAuthentication && !isOffline) {
           await FirebaseAuthentication.signOut();
           FirebaseAuthentication.removeAllListeners();
         }
@@ -293,7 +296,11 @@ export const useAuth = () => {
         setCurrentTree(null);
         setCurrentTreeName(null);
         setCurrentTreeMembers(null);
-        if (!isWaitingForDelete) setSystemMessage('ログアウトしました。');
+        if (!isWaitingForDelete && !isOffline) {
+          setSystemMessage('ログアウトしました。');
+        } else {
+          setSystemMessage('');
+        }
       })
       .catch((error) => {
         console.error(error);

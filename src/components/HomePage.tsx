@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useTreeManagement } from '../hooks/useTreeManagement';
 import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
 import { ResponsiveDrawer } from './ResponsiveDrawer';
@@ -16,12 +17,15 @@ import { useDialogStore } from '../store/dialogStore';
 import { useInputDialogStore } from '../store/dialogStore';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+//import { Capacitor } from '@capacitor/core';
 
 export function HomePage() {
   const [email, setEmail] = useState(''); // ログイン用メールアドレス
   const [password, setPassword] = useState(''); // ログイン用パスワード
+  const setIsOffline = useAppStateStore((state) => state.setIsOffline); //
   const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
+  const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn); // ログイン状態を変更
   const systemMessage = useAppStateStore((state) => state.systemMessage); // システムメッセージ
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete); // アカウント削除の確認状態
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete); // アカウント削除の確認状態を変更
@@ -40,6 +44,8 @@ export function HomePage() {
     handleLogout,
     handleDeleteAccount,
   } = useAuth();
+
+  const { handleCreateOfflineTree } = useTreeManagement();
 
   const theme = useTheme();
 
@@ -201,6 +207,19 @@ export function HomePage() {
                 >
                   Appleでログイン
                 </Button>
+                {/* {Capacitor.isNativePlatform() && ( */}
+                <Button
+                  onClick={() => {
+                    setIsOffline(true);
+                    setIsLoggedIn(true);
+                    handleCreateOfflineTree();
+                  }}
+                  variant='contained'
+                  sx={{ textTransform: 'none' }}
+                >
+                  オフラインモードで使用する
+                </Button>
+                {/* )} */}
                 <Button onClick={async () => await handleResetPassword()} variant='text' size='small'>
                   <Typography variant='caption' sx={{ textDecoration: 'underline' }}>
                     ※ パスワードをお忘れですか？

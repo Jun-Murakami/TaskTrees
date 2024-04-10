@@ -18,6 +18,7 @@ import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
 import { useDialogStore } from '../../store/dialogStore';
 import { useAttachedFile } from '../../hooks/useAttachedFile';
+import { useAppStateStore } from '../../store/appStateStore';
 import { Capacitor } from '@capacitor/core';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 
@@ -84,6 +85,7 @@ export function MenuItems({
   const anchorElMove = useRef<HTMLButtonElement>(null);
   const anchorEliOS = useRef<HTMLButtonElement>(null);
 
+  const isOffline = useAppStateStore((state) => state.isOffline);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const treesList = useTreeStateStore((state) => state.treesList);
   const treesListWithoutId = treesList.filter((tree) => tree.id !== currenTreeId);
@@ -225,135 +227,139 @@ export function MenuItems({
           </ListItemIcon>
           削除
         </MenuItem>
-        <Divider />
-        <Box ref={anchorEliOS}>
-          <MenuItem
-            onClick={async () => {
-              await handleUploadClick();
-            }}
-          >
-            <ListItemIcon>
-              <AttachFileIcon fontSize='small' />
-            </ListItemIcon>
-            ファイルを添付
-            <Menu
-              anchorEl={anchorEliOS.current}
-              id='menu-item-management-ios'
-              open={openIOSMenu}
-              onClose={() => {
-                handleiOSClose();
-                handleParentClose();
-              }}
-              sx={{
-                elevation: 0,
-              }}
-            >
+        {!isOffline && !Capacitor.isNativePlatform() && (
+          <Box>
+            <Divider />
+            <Box ref={anchorEliOS}>
               <MenuItem
                 onClick={async () => {
-                  await handleiOSImagePicker();
-                  handleParentClose();
+                  await handleUploadClick();
                 }}
               >
                 <ListItemIcon>
-                  <ImageIcon fontSize='small' />
+                  <AttachFileIcon fontSize='small' />
                 </ListItemIcon>
-                画像ファイルを添付
+                ファイルを添付
+                <Menu
+                  anchorEl={anchorEliOS.current}
+                  id='menu-item-management-ios'
+                  open={openIOSMenu}
+                  onClose={() => {
+                    handleiOSClose();
+                    handleParentClose();
+                  }}
+                  sx={{
+                    elevation: 0,
+                  }}
+                >
+                  <MenuItem
+                    onClick={async () => {
+                      await handleiOSImagePicker();
+                      handleParentClose();
+                    }}
+                  >
+                    <ListItemIcon>
+                      <ImageIcon fontSize='small' />
+                    </ListItemIcon>
+                    画像ファイルを添付
+                  </MenuItem>
+                  <MenuItem
+                    onClick={async () => {
+                      await handleiOSFilePicker();
+                      handleParentClose();
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FolderIcon fontSize='small' />
+                    </ListItemIcon>
+                    その他のファイルを添付
+                  </MenuItem>
+                </Menu>
               </MenuItem>
+            </Box>
+            <Divider />
+            <Box ref={anchorElCopy}>
               <MenuItem
-                onClick={async () => {
-                  await handleiOSFilePicker();
-                  handleParentClose();
+                onClick={() => {
+                  handleCopyClick();
                 }}
               >
                 <ListItemIcon>
-                  <FolderIcon fontSize='small' />
+                  <KeyboardDoubleArrowRightIcon fontSize='small' />
                 </ListItemIcon>
-                その他のファイルを添付
-              </MenuItem>
-            </Menu>
-          </MenuItem>
-        </Box>
-        <Divider />
-        <Box ref={anchorElCopy}>
-          <MenuItem
-            onClick={() => {
-              handleCopyClick();
-            }}
-          >
-            <ListItemIcon>
-              <KeyboardDoubleArrowRightIcon fontSize='small' />
-            </ListItemIcon>
-            コピー
-            <Menu
-              anchorEl={anchorElCopy.current}
-              id='menu-item-management-copy'
-              open={openCopyMenu}
-              onClose={() => {
-                handleCopyClose();
-                handleParentClose();
-              }}
-              sx={{
-                elevation: 0,
-              }}
-            >
-              {treesList.map((tree) => (
-                <MenuItem
-                  key={tree.id}
-                  onClick={() => {
-                    onCopyItems && onCopyItems(tree.id, id);
+                コピー
+                <Menu
+                  anchorEl={anchorElCopy.current}
+                  id='menu-item-management-copy'
+                  open={openCopyMenu}
+                  onClose={() => {
                     handleCopyClose();
                     handleParentClose();
                   }}
+                  sx={{
+                    elevation: 0,
+                  }}
                 >
-                  <ListItemIcon>
-                    <KeyboardDoubleArrowRightIcon fontSize='small' />
-                  </ListItemIcon>
-                  {tree.name}
-                </MenuItem>
-              ))}
-            </Menu>
-          </MenuItem>
-        </Box>
-        <Box ref={anchorElMove}>
-          <MenuItem
-            onClick={() => {
-              handleMoveClick();
-            }}
-          >
-            <ListItemIcon>
-              <KeyboardArrowRightIcon fontSize='small' />
-            </ListItemIcon>
-            移動
-            <Menu
-              anchorEl={anchorElMove.current}
-              id='menu-item-management-move'
-              open={openMoveMenu}
-              onClose={() => {
-                handleMoveClose();
-                handleParentClose();
-              }}
-              sx={{
-                elevation: 0,
-              }}
-            >
-              {treesListWithoutId.map((tree) => (
-                <MenuItem
-                  key={tree.id}
-                  onClick={() => {
-                    onMoveItems && onMoveItems(tree.id, id);
+                  {treesList.map((tree) => (
+                    <MenuItem
+                      key={tree.id}
+                      onClick={() => {
+                        onCopyItems && onCopyItems(tree.id, id);
+                        handleCopyClose();
+                        handleParentClose();
+                      }}
+                    >
+                      <ListItemIcon>
+                        <KeyboardDoubleArrowRightIcon fontSize='small' />
+                      </ListItemIcon>
+                      {tree.name}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </MenuItem>
+            </Box>
+            <Box ref={anchorElMove}>
+              <MenuItem
+                onClick={() => {
+                  handleMoveClick();
+                }}
+              >
+                <ListItemIcon>
+                  <KeyboardArrowRightIcon fontSize='small' />
+                </ListItemIcon>
+                移動
+                <Menu
+                  anchorEl={anchorElMove.current}
+                  id='menu-item-management-move'
+                  open={openMoveMenu}
+                  onClose={() => {
                     handleMoveClose();
                     handleParentClose();
                   }}
+                  sx={{
+                    elevation: 0,
+                  }}
                 >
-                  <ListItemIcon>
-                    <KeyboardArrowRightIcon fontSize='small' />
-                  </ListItemIcon>
-                  {tree.name}
-                </MenuItem>
-              ))}
-            </Menu>
-          </MenuItem>
-        </Box>
+                  {treesListWithoutId.map((tree) => (
+                    <MenuItem
+                      key={tree.id}
+                      onClick={() => {
+                        onMoveItems && onMoveItems(tree.id, id);
+                        handleMoveClose();
+                        handleParentClose();
+                      }}
+                    >
+                      <ListItemIcon>
+                        <KeyboardArrowRightIcon fontSize='small' />
+                      </ListItemIcon>
+                      {tree.name}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </MenuItem>
+            </Box>
+          </Box>
+        )}
       </Menu>
     </>
   );

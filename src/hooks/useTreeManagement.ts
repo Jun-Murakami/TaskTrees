@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { TreeItem, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
 import { isTreeItemArray, ensureChildrenProperty } from '../components/SortableTree/utilities';
-import { initialItems } from '../components/SortableTree/mock';
+import { initialItems, initialOfflineItems } from '../components/SortableTree/mock';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
@@ -13,11 +13,13 @@ import { useDialogStore, useInputDialogStore } from '../store/dialogStore';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Preferences } from '@capacitor/preferences';
 
 // ツリーの管理に関するカスタムフック
 // データベースに関連する処理はuseDatabaseフックを使用
 
 export const useTreeManagement = () => {
+  const isOffline = useAppStateStore((state) => state.isOffline);
   const uid = useAppStateStore((state) => state.uid);
   const email = useAppStateStore((state) => state.email);
   const isLoading = useAppStateStore((state) => state.isLoading);
@@ -264,6 +266,9 @@ export const useTreeManagement = () => {
 
   // 新しいツリーを作成する ---------------------------------------------------------------------------
   const handleCreateNewTree = async () => {
+    if (isOffline) {
+      await showDialog('オフラインモードでは新しいツリーを作成できません。', 'Information');
+    }
     if (!uid) {
       return Promise.reject();
     }
@@ -311,6 +316,38 @@ export const useTreeManagement = () => {
       setIsLoading(false);
       return Promise.reject();
     }
+  };
+
+  //オフラインツリーを作成する ---------------------------------------------------------------------------
+  const handleCreateOfflineTree = async () => {
+    setIsLoading(true);
+    try {
+      setCurrentTree('offline');
+      const { value: treeName } = await Preferences.get({ key: `treeName_offline` });
+      if (treeName) {
+        // ローカルストレージから読み込んだデータが存在する場合
+        setCurrentTreeName(treeName);
+      } else {
+        // ローカルストレージにデータが存在しない場合、初期のツリー名をセット
+        setCurrentTreeName('オフラインツリー');
+      }
+      setCurrentTreeMembers([{ uid: 'offline', email: 'offline' }]);
+      setTreesList([{ id: 'offline' as UniqueIdentifier, name: 'オフラインツリー' }]);
+      const { value } = await Preferences.get({ key: `items_offline` });
+      if (value) {
+        // ローカルストレージから読み込んだデータが存在する場合
+        const items = JSON.parse(value);
+        setItems(items);
+      } else {
+        // ローカルストレージにデータが存在しない場合、初期のオフラインアイテムをセット
+        setItems(initialOfflineItems);
+      }
+    } catch (error) {
+      console.error('ローカルストレージからの読み込みに失敗しました', error);
+      // エラーが発生した場合は初期のオフラインアイテムをセット
+      setItems(initialOfflineItems);
+    }
+    setIsLoading(false);
   };
 
   // ファイルを読み込んでツリーの状態を復元する ---------------------------------------------------------------------------
@@ -362,6 +399,7 @@ export const useTreeManagement = () => {
     if (!uid) {
       return Promise.reject();
     }
+    const treesList = useTreeStateStore.getState().treesList;
     if (data) {
       try {
         setCurrentTree(null);
@@ -586,7 +624,11 @@ export const useTreeManagement = () => {
   const handleTreeNameSubmit = (editedTreeName: string) => {
     if (editedTreeName !== null && editedTreeName !== '' && editedTreeName !== currentTreeName) {
       setCurrentTreeName(editedTreeName);
-      saveCurrentTreeNameDb(editedTreeName, currentTree);
+      if (isOffline) {
+        Preferences.set({ key: `treeName_offline`, value: editedTreeName });
+      } else {
+        saveCurrentTreeNameDb(editedTreeName, currentTree);
+      }
       if (treesList) {
         const newList = treesList.map((tree) => {
           if (tree.id === currentTree) {
@@ -676,6 +718,7 @@ export const useTreeManagement = () => {
   return {
     deleteTree,
     handleCreateNewTree,
+    handleCreateOfflineTree,
     handleFileUpload,
     handleLoadedContent,
     handleDownloadTreeState,

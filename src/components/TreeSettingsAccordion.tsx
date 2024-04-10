@@ -29,6 +29,7 @@ import { useTreeManagement } from '../hooks/useTreeManagement';
 import { Capacitor } from '@capacitor/core';
 
 export function TreeSettingsAccordion() {
+  const isOffline = useAppStateStore((state) => state.isOffline);
   const darkMode = useAppStateStore((state) => state.darkMode);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
@@ -185,19 +186,21 @@ export function TreeSettingsAccordion() {
                   <Divider />
                   <ListItem disablePadding>
                     <ListItemText secondary={member.email} sx={{ width: '100%', ml: 2 }} />
-                    <ListItemButton
-                      sx={{
-                        '& .MuiListItemIcon-root': {
-                          minWidth: 0,
-                          width: 24,
-                          marginX: 1,
-                        },
-                      }}
-                    >
-                      <ListItemIcon>
-                        <HighlightOffIcon onClick={async () => await handleDeleteUserFromTree(member.uid, member.email)} />
-                      </ListItemIcon>
-                    </ListItemButton>
+                    {!isOffline && (
+                      <ListItemButton
+                        sx={{
+                          '& .MuiListItemIcon-root': {
+                            minWidth: 0,
+                            width: 24,
+                            marginX: 1,
+                          },
+                        }}
+                      >
+                        <ListItemIcon>
+                          <HighlightOffIcon onClick={async () => await handleDeleteUserFromTree(member.uid, member.email)} />
+                        </ListItemIcon>
+                      </ListItemButton>
+                    )}
                   </ListItem>
                 </React.Fragment>
               ))}
@@ -205,32 +208,34 @@ export function TreeSettingsAccordion() {
             </List>
           )}
 
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              marginTop: 1,
-            }}
-          >
-            <Button
-              variant={'outlined'}
-              sx={{ mr: 2 }}
-              startIcon={<AddIcon />}
-              color='inherit'
-              onClick={async () => await handleAddUserToTree()}
+          {!isOffline && (
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                marginTop: 1,
+              }}
             >
-              メンバーの追加
-            </Button>
-            <Button
-              variant={'outlined'}
-              startIcon={<DeleteForeverIcon />}
-              color='error'
-              onClick={async () => await handleDeleteTree()}
-            >
-              ツリーを削除
-            </Button>
-          </Box>
+              <Button
+                variant={'outlined'}
+                sx={{ mr: 2 }}
+                startIcon={<AddIcon />}
+                color='inherit'
+                onClick={async () => await handleAddUserToTree()}
+              >
+                メンバーの追加
+              </Button>
+              <Button
+                variant={'outlined'}
+                startIcon={<DeleteForeverIcon />}
+                color='error'
+                onClick={async () => await handleDeleteTree()}
+              >
+                ツリーを削除
+              </Button>
+            </Box>
+          )}
         </AccordionDetails>
       </Accordion>
     </Box>

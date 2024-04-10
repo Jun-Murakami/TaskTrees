@@ -3,21 +3,27 @@ import isEqual from 'lodash/isEqual';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useTreeManagement } from './useTreeManagement';
 import { useAppStateManagement } from './useAppStateManagement';
+import { useDialogStore } from '../store/dialogStore';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
 import { getDatabase, ref, onValue, } from 'firebase/database';
 import { useAppStateStore } from '../store/appStateStore';
+import { Preferences } from '@capacitor/preferences';
 
 export const useObserve = () => {
+  const isOffline = useAppStateStore((state) => state.isOffline);
   const uid = useAppStateStore((state) => state.uid);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const items = useTreeStateStore((state) => state.items);
   const currentTree = useTreeStateStore((state) => state.currentTree);
+  const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
   const prevItems = useTreeStateStore((state) => state.prevItems);
   const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
 
-  const { loadTreesList, loadCurrentTreeData } = useTreeManagement();
+  const showDialog = useDialogStore((state) => state.showDialog);
+
+  const { loadTreesList, loadCurrentTreeData, handleLoadedContent } = useTreeManagement();
   const { saveItemsDb } = useDatabase();
   const { loadSettingsFromDb } = useAppStateManagement();
   const { handleError } = useError();
@@ -30,6 +36,25 @@ export const useObserve = () => {
     setIsLoading(true);
     await loadSettingsFromDb();
     await loadTreesList();
+    // ローカルストレージからitems_offlineとtreeName_offlineを読み込む
+    const { value: itemsOffline } = await Preferences.get({ key: `items_offline` });
+    const { value: treeNameOffline } = await Preferences.get({ key: `treeName_offline` });
+    if (itemsOffline) {
+      const items = JSON.parse(itemsOffline);
+      const name = treeNameOffline ? treeNameOffline : 'オフラインツリー';
+      const result = await showDialog('オフラインツリーが見つかりました。このツリーを読み込みますか？', 'オフラインツリーの読み込み', true);
+      if (result) {
+        await handleLoadedContent(JSON.stringify({ name, items }));
+        await Preferences.remove({ key: `items_offline` });
+        await Preferences.remove({ key: `treeName_offline` });
+      } else {
+        const removeResult = await showDialog('オフラインツリーを削除しますか？削除せず、次回ログイン時に読み込むこともできます。', 'オフラインツリーの削除', true);
+        if (removeResult) {
+          await Preferences.remove({ key: `items_offline` });
+          await Preferences.remove({ key: `treeName_offline` });
+        }
+      }
+    }
     const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
     onValue(timestampRef, async (snapshot) => {
       setIsLoading(true);
@@ -56,12 +81,27 @@ export const useObserve = () => {
       setPrevItems(items);
       return;
     }
-    if (!uid || !currentTree || isEqual(items, prevItems)) {
+    if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems)) {
       return;
     }
     const debounceSave = setTimeout(() => {
       try {
-        saveItemsDb(items, currentTree);
+        if (isOffline) {
+          // オフラインモードの場合、ローカルストレージに保存
+          Preferences.set({
+            key: `items_offline`,
+            value: JSON.stringify(items),
+          });
+          if (currentTreeName) {
+            Preferences.set({
+              key: `treeName_offline`,
+              value: currentTreeName,
+            });
+          }
+        } else {
+          // オンラインモードの場合、データベースに保存
+          saveItemsDb(items, currentTree);
+        }
         setPrevItems(items);
       } catch (error) {
         handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error);
@@ -75,6 +115,5 @@ export const useObserve = () => {
 
   return {
     observeTimeStamp
-
   };
 }

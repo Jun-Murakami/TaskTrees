@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { styled } from '@mui/material/styles';
 import {
+  Box,
   FormControlLabel,
   Switch,
   Menu,
@@ -21,10 +22,12 @@ import { useAppStateManagement } from '../hooks/useAppStateManagement';
 import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
+import { Capacitor } from '@capacitor/core';
 
 export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
+  const isOffline = useAppStateStore((state) => state.isOffline);
   const darkMode = useAppStateStore((state) => state.darkMode);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
@@ -155,20 +158,24 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
           horizontal: 'center',
         }}
       >
-        <Tooltip title='アプリケーションの全データとアカウントの削除' placement='right'>
-          <MenuItem
-            onClick={() => {
-              setIsWaitingForDelete(true);
-              handleClose();
-            }}
-          >
-            <ListItemIcon>
-              <DeleteForeverIcon fontSize='small' />
-            </ListItemIcon>
-            アカウント削除
-          </MenuItem>
-        </Tooltip>
-        <Divider />
+        {!isOffline && !Capacitor.isNativePlatform() && (
+          <Box>
+            <Tooltip title='アプリケーションの全データとアカウントの削除' placement='right'>
+              <MenuItem
+                onClick={() => {
+                  setIsWaitingForDelete(true);
+                  handleClose();
+                }}
+              >
+                <ListItemIcon>
+                  <DeleteForeverIcon fontSize='small' />
+                </ListItemIcon>
+                アカウント削除
+              </MenuItem>
+            </Tooltip>
+            <Divider />
+          </Box>
+        )}
         <input
           type='file'
           ref={hiddenFileInput}
@@ -179,18 +186,20 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
           style={{ display: 'none' }}
           accept='.json'
         />
-        <Tooltip title='バックアップしたデータを復元' placement='right'>
-          <MenuItem
-            onClick={() => {
-              handleUploadClick();
-            }}
-          >
-            <ListItemIcon>
-              <UploadIcon fontSize='small' />
-            </ListItemIcon>
-            ツリーを読み込む
-          </MenuItem>
-        </Tooltip>
+        {!isOffline && !Capacitor.isNativePlatform() && (
+          <Tooltip title='バックアップしたデータを復元' placement='right'>
+            <MenuItem
+              onClick={() => {
+                handleUploadClick();
+              }}
+            >
+              <ListItemIcon>
+                <UploadIcon fontSize='small' />
+              </ListItemIcon>
+              ツリーを読み込む
+            </MenuItem>
+          </Tooltip>
+        )}
         {currentTree && (
           <Tooltip title='現在のツリーのデータをバックアップ' placement='right'>
             <MenuItem
@@ -206,19 +215,21 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
             </MenuItem>
           </Tooltip>
         )}
-        <Tooltip title='すべてのツリーデータをバックアップ' placement='right'>
-          <MenuItem
-            onClick={async () => {
-              await handleDownloadAllTrees();
-              handleClose();
-            }}
-          >
-            <ListItemIcon>
-              <DownloadIcon fontSize='small' />
-            </ListItemIcon>
-            全ツリーをバックアップ
-          </MenuItem>
-        </Tooltip>
+        {!isOffline && !Capacitor.isNativePlatform() && (
+          <Tooltip title='すべてのツリーデータをバックアップ' placement='right'>
+            <MenuItem
+              onClick={async () => {
+                await handleDownloadAllTrees();
+                handleClose();
+              }}
+            >
+              <ListItemIcon>
+                <DownloadIcon fontSize='small' />
+              </ListItemIcon>
+              全ツリーをバックアップ
+            </MenuItem>
+          </Tooltip>
+        )}
         <Divider />
         <Tooltip title='表示モードの切り替え' placement='right'>
           <MenuItem>
@@ -238,14 +249,25 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
           </MenuItem>
         </Tooltip>
         <Divider />
-        <Tooltip title='アプリからログアウト' placement='right'>
-          <MenuItem onClick={handleLogout}>
-            <ListItemIcon>
-              <LogoutIcon fontSize='small' />
-            </ListItemIcon>
-            ログアウト
-          </MenuItem>
-        </Tooltip>
+        {!isOffline && !Capacitor.isNativePlatform() ? (
+          <Tooltip title='アプリからログアウト' placement='right'>
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize='small' />
+              </ListItemIcon>
+              ログアウト
+            </MenuItem>
+          </Tooltip>
+        ) : (
+          <Tooltip title='ログインするとすべての機能を利用できます' placement='right'>
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize='small' />
+              </ListItemIcon>
+              ログインして全機能にアクセス
+            </MenuItem>
+          </Tooltip>
+        )}
       </Menu>
     </ListItem>
   );

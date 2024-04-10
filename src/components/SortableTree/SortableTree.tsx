@@ -296,16 +296,24 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     if (projected && over) {
       const { depth, parentId } = projected;
       const clonedItems: FlattenedItem[] = JSON.parse(JSON.stringify(flattenTree(items)));
-      let overIndex;
-      if (over.id === 'trash') {
-        overIndex = 0;
-      } else {
-        overIndex = clonedItems.findIndex(({ id }) => id === over.id);
-      }
+      const trashIndex = clonedItems.findIndex(({ id }) => id === 'trash'); // ゴミ箱の位置を検索
+
+      const overIndex = clonedItems.findIndex(({ id }) => id === over.id);
       const activeIndex = clonedItems.findIndex(({ id }) => id === active.id);
       const activeTreeItem = clonedItems[activeIndex];
 
-      clonedItems[activeIndex] = { ...activeTreeItem, depth, parentId };
+      // over.idがゴミ箱より後ろにあり、かつdepthが0の場合、depthを1に更新
+      let putDepth;
+      let putParentId;
+      if (overIndex >= trashIndex && depth === 0) {
+        putDepth = 1;
+        putParentId = 'trash';
+      } else {
+        putDepth = depth;
+        putParentId = parentId;
+      }
+
+      clonedItems[activeIndex] = { ...activeTreeItem, depth: putDepth, parentId: putParentId };
 
       const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
       const newItems = buildTree(sortedItems);

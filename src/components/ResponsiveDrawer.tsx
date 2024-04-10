@@ -214,7 +214,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
             zIndex: 1000,
           }}
         >
-          タップしてツリーを開く →
+          タップしてツリーリストを開く →
         </Typography>
       )}
       <IconButton
