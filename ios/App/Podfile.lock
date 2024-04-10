@@ -21,6 +21,8 @@ PODS:
   - CapacitorFirebaseAuthentication/Lite (5.4.1):
     - Capacitor
     - FirebaseAuth (~> 10.8)
+  - CapacitorPreferences (5.0.7):
+    - Capacitor
   - CapacitorShare (5.0.7):
     - Capacitor
   - CapawesomeCapacitorFilePicker (5.3.0):
@@ -78,6 +80,7 @@ DEPENDENCIES:
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
   - "CapacitorFirebaseAuthentication (from `../../node_modules/@capacitor-firebase/authentication`)"
   - "CapacitorFirebaseAuthentication/Google (from `../../node_modules/@capacitor-firebase/authentication`)"
+  - "CapacitorPreferences (from `../../node_modules/@capacitor/preferences`)"
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapawesomeCapacitorFilePicker (from `../../node_modules/@capawesome/capacitor-file-picker`)"
 
@@ -104,6 +107,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/filesystem"
   CapacitorFirebaseAuthentication:
     :path: "../../node_modules/@capacitor-firebase/authentication"
+  CapacitorPreferences:
+    :path: "../../node_modules/@capacitor/preferences"
   CapacitorShare:
     :path: "../../node_modules/@capacitor/share"
   CapawesomeCapacitorFilePicker:
@@ -115,6 +120,7 @@ SPEC CHECKSUMS:
   CapacitorCordova: a6e87fccc0307dee7aec1560ec9398485f2b0ce7
   CapacitorFilesystem: 9f3e3c7fea2fff12f46dd5b07a2914f2103e4cfc
   CapacitorFirebaseAuthentication: 4b5146252052345d7c0cd8147dd4f1372a65e99b
+  CapacitorPreferences: 77ac427e98db83bace772455f8ba447430382c4c
   CapacitorShare: c6a1ebbf0114ff9e863b966cd6052678fa25d480
   CapawesomeCapacitorFilePicker: 41f486cb4a89c6a7c8a4f5d683dbf96658894182
   FirebaseAppCheckInterop: a1955ce8c30f38f87e7d091630e871e91154d65d
@@ -128,6 +134,6 @@ SPEC CHECKSUMS:
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
 
-PODFILE CHECKSUM: 046e216df0a95226021b23b58969b94e4b111329
+PODFILE CHECKSUM: 32a24057c77dcceaa0d5377a0356311914332cf1
 
 COCOAPODS: 1.15.2
