@@ -44,6 +44,7 @@ export const useObserve = () => {
       const name = treeNameOffline ? treeNameOffline : 'オフラインツリー';
       const result = await showDialog('オフラインツリーが見つかりました。このツリーを読み込みますか？', 'オフラインツリーの読み込み', true);
       if (result) {
+        setIsLoading(true);
         await handleLoadedContent(JSON.stringify({ name, items }));
         await Preferences.remove({ key: `items_offline` });
         await Preferences.remove({ key: `treeName_offline` });
