@@ -240,8 +240,10 @@ export const useTaskManagement = () => {
                   const newId = newIdStart + parseInt(item.id.toString());
                   let newAttachedFile = item.attachedFile;
                   if (item.attachedFile) {
-                    // 添付ファイルのパスを新しいツリーIDに更新する処理を追加
-                    newAttachedFile = `trees/${targetTreeId}/${item.attachedFile}`;
+                    // ファイル名のみを抽出（最後のスラッシュ以降）
+                    const fileName = item.attachedFile.substring(item.attachedFile.lastIndexOf('/') + 1);
+                    // 新しいパスを構築
+                    newAttachedFile = `trees/${targetTreeId}/${fileName}`;
                   }
                   return {
                     ...item,
@@ -343,8 +345,10 @@ export const useTaskManagement = () => {
                   const newId = newIdStart + parseInt(item.id.toString());
                   let newAttachedFile = item.attachedFile;
                   if (item.attachedFile) {
-                    // 添付ファイルのパスを新しいツリーIDに更新する処理を追加
-                    newAttachedFile = `trees/${targetTreeId}/${item.attachedFile}`;
+                    // ファイル名のみを抽出（最後のスラッシュ以降）
+                    const fileName = item.attachedFile.substring(item.attachedFile.lastIndexOf('/') + 1);
+                    // 新しいパスを構築
+                    newAttachedFile = `trees/${targetTreeId}/${fileName}`;
                   }
                   return {
                     ...item,
