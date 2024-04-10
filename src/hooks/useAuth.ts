@@ -301,6 +301,7 @@ export const useAuth = () => {
         } else {
           setSystemMessage('');
         }
+        setIsOffline(false);
       })
       .catch((error) => {
         console.error(error);

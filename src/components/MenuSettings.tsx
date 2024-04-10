@@ -249,7 +249,7 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
           </MenuItem>
         </Tooltip>
         <Divider />
-        {!isOffline && !Capacitor.isNativePlatform() ? (
+        {!isOffline ? (
           <Tooltip title='アプリからログアウト' placement='right'>
             <MenuItem onClick={handleLogout}>
               <ListItemIcon>
