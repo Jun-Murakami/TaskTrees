@@ -33,8 +33,8 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   wrapperRef?(node: HTMLLIElement): void;
   onChange?(value: string): void;
   onChangeDone?(done: boolean): void;
-  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
-  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
+  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): Promise<boolean>;
+  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): Promise<void>;
   onRestoreItems?(id: UniqueIdentifier): void;
   handleAttachFile(id: UniqueIdentifier, fileName: string): void;
   removeTrashDescendants?: () => Promise<void>;

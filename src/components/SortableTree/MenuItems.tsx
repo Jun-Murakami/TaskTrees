@@ -28,8 +28,8 @@ interface MenuItemsProps {
   currenTreeId: UniqueIdentifier | null;
   handleAttachFile?(id: UniqueIdentifier, fileName: string): void;
   onRemove?: () => void;
-  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
-  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): void;
+  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): Promise<boolean>;
+  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): Promise<void>;
 }
 
 interface MenuItemsTrashProps {
@@ -303,8 +303,8 @@ export function MenuItems({
                   {treesList.map((tree) => (
                     <MenuItem
                       key={tree.id}
-                      onClick={() => {
-                        onCopyItems && onCopyItems(tree.id, id);
+                      onClick={async () => {
+                        onCopyItems && (await onCopyItems(tree.id, id));
                         handleCopyClose();
                         handleParentClose();
                       }}
@@ -343,8 +343,8 @@ export function MenuItems({
                   {treesListWithoutId.map((tree) => (
                     <MenuItem
                       key={tree.id}
-                      onClick={() => {
-                        onMoveItems && onMoveItems(tree.id, id);
+                      onClick={async () => {
+                        onMoveItems && (await onMoveItems(tree.id, id));
                         handleMoveClose();
                         handleParentClose();
                       }}
