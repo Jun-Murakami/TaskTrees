@@ -42,7 +42,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   isLoggedIn: false,
   uid: null,
   email: null,
-  isLoading: false,
+  isLoading: true,
   isWaitingForDelete: false,
   isAccordionExpanded: false,
   isFocusedTreeName: false,
