@@ -227,7 +227,7 @@ export function MenuItems({
           </ListItemIcon>
           削除
         </MenuItem>
-        {!isOffline && !Capacitor.isNativePlatform() && (
+        {!isOffline && (
           <Box>
             <Divider />
             <Box ref={anchorEliOS}>

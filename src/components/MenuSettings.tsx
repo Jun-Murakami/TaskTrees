@@ -158,7 +158,7 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
           horizontal: 'center',
         }}
       >
-        {!isOffline && !Capacitor.isNativePlatform() && (
+        {!isOffline && (
           <Box>
             <Tooltip title='アプリケーションの全データとアカウントの削除' placement='right'>
               <MenuItem
@@ -215,7 +215,7 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
             </MenuItem>
           </Tooltip>
         )}
-        {!isOffline && !Capacitor.isNativePlatform() && (
+        {!isOffline && (
           <Tooltip title='すべてのツリーデータをバックアップ' placement='right'>
             <MenuItem
               onClick={async () => {
