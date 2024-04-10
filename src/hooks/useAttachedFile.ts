@@ -102,17 +102,19 @@ export const useAttachedFile = () => {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      const result = await showDialog(
-        'ファイルのダウンロードに失敗しました。ファイルが削除されている可能性があります。データベースからこのファイルの添付を削除しますか？\n\n' +
-        error,
-        'Error',
-        true
-      );
-      if (result) {
-        const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
-        const updatedItems = await deleteAttachedFile(newItems, fileName);
-        setItems(updatedItems);
-        await saveItemsDb(updatedItems, currentTree!);
+      if (error instanceof Error && !error.message.includes('Share')) {
+        const result = await showDialog(
+          'ファイルのダウンロードに失敗しました。ファイルが削除されている可能性があります。データベースからこのファイルの添付を削除しますか？\n\n' +
+          error,
+          'Error',
+          true
+        );
+        if (result) {
+          const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
+          const updatedItems = await deleteAttachedFile(newItems, fileName);
+          setItems(updatedItems);
+          saveItemsDb(updatedItems, currentTree!);
+        }
       }
     }
   };
