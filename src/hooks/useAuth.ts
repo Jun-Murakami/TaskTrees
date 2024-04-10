@@ -68,7 +68,6 @@ export const useAuth = () => {
   useEffect(() => {
     setIsLoading(true);
     const asyncFunc = async () => {
-      setIsLoading(false);
       if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
         FirebaseAuthentication.addListener('authStateChange', async (result) => {
           if (result.user) {
@@ -92,6 +91,9 @@ export const useAuth = () => {
       }
     };
     asyncFunc();
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
   }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
 
   useEffect(() => {
