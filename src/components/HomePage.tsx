@@ -207,7 +207,6 @@ export function HomePage() {
                 >
                   Appleでログイン
                 </Button>
-                {/* {Capacitor.isNativePlatform() && ( */}
                 <Button
                   onClick={() => {
                     setIsOffline(true);
@@ -219,7 +218,6 @@ export function HomePage() {
                 >
                   オフラインモードで使用する
                 </Button>
-                {/* )} */}
                 <Button onClick={async () => await handleResetPassword()} variant='text' size='small'>
                   <Typography variant='caption' sx={{ textDecoration: 'underline' }}>
                     ※ パスワードをお忘れですか？
