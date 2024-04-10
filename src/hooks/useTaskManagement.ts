@@ -262,7 +262,6 @@ export const useTaskManagement = () => {
                 attachedFiles.forEach(async (attachedFile) => {
                   const sourcePath = `trees/${currentTree}/${attachedFile}`;
                   const destinationPath = `trees/${targetTreeId}/${attachedFile}`;
-                  console.log(sourcePath, destinationPath);
                   try {
                     await copyFileInStorage({ sourcePath, destinationPath });
                   } catch (error) {
@@ -360,7 +359,6 @@ export const useTaskManagement = () => {
                 attachedFiles.forEach(async (attachedFile) => {
                   const sourcePath = `trees/${currentTree}/${attachedFile}`;
                   const destinationPath = `trees/${targetTreeId}/${attachedFile}`;
-                  console.log(sourcePath, destinationPath);
                   try {
                     await copyFileInStorage({ sourcePath, destinationPath });
                     await deleteFile(attachedFile, currentTree, true);
