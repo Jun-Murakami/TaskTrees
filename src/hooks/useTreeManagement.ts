@@ -653,6 +653,7 @@ export const useTreeManagement = () => {
       false
     );
     if (!email) return Promise.resolve();
+    setIsLoading(true);
     const functions = getFunctions();
     const addUserToTreeCallable = httpsCallable(functions, 'addUserToTree');
     try {
@@ -664,11 +665,11 @@ export const useTreeManagement = () => {
       setIsLoading(false);
       return Promise.resolve(result.data);
     } catch (error) {
+      setIsLoading(false);
       await showDialog(
         'メンバーの追加に失敗しました。メールアドレスを確認して再度実行してください。\n\n' + error,
-        'IInformation'
+        'Information'
       );
-      setIsLoading(false);
       return Promise.reject(error);
     }
   };
@@ -707,8 +708,8 @@ export const useTreeManagement = () => {
         setIsLoading(false);
         return Promise.resolve(result.data);
       } catch (error) {
-        await showDialog('メンバーの削除に失敗しました。\n\n' + error, 'Error');
         setIsLoading(false);
+        await showDialog('メンバーの削除に失敗しました。\n\n' + error, 'Error');
         return Promise.reject(error);
       }
     }

@@ -39,7 +39,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   darkMode: false,
   hideDoneItems: false,
   systemMessage: null,
-  isLoggedIn: false,
+  isLoggedIn: true,
   uid: null,
   email: null,
   isLoading: true,
