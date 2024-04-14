@@ -27,7 +27,7 @@ export const useObserve = () => {
   const showDialog = useDialogStore((state) => state.showDialog);
 
   const { loadTreesList, loadCurrentTreeData, handleLoadedContent } = useTreeManagement();
-  const { saveItemsDb } = useDatabase();
+  const { saveItemsDb, saveTimeStampDb } = useDatabase();
   const { loadSettingsFromDb, loadQuickMemoFromDb, saveQuickMemoDb } = useAppStateManagement();
   const { handleError } = useError();
 
@@ -137,6 +137,7 @@ export const useObserve = () => {
             value: quickMemoText,
           });
         } else {
+          saveTimeStampDb();
           saveQuickMemoDb(quickMemoText);
         }
       } catch (error) {
