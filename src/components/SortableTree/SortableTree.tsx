@@ -122,14 +122,13 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     draggable: {
       measure: (node: HTMLElement | null) => {
         if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
-          // 特定の要素に対する調整
           const rect = node!.getBoundingClientRect();
-          // 必要に応じてrectを修正
-          // 例: スクロールされた分だけ位置を調整する
+          const safeAreaInsetBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('padding-bottom'));
+
           if (isMobile) {
-            rect.y = window.innerHeight;
+            rect.y = window.innerHeight - safeAreaInsetBottom - 50;
           } else {
-            rect.y += window.scrollY;
+            rect.y += window.scrollY - 30;
           }
           return rect;
         }
