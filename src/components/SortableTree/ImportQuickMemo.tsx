@@ -13,7 +13,6 @@ interface Props {
 
 export function ImportQuickMemo({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
-  const isEditingText = useAppStateStore((state) => state.isEditingText);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
 
   const theme = useTheme();
@@ -56,7 +55,7 @@ export function ImportQuickMemo({ id, ...Props }: Props) {
             cursor: Props ? 'grab' : 'grabbing',
             height: '30px',
           }}
-          disabled={isDragging || (isEditingText && isMobile) || quickMemoText === ''}
+          disabled={isDragging || quickMemoText === ''}
         >
           メモを取り込む
         </Button>

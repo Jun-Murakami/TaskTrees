@@ -272,9 +272,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
         children: [],
       };
       setItems([activeNewTaskItem, ...items]);
-      if (activeId === activeQuickMemoId) {
-        setIsQuickMemoExpanded(false);
-      }
     }
 
     setActiveId(activeId);
@@ -343,7 +340,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
             return { ...item, children: updateItemIdRecursively(item.children, targetId, newId) };
           });
         };
-        const newItemsWithId = updateItemIdRecursively(newItems, activeNewTaskId, (findMaxId(newItems) + 1).toString());
+        const newItemsWithId = updateItemIdRecursively(newItems, active.id, (findMaxId(newItems) + 1).toString());
         setAddedTaskId(findMaxId(newItemsWithId).toString());
         setItems(newItemsWithId);
         const newActiveId = (parseInt(active.id.toString()) - 1).toString();
@@ -351,6 +348,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
           setActiveNewTaskId(newActiveId);
         } else {
           setActiveQuickMemoId(newActiveId);
+          setIsQuickMemoExpanded(false);
           setQuickMemoText('');
         }
       } else {
