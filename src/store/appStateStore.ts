@@ -16,7 +16,6 @@ type AppState = {
   isFocusedTreeName: boolean;
   containerWidth: number;
   searchKey: string;
-  isEditingText: boolean;
   quickMemoText: string;
   setIsOffline: (isOffline: boolean) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
@@ -33,7 +32,6 @@ type AppState = {
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
   setContainerWidth: (containerWidth: number) => void;
   setSearchKey: (searchKey: string) => void;
-  setIsEditingText: (isEditingText: boolean) => void;
   setQuickMemoText: (quickMemoText: string) => void;
 };
 
@@ -53,7 +51,6 @@ export const useAppStateStore = create<AppState>((set) => ({
   isFocusedTreeName: false,
   containerWidth: 0,
   searchKey: '',
-  isEditingText: false,
   quickMemoText: '',
   setIsOffline: (isOffline) => set({ isOffline }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
@@ -70,6 +67,5 @@ export const useAppStateStore = create<AppState>((set) => ({
   setIsFocusedTreeName: (isFocusedTreeName) => set({ isFocusedTreeName }),
   setContainerWidth: (containerWidth) => set({ containerWidth }),
   setSearchKey: (searchKey) => set({ searchKey }),
-  setIsEditingText: (isEditingText) => set({ isEditingText }),
   setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
 }));

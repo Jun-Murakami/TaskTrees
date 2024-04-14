@@ -9,7 +9,6 @@ export const QuickMemo = () => {
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
-  const setIsEditingText = useAppStateStore((state) => state.setIsEditingText);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
 
@@ -107,8 +106,6 @@ export const QuickMemo = () => {
               rows={6}
               value={quickMemoText}
               onChange={(e) => setQuickMemoText(e.target.value)}
-              onFocus={() => setIsEditingText(true)}
-              onBlur={() => setIsEditingText(false)}
               sx={{ backgroundColor: theme.palette.background.paper }}
               InputLabelProps={{
                 shrink: true,
