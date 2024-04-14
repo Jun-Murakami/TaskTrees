@@ -51,6 +51,7 @@ export function AddTask({ id, ...Props }: Props) {
             width: { xs: '50%', sm: '80%' },
             maxWidth: '400px',
           }}
+          onMouseDown={(event) => event.currentTarget.focus()}
         >
           <Button
             data-id='add-task-button'
