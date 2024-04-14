@@ -45,7 +45,7 @@ export function AddTask({ id, ...Props }: Props) {
               left: { xs: '50%', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px)' },
             },
             transform: 'translateX(-50%)',
-            bottom: { xs: 'calc(env(safe-area-inset-bottom) + 50px)', sm: 'auto' },
+            bottom: { xs: 'calc(env(safe-area-inset-bottom) + 60px)', sm: 'auto' },
             marginBottom: isAccordionExpanded ? { xs: 'auto', sm: 5 } : 'auto',
             zIndex: 900, // スクロール時は他の要素より前面に
             height: { xs: '40px', sm: '50px' },

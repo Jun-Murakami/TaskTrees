@@ -30,7 +30,6 @@ import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useSearch } from '../hooks/useSearch';
 import { SortableList } from './SortableList/SortableList';
 import { MenuSettings } from './MenuSettings';
-import { Capacitor } from '@capacitor/core';
 
 const drawerWidth = 300;
 
@@ -55,7 +54,6 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isNative = Capacitor.isNativePlatform();
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
@@ -90,7 +88,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       <Box
         sx={{
           position: 'absolute',
-          top: isNative ? 'env(safe-area-inset-top)' : 0,
+          top: 'env(safe-area-inset-top)',
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
@@ -131,7 +129,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
-          bottom: isNative ? 'env(safe-area-inset-bottom)' : 0,
+          bottom: 'env(safe-area-inset-bottom)',
           backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
         }}
       >
@@ -209,7 +207,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { sm: 'none' },
             position: 'fixed',
-            bottom: 'calc(env(safe-area-inset-bottom) + 50px)',
+            bottom: 'calc(env(safe-area-inset-bottom) + 70px)',
             right: 100,
             zIndex: 1000,
           }}
@@ -227,7 +225,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           border: `1px solid ${theme.palette.divider}`,
           display: { sm: 'none' },
           position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 45px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 55px)',
           right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,
@@ -259,7 +257,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': {
-              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
+              pt: 'calc(env(safe-area-inset-top) + 60px)',
               boxSizing: 'border-box',
               width: drawerWidth,
             },
@@ -272,7 +270,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': {
-              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
+              pt: 'calc(env(safe-area-inset-top) + 60px)',
               boxSizing: 'border-box',
               width: drawerWidth,
             },
