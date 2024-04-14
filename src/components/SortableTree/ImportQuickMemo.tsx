@@ -6,7 +6,6 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
 import { useAppStateStore } from '../../store/appStateStore';
-import { Capacitor } from '@capacitor/core';
 
 interface Props {
   id: UniqueIdentifier;
@@ -19,7 +18,6 @@ export function ImportQuickMemo({ id, ...Props }: Props) {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isNative = Capacitor.isNativePlatform();
 
   return (
     <>
@@ -38,7 +36,7 @@ export function ImportQuickMemo({ id, ...Props }: Props) {
             left: { xs: '50%', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px)' },
           },
           transform: 'translateX(-50%)',
-          bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 176px)' : 176,
+          bottom: 'calc(env(safe-area-inset-bottom) + 176px)',
           zIndex: 900,
           height: '30px',
           width: '50%',
