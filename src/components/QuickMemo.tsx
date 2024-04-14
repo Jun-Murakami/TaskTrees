@@ -3,7 +3,6 @@ import { Box, Stack, Typography, TextField, Accordion, AccordionSummary, Accordi
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import { useAppStateStore } from '../store/appStateStore';
-import { Capacitor } from '@capacitor/core';
 
 export const QuickMemo = () => {
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
@@ -47,7 +46,7 @@ export const QuickMemo = () => {
             height: isQuickMemoExpanded
               ? 'calc(215px + env(safe-area-inset-bottom))'
               : 'calc(40px + env(safe-area-inset-bottom))',
-            paddingBottom: Capacitor.isNativePlatform() ? 'env(safe-area-inset-bottom)' : 0,
+            paddingBottom: 'env(safe-area-inset-bottom)',
             backgroundColor: darkMode
               ? isQuickMemoExpanded
                 ? 'rgba(0, 55, 119, 0.8)'

@@ -6,7 +6,6 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
 import { useAppStateStore } from '../../store/appStateStore';
-import { Capacitor } from '@capacitor/core';
 
 interface Props {
   id: UniqueIdentifier;
@@ -20,7 +19,6 @@ export function AddTask({ id, ...Props }: Props) {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isNative = Capacitor.isNativePlatform();
 
   return (
     <>
@@ -38,7 +36,7 @@ export function AddTask({ id, ...Props }: Props) {
           sx={{
             display: { xs: 'flex', sm: 'block' },
             position: 'fixed', // スクロールに応じて位置を固定
-            top: { xs: 'auto', sm: isNative ? 'calc(env(safe-area-inset-top) + 80px)' : '80px' }, // スクロール時は上部に固定
+            top: { xs: 'auto', sm: 'calc(env(safe-area-inset-top) + 80px)' }, // スクロール時は上部に固定
             left: '50%',
             '@media (min-width: 1249px) and (max-width: 1546px)': {
               left: { xs: '50%', sm: '765px' },
@@ -47,7 +45,7 @@ export function AddTask({ id, ...Props }: Props) {
               left: { xs: '50%', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px)' },
             },
             transform: 'translateX(-50%)',
-            bottom: { xs: isNative ? 'calc(env(safe-area-inset-bottom) + 50px)' : 50, sm: 'auto' },
+            bottom: { xs: 'calc(env(safe-area-inset-bottom) + 50px)', sm: 'auto' },
             marginBottom: isAccordionExpanded ? { xs: 'auto', sm: 5 } : 'auto',
             zIndex: 900, // スクロール時は他の要素より前面に
             height: { xs: '40px', sm: '50px' },

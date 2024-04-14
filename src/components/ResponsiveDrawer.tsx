@@ -209,7 +209,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { sm: 'none' },
             position: 'fixed',
-            bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 50px)' : 50,
+            bottom: 'calc(env(safe-area-inset-bottom) + 50px)',
             right: 100,
             zIndex: 1000,
           }}
@@ -227,7 +227,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           border: `1px solid ${theme.palette.divider}`,
           display: { sm: 'none' },
           position: 'fixed',
-          bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 45px)' : 45,
+          bottom: 'calc(env(safe-area-inset-bottom) + 45px)',
           right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,
