@@ -111,6 +111,9 @@ export const QuickMemo = () => {
               onFocus={() => setIsEditingText(true)}
               onBlur={() => setIsEditingText(false)}
               sx={{ backgroundColor: theme.palette.background.paper }}
+              InputLabelProps={{
+                shrink: true,
+              }}
             />
           </AccordionDetails>
         </Accordion>
