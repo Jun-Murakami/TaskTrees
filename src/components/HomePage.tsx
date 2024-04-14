@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTreeManagement } from '../hooks/useTreeManagement';
 import { ModalDialog } from '../components/ModalDialog';
@@ -48,10 +48,6 @@ export function HomePage() {
   } = useAuth();
 
   const { handleCreateOfflineTree } = useTreeManagement();
-
-  useEffect(() => {
-    console.log('isLoggedIn:', isLoggedIn);
-  }, [isLoggedIn]);
 
   const theme = useTheme();
 

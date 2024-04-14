@@ -126,14 +126,8 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
           const rect = node!.getBoundingClientRect();
           // 必要に応じてrectを修正
           // 例: スクロールされた分だけ位置を調整する
-          if (activeId === activeQuickMemoId) {
-            if (isMobile) {
-              rect.y = window.scrollY + (window.innerHeight - 176);
-            } else {
-              rect.y += window.scrollY + (window.innerHeight - 300);
-            }
-          } else if (isMobile) {
-            rect.y = window.scrollY + (window.innerHeight - 15);
+          if (isMobile) {
+            rect.y = window.innerHeight;
           } else {
             rect.y += window.scrollY;
           }
