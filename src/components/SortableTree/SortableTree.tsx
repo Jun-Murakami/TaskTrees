@@ -206,7 +206,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       onDragCancel={handleDragCancel}
     >
       {currentTree && <AddTask id={activeNewTaskId} />}
-      {isQuickMemoExpanded && <ImportQuickMemo id={activeQuickMemoId} />}
+      {isQuickMemoExpanded && quickMemoText !== '' && <ImportQuickMemo id={activeQuickMemoId} />}
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
