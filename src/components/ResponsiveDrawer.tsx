@@ -38,6 +38,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   const darkMode = useAppStateStore((state) => state.darkMode);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
+  const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
   const searchKey = useAppStateStore((state) => state.searchKey);
@@ -199,6 +200,8 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
     </>
   );
 
+  const quickMemoSpacer = isQuickMemoExpanded ? 176 : 0;
+
   return (
     <>
       {!currentTree && treesList.length === 0 && (
@@ -207,7 +210,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { sm: 'none' },
             position: 'fixed',
-            bottom: 'calc(env(safe-area-inset-bottom) + 70px)',
+            bottom: `calc(env(safe-area-inset-bottom) + ${quickMemoSpacer}px + 70px)`,
             right: 100,
             zIndex: 1000,
           }}
@@ -225,7 +228,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           border: `1px solid ${theme.palette.divider}`,
           display: { sm: 'none' },
           position: 'fixed',
-          bottom: 'calc(env(safe-area-inset-bottom) + 55px)',
+          bottom: `calc(env(safe-area-inset-bottom) + ${quickMemoSpacer}px + 55px)`,
           right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,
