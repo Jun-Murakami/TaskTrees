@@ -65,7 +65,7 @@ export const useTreeManagement = () => {
       if (!uid) {
         return;
       }
-      setIsLoading(true);
+      if (!isLoading) setIsLoading(true);
       const treesListFromDb = await loadTreesListFromDb(uid);
       let missingTrees: string[] = [];
       if (treesListFromDb) {
@@ -107,7 +107,7 @@ export const useTreeManagement = () => {
 
   // 本編
   const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
-    setIsLoading(true);
+    if (!isLoading) setIsLoading(true);
     // デバウンスで前のツリーの状態変更が残っていたら保存
     if (prevCurrentTree && prevCurrentTree !== targetTree && prevItems.length !== 0 && prevItems !== items) {
       saveItemsDb(items, prevCurrentTree);

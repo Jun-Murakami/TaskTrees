@@ -34,6 +34,7 @@ import type { FlattenedItem, SensorContext, TreeItems } from '../../types/types'
 import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './SortableTreeItem';
 import { AddTask } from './AddTask';
+import { ImportQuickMemo } from './ImportQuickMemo';
 import { CSS } from '@dnd-kit/utilities';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { useTreeStateStore } from '../../store/treeStateStore';
@@ -74,6 +75,7 @@ interface SortableTreeProps {
 export function SortableTree({ collapsible, indicator = false, indentationWidth = 30, removable }: SortableTreeProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeNewTaskId, setActiveNewTaskId] = useState<UniqueIdentifier>('-1');
+  const [activeQuickMemoId, setActiveQuickMemoId] = useState<UniqueIdentifier>('-10000');
   const [addedTaskId, setAddedTaskId] = useState<UniqueIdentifier | null>(null);
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [offsetLeft, setOffsetLeft] = useState(0);
@@ -88,6 +90,10 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   const searchKey = useAppStateStore((state) => state.searchKey);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
+  const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
+  const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
+  const quickMemoText = useAppStateStore((state) => state.quickMemoText);
+  const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
 
   // タスクを管理するカスタムフック
   const {
@@ -115,12 +121,18 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     },
     draggable: {
       measure: (node: HTMLElement | null) => {
-        if (activeId === activeNewTaskId) {
+        if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
           // 特定の要素に対する調整
           const rect = node!.getBoundingClientRect();
           // 必要に応じてrectを修正
           // 例: スクロールされた分だけ位置を調整する
-          if (isMobile) {
+          if (activeId === activeQuickMemoId) {
+            if (isMobile) {
+              rect.y = window.scrollY + (window.innerHeight - 176);
+            } else {
+              rect.y += window.scrollY + (window.innerHeight - 300);
+            }
+          } else if (isMobile) {
             rect.y = window.scrollY + (window.innerHeight - 15);
           } else {
             rect.y += window.scrollY;
@@ -200,6 +212,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       onDragCancel={handleDragCancel}
     >
       {currentTree && <AddTask id={activeNewTaskId} />}
+      {isQuickMemoExpanded && <ImportQuickMemo id={activeQuickMemoId} />}
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
@@ -242,7 +255,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
                 indentationWidth={indentationWidth}
                 handleAttachFile={handleAttachFile}
                 done={activeItem.done}
-                isNewTask={activeId === activeNewTaskId}
+                isNewTask={activeId === activeNewTaskId || activeId === activeQuickMemoId}
                 isItemDescendantOfTrash={isDescendantOfTrash(items, activeId)}
               />
             ) : null}
@@ -255,22 +268,23 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
     if (isLoading) return;
-    if (activeId === activeNewTaskId) {
+    if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
       const activeNewTaskItem = {
-        id: activeNewTaskId,
-        value: '新しいタスク',
+        id: activeId,
+        value: activeId === activeNewTaskId ? '新しいタスク' : quickMemoText,
         done: false,
         parentId: null,
         depth: 0,
         children: [],
       };
       setItems([activeNewTaskItem, ...items]);
-      setActiveId(activeNewTaskId);
-      setOverId(activeNewTaskId);
-    } else {
-      setActiveId(activeId);
-      setOverId(activeId);
+      if (activeId === activeQuickMemoId) {
+        setIsQuickMemoExpanded(false);
+      }
     }
+
+    setActiveId(activeId);
+    setOverId(activeId);
 
     const activeItem = flattenedItems.find(({ id }) => id === activeId);
 
@@ -318,13 +332,18 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
       const newItems = buildTree(sortedItems);
 
-      if (active.id === activeNewTaskId) {
+      if (active.id === activeNewTaskId || active.id === activeQuickMemoId) {
         // newItemsをchildren内も再帰的に検索し-1のIDを持つ新規タスクのIDを最大ID+1に変更
         const updateItemIdRecursively = (items: TreeItems, targetId: UniqueIdentifier, newId: UniqueIdentifier): TreeItems => {
           return items.map((item) => {
             // IDが目的のIDと一致する場合、新しいIDで更新
             if (item.id === targetId) {
-              return { ...item, id: newId, value: '', children: updateItemIdRecursively(item.children, targetId, newId) };
+              return {
+                ...item,
+                id: newId,
+                value: active.id === activeNewTaskId ? '' : quickMemoText,
+                children: updateItemIdRecursively(item.children, targetId, newId),
+              };
             }
             // 子アイテムも同様に処理
             return { ...item, children: updateItemIdRecursively(item.children, targetId, newId) };
@@ -333,17 +352,26 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
         const newItemsWithId = updateItemIdRecursively(newItems, activeNewTaskId, (findMaxId(newItems) + 1).toString());
         setAddedTaskId(findMaxId(newItemsWithId).toString());
         setItems(newItemsWithId);
-        const newActiveId = (parseInt(activeNewTaskId.toString()) - 1).toString();
-        setActiveNewTaskId(newActiveId);
+        const newActiveId = (parseInt(active.id.toString()) - 1).toString();
+        if (active.id === activeNewTaskId) {
+          setActiveNewTaskId(newActiveId);
+        } else {
+          setActiveQuickMemoId(newActiveId);
+          setQuickMemoText('');
+        }
       } else {
         setItems(newItems);
       }
     } else {
       // 新規タスクの場合、新規タスクを削除
-      if (active.id === activeNewTaskId) {
+      if (active.id === activeNewTaskId || active.id === activeQuickMemoId) {
         setItems(items.filter((item) => item.id !== active.id));
-        const newActiveId = (parseInt(activeNewTaskId.toString()) - 1).toString();
-        setActiveNewTaskId(newActiveId);
+        const newActiveId = (parseInt(active.id.toString()) - 1).toString();
+        if (active.id === activeNewTaskId) {
+          setActiveNewTaskId(newActiveId);
+        } else {
+          setActiveQuickMemoId(newActiveId);
+        }
       }
     }
   }

@@ -14,7 +14,10 @@ export const useObserve = () => {
   const isOffline = useAppStateStore((state) => state.isOffline);
   const uid = useAppStateStore((state) => state.uid);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
+  const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
+  const quickMemoText = useAppStateStore((state) => state.quickMemoText);
+  const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
   const items = useTreeStateStore((state) => state.items);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
@@ -25,7 +28,7 @@ export const useObserve = () => {
 
   const { loadTreesList, loadCurrentTreeData, handleLoadedContent } = useTreeManagement();
   const { saveItemsDb } = useDatabase();
-  const { loadSettingsFromDb } = useAppStateManagement();
+  const { loadSettingsFromDb, loadQuickMemoFromDb, saveQuickMemoDb } = useAppStateManagement();
   const { handleError } = useError();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
@@ -33,19 +36,23 @@ export const useObserve = () => {
     if (!uid) {
       return;
     }
-    setIsLoading(true);
+    if (!isLoading) setIsLoading(true);
     await loadSettingsFromDb();
     await loadTreesList();
-    // ローカルストレージからitems_offlineとtreeName_offlineを読み込む
+    await loadQuickMemoFromDb();
+    // ローカルストレージからitems_offlineとtreeName_offline、quick_memo_offlineを読み込む
     const { value: itemsOffline } = await Preferences.get({ key: `items_offline` });
     const { value: treeNameOffline } = await Preferences.get({ key: `treeName_offline` });
+    const { value: quickMemoOffline } = await Preferences.get({ key: `quick_memo_offline` });
     if (itemsOffline) {
       const items = JSON.parse(itemsOffline);
       const name = treeNameOffline ? treeNameOffline : 'オフラインツリー';
+      const quickMemo = quickMemoOffline ? quickMemoOffline : '';
+      const conbinedQuickMemoText = quickMemoText + '\n\n' + quickMemo;
       const result = await showDialog('オフラインツリーが見つかりました。このツリーを読み込みますか？', 'オフラインツリーの読み込み', true);
       if (result) {
-        setIsLoading(true);
         await handleLoadedContent(JSON.stringify({ name, items }));
+        setQuickMemoText(conbinedQuickMemoText);
         await Preferences.remove({ key: `items_offline` });
         await Preferences.remove({ key: `treeName_offline` });
       } else {
@@ -53,18 +60,20 @@ export const useObserve = () => {
         if (removeResult) {
           await Preferences.remove({ key: `items_offline` });
           await Preferences.remove({ key: `treeName_offline` });
+          await Preferences.remove({ key: `quick_memo_offline` });
         }
       }
     }
     const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
     onValue(timestampRef, async (snapshot) => {
-      setIsLoading(true);
+      if (!isLoading) setIsLoading(true);
       const serverTimestamp = snapshot.val();
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
         setLocalTimestamp(serverTimestamp);
         await loadSettingsFromDb();
         await loadTreesList();
+        await loadQuickMemoFromDb();
         const currentTree = useTreeStateStore.getState().currentTree;
         if (currentTree) {
           await loadCurrentTreeData(currentTree);
@@ -113,6 +122,32 @@ export const useObserve = () => {
     return () => clearTimeout(debounceSave);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
+
+  // ローカルのクイックメモの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!uid || !quickMemoText) {
+      return;
+    }
+    const debounceSave = setTimeout(() => {
+      try {
+        if (isOffline) {
+          // オフラインモードの場合、ローカルストレージに保存
+          Preferences.set({
+            key: `quick_memo_offline`,
+            value: quickMemoText,
+          });
+        } else {
+          saveQuickMemoDb(quickMemoText);
+        }
+      } catch (error) {
+        handleError('クイックメモの変更をデータベースに保存できませんでした。\n\n' + error);
+      }
+    }, 3000); // 3秒のデバウンス
+
+    // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
+    return () => clearTimeout(debounceSave);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quickMemoText]);
 
   return {
     observeTimeStamp

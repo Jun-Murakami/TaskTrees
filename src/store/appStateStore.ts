@@ -12,10 +12,12 @@ type AppState = {
   isLoading: boolean;
   isWaitingForDelete: boolean;
   isAccordionExpanded: boolean;
+  isQuickMemoExpanded: boolean;
   isFocusedTreeName: boolean;
   containerWidth: number;
   searchKey: string;
   isEditingText: boolean;
+  quickMemoText: string;
   setIsOffline: (isOffline: boolean) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
   setDarkMode: (darkMode: boolean) => void;
@@ -27,10 +29,12 @@ type AppState = {
   setIsLoading: (isLoading: boolean) => void;
   setIsWaitingForDelete: (isWaitingForDelete: boolean) => void;
   setIsAccordionExpanded: (isAccordionExpanded: boolean) => void;
+  setIsQuickMemoExpanded: (isQuickMemoExpanded: boolean) => void;
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
   setContainerWidth: (containerWidth: number) => void;
   setSearchKey: (searchKey: string) => void;
   setIsEditingText: (isEditingText: boolean) => void;
+  setQuickMemoText: (quickMemoText: string) => void;
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
@@ -45,10 +49,12 @@ export const useAppStateStore = create<AppState>((set) => ({
   isLoading: true,
   isWaitingForDelete: false,
   isAccordionExpanded: false,
+  isQuickMemoExpanded: false,
   isFocusedTreeName: false,
   containerWidth: 0,
   searchKey: '',
   isEditingText: false,
+  quickMemoText: '',
   setIsOffline: (isOffline) => set({ isOffline }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
   setDarkMode: (darkMode) => set({ darkMode }),
@@ -60,8 +66,10 @@ export const useAppStateStore = create<AppState>((set) => ({
   setIsLoading: (isLoading) => set({ isLoading }),
   setIsWaitingForDelete: (isWaitingForDelete) => set({ isWaitingForDelete }),
   setIsAccordionExpanded: (isAccordionExpanded) => set({ isAccordionExpanded }),
+  setIsQuickMemoExpanded: (isQuickMemoExpanded) => set({ isQuickMemoExpanded }),
   setIsFocusedTreeName: (isFocusedTreeName) => set({ isFocusedTreeName }),
   setContainerWidth: (containerWidth) => set({ containerWidth }),
   setSearchKey: (searchKey) => set({ searchKey }),
   setIsEditingText: (isEditingText) => set({ isEditingText }),
+  setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
 }));
