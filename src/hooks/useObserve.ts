@@ -55,6 +55,7 @@ export const useObserve = () => {
         setQuickMemoText(conbinedQuickMemoText);
         await Preferences.remove({ key: `items_offline` });
         await Preferences.remove({ key: `treeName_offline` });
+        await Preferences.remove({ key: `quick_memo_offline` });
       } else {
         const removeResult = await showDialog('オフラインツリーを削除しますか？削除せず、次回ログイン時に読み込むこともできます。', 'オフラインツリーの削除', true);
         if (removeResult) {
