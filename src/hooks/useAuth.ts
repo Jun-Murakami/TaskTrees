@@ -201,6 +201,7 @@ export const useAuth = () => {
       } else {
         setSystemMessage('ログインに失敗しました。\n\n' + error.code);
       }
+      setIsLoading(false);
     });
   };
 
