@@ -15,7 +15,6 @@ export function AddTask({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
-  const isEditingText = useAppStateStore((state) => state.isEditingText);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -51,6 +50,7 @@ export function AddTask({ id, ...Props }: Props) {
             height: { xs: '40px', sm: '50px' },
             width: { xs: '50%', sm: '80%' },
             maxWidth: '400px',
+            touchAction: 'none',
           }}
         >
           <Button
@@ -65,7 +65,7 @@ export function AddTask({ id, ...Props }: Props) {
               touchAction: 'none',
               cursor: Props ? 'grab' : 'grabbing',
             }}
-            disabled={isDragging || (isEditingText && isMobile)}
+            disabled={isDragging}
           >
             タスクを追加
           </Button>
