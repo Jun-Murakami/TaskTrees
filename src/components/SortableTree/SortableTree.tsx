@@ -90,6 +90,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   const searchKey = useAppStateStore((state) => state.searchKey);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
+  const isEditingText = useAppStateStore((state) => state.isEditingText);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
@@ -205,8 +206,8 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      {currentTree && <AddTask id={activeNewTaskId} />}
-      {isQuickMemoExpanded && quickMemoText !== '' && <ImportQuickMemo id={activeQuickMemoId} />}
+      {currentTree && !(isEditingText && isMobile) && <AddTask id={activeNewTaskId} />}
+      {isQuickMemoExpanded && quickMemoText !== '' && !(isEditingText && isMobile) && <ImportQuickMemo id={activeQuickMemoId} />}
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))

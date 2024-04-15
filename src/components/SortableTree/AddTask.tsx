@@ -21,11 +21,6 @@ export function AddTask({ id, ...Props }: Props) {
 
   return (
     <>
-      <Box
-        sx={{
-          height: { xs: '90px', sm: '138px' },
-        }}
-      />
       {!(isMobile && isQuickMemoExpanded) && (
         <Box
           key={id}

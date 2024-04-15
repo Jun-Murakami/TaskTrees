@@ -84,6 +84,11 @@ export function HomePage() {
                     sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 30 : 8 }}
                     id='tree-container'
                   >
+                    <Box
+                      sx={{
+                        height: { xs: '90px', sm: '138px' },
+                      }}
+                    />
                     <SortableTree collapsible indicator removable />
                   </Box>
                 </>
