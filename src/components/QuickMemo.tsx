@@ -61,8 +61,8 @@ export const QuickMemo = () => {
             paddingBottom: 'env(safe-area-inset-bottom)',
             backgroundColor: darkMode
               ? isQuickMemoExpanded
-                ? 'rgba(10, 20, 26, 0.8)'
-                : 'rgba(10, 20, 26, 0.6)'
+                ? 'rgba(20, 30, 36, 0.8)'
+                : 'rgba(20, 30, 36, 0.6)'
               : isQuickMemoExpanded
               ? 'rgba(230, 240, 246, 0.8)'
               : 'rgba(230, 240, 246, 0.6)',
