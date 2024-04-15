@@ -370,6 +370,16 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
   function handleDragCancel() {
     resetState();
+    // 新規タスクの場合、新規タスクを削除
+    if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
+      setItems(items.filter((item) => item.id !== activeId));
+      const newActiveId = (parseInt(activeId.toString()) - 1).toString();
+      if (activeId === activeNewTaskId) {
+        setActiveNewTaskId(newActiveId);
+      } else {
+        setActiveQuickMemoId(newActiveId);
+      }
+    }
   }
 
   function resetState() {
