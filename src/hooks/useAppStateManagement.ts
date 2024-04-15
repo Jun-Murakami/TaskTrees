@@ -10,6 +10,7 @@ export const useAppStateManagement = () => {
   const uid = useAppStateStore((state) => state.uid);
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
+  const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
 
   const { saveTimeStampDb } = useDatabase();
   // エラーハンドリング
@@ -39,6 +40,28 @@ export const useAppStateManagement = () => {
     }
   };
 
+  // クイックメモの取得 ------------------------------------------------
+  const loadQuickMemoFromDb = async () => {
+    const db = getDatabase();
+    if (!uid || !db) {
+      return;
+    }
+    try {
+      const quickMemoRef = ref(db, `users/${uid}/quickMemo`);
+      await get(quickMemoRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          if (typeof data === 'string') {
+            // クイックメモの内容をセット
+            setQuickMemoText(data);
+          }
+        }
+      });
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
   // ダークモードと完了済みアイテムの非表示設定を保存 ------------------------------------------------
   const saveAppSettingsDb = (darkModeNew: boolean, hideDoneItemsNew: boolean) => {
     const db = getDatabase();
@@ -54,5 +77,19 @@ export const useAppStateManagement = () => {
     }
   }
 
-  return { loadSettingsFromDb, saveAppSettingsDb };
+  // クイックメモをデータベースに保存する関数 ---------------------------------------------------------------------------
+  const saveQuickMemoDb = (quickMemoText: string) => {
+    if (!uid) {
+      return;
+    }
+    try {
+      const quickMemoRef = ref(getDatabase(), `users/${uid}/quickMemo`);
+      saveTimeStampDb();
+      set(quickMemoRef, quickMemoText);
+    } catch (error) {
+      handleError('クイックメモの変更をデータベースに保存できませんでした。\n\n' + error);
+    }
+  };
+
+  return { loadSettingsFromDb, loadQuickMemoFromDb, saveAppSettingsDb, saveQuickMemoDb };
 };

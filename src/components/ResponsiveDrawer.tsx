@@ -30,7 +30,6 @@ import { useTreeManagement } from '../hooks/useTreeManagement';
 import { useSearch } from '../hooks/useSearch';
 import { SortableList } from './SortableList/SortableList';
 import { MenuSettings } from './MenuSettings';
-import { Capacitor } from '@capacitor/core';
 
 const drawerWidth = 300;
 
@@ -39,6 +38,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   const darkMode = useAppStateStore((state) => state.darkMode);
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
+  const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
   const searchKey = useAppStateStore((state) => state.searchKey);
@@ -55,7 +55,6 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isNative = Capacitor.isNativePlatform();
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (
@@ -90,7 +89,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       <Box
         sx={{
           position: 'absolute',
-          top: isNative ? 'env(safe-area-inset-top)' : 0,
+          top: 'env(safe-area-inset-top)',
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
@@ -131,7 +130,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           right: { xs: 0, sm: 'auto' }, // スマホサイズでは右寄せ
           left: { xs: 'auto', sm: 0 }, // それ以外では左寄せ
           width: '100%',
-          bottom: isNative ? 'env(safe-area-inset-bottom)' : 0,
+          bottom: 'env(safe-area-inset-bottom)',
           backgroundColor: darkMode ? { xs: '#353535', sm: theme.palette.background.default } : theme.palette.background.default,
         }}
       >
@@ -201,6 +200,8 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
     </>
   );
 
+  const quickMemoSpacer = isQuickMemoExpanded ? 176 : 0;
+
   return (
     <>
       {!currentTree && treesList.length === 0 && (
@@ -209,7 +210,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { sm: 'none' },
             position: 'fixed',
-            bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 30px)' : 30,
+            bottom: `calc(env(safe-area-inset-bottom) + ${quickMemoSpacer}px + 70px)`,
             right: 100,
             zIndex: 1000,
           }}
@@ -227,7 +228,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           border: `1px solid ${theme.palette.divider}`,
           display: { sm: 'none' },
           position: 'fixed',
-          bottom: isNative ? 'calc(env(safe-area-inset-bottom) + 15px)' : 15,
+          bottom: `calc(env(safe-area-inset-bottom) + ${quickMemoSpacer}px + 55px)`,
           right: 30,
           zIndex: 1000,
           backgroundColor: theme.palette.background.default,
@@ -259,7 +260,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': {
-              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
+              pt: 'calc(env(safe-area-inset-top) + 60px)',
               boxSizing: 'border-box',
               width: drawerWidth,
             },
@@ -272,7 +273,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': {
-              pt: isNative ? 'calc(env(safe-area-inset-top) + 60px)' : '60px',
+              pt: 'calc(env(safe-area-inset-top) + 60px)',
               boxSizing: 'border-box',
               width: drawerWidth,
             },

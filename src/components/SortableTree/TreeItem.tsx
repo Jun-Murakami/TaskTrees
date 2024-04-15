@@ -6,6 +6,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 import { useAttachedFile } from '../../hooks/useAttachedFile';
 import { useAppStateStore } from '../../store/appStateStore';
 import { useTreeStateStore } from '../../store/treeStateStore';
@@ -83,8 +84,10 @@ const TreeItemContent = memo(
     removeTrashDescendantsWithDone,
     isItemDescendantOfTrash,
   }: TreeItemContentProps) => {
+    const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
     const setIsEditingText = useAppStateStore((state) => state.setIsEditingText);
     const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     // ボタンの共通スタイルを定義
     const buttonStyle = {
@@ -160,10 +163,12 @@ const TreeItemContent = memo(
               }}
               onFocus={() => {
                 setIsEditingText(true);
+                setIsEditingTextLocal(true);
                 setIsFocusedOrHovered(true);
               }}
               onBlur={() => {
                 setIsEditingText(false);
+                setIsEditingTextLocal(false);
                 setTimeout(() => setIsFocusedOrHovered(false), 300);
               }}
             />
@@ -178,7 +183,16 @@ const TreeItemContent = memo(
               </IconButton>
             )}
             {!clone && attachedFile && <MenuItemsAttachedFile attachedFile={attachedFile} />}
-            {!clone && onRemove && !isItemDescendantOfTrash ? (
+            {isEditingTextLocal && isMobile ? (
+              <IconButton
+                sx={{
+                  color: theme.palette.grey[500],
+                  ...buttonStyle,
+                }}
+              >
+                <SaveAsIcon />
+              </IconButton>
+            ) : !clone && onRemove && !isItemDescendantOfTrash ? (
               <MenuItems
                 onRemove={onRemove}
                 handleAttachFile={handleAttachFile}

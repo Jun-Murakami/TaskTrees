@@ -35,7 +35,7 @@ export const useError = () => {
       signOut(getAuth());
       FirebaseAuthentication.signOut();
       setIsLoggedIn(false);
-      if (setIsLoading && isLoading) setIsLoading(false);
+      setIsLoading(false);
     },
     [
       setSystemMessage,
