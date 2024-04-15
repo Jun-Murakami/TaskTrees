@@ -42,6 +42,7 @@ export function ImportQuickMemo({ id, ...Props }: Props) {
           maxWidth: '250px',
           touchAction: 'none',
         }}
+        onMouseDown={(event) => event.currentTarget.focus()}
       >
         <Button
           data-id='import-quick-memo-button'
