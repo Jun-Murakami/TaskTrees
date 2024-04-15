@@ -57,9 +57,7 @@ export const QuickMemo = () => {
         <Accordion
           sx={{
             p: 0,
-            height: isQuickMemoExpanded
-              ? 'calc(215px + env(safe-area-inset-bottom))'
-              : 'calc(40px + env(safe-area-inset-bottom))',
+            height: isQuickMemoExpanded ? '215px + env(safe-area-inset-bottom)' : '40px + env(safe-area-inset-bottom)',
             paddingBottom: 'env(safe-area-inset-bottom)',
             backgroundColor: darkMode
               ? isQuickMemoExpanded
@@ -139,7 +137,7 @@ export const QuickMemo = () => {
                 sx={{
                   position: 'absolute',
                   color: theme.palette.grey[500],
-                  bottom: 10,
+                  bottom: 'env(safe-area-inset-bottom) + 10px',
                   right: 15,
                 }}
               >
