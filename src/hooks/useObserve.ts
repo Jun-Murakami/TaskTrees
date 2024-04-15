@@ -126,7 +126,7 @@ export const useObserve = () => {
 
   // ローカルのクイックメモの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!uid || !quickMemoText) {
+    if (!uid) {
       return;
     }
     const debounceSave = setTimeout(() => {

@@ -124,11 +124,10 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       measure: (node: HTMLElement | null) => {
         if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
           const rect = node!.getBoundingClientRect();
-          const safeAreaInsetBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('padding-bottom'));
           if (isMobile && activeId === activeNewTaskId) {
-            rect.y = window.innerHeight - safeAreaInsetBottom - 50;
+            rect.y = window.innerHeight - 50;
           } else if (activeId === activeQuickMemoId) {
-            rect.y = window.innerHeight - safeAreaInsetBottom - 176;
+            rect.y = window.innerHeight - 176;
           } else {
             rect.y += window.scrollY - 30;
           }
