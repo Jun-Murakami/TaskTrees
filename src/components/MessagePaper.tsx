@@ -13,14 +13,13 @@ export const MessagePaper = () => {
         <>
           <Paper>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
+              2024.4.15 クイックメモ機能を追加しました。
+              <br />
+              <br />
               2024.04.11 <a href='https://apps.apple.com/jp/app/tasktrees/id6482979857'>iOS版アプリ</a>を公開しました。
               <br />
               <br />
               2024.03.10 ファイルの添付機能を追加しました。タスクにファイルをドロップして添付できます。（25MBまで）
-              <br />
-              <br />
-              １ツリーのシンプルな個人用バージョンは<a href='https://tasktree-fb.web.app/'>こちら</a>。
-              ツリーデータは相互に移行可能です。
             </Typography>
           </Paper>
           <Button

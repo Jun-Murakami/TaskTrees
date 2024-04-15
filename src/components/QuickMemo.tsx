@@ -1,10 +1,23 @@
+import { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Stack, Typography, TextField, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import {
+  useMediaQuery,
+  Box,
+  Stack,
+  Typography,
+  TextField,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  IconButton,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 import { useAppStateStore } from '../store/appStateStore';
 
 export const QuickMemo = () => {
+  const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
@@ -14,6 +27,7 @@ export const QuickMemo = () => {
   const darkMode = useAppStateStore((state) => state.darkMode);
 
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <>
@@ -49,8 +63,8 @@ export const QuickMemo = () => {
             paddingBottom: 'env(safe-area-inset-bottom)',
             backgroundColor: darkMode
               ? isQuickMemoExpanded
-                ? 'rgba(0, 55, 119, 0.8)'
-                : 'rgba(0, 55, 119, 0.6)'
+                ? 'rgba(10, 20, 26, 0.8)'
+                : 'rgba(10, 20, 26, 0.6)'
               : isQuickMemoExpanded
               ? 'rgba(230, 240, 246, 0.8)'
               : 'rgba(230, 240, 246, 0.6)',
@@ -107,13 +121,31 @@ export const QuickMemo = () => {
               rows={6}
               value={quickMemoText}
               onChange={(e) => setQuickMemoText(e.target.value)}
-              onFocus={() => setIsEditingText(true)}
-              onBlur={() => setIsEditingText(false)}
+              onFocus={() => {
+                setIsEditingText(true);
+                setIsEditingTextLocal(true);
+              }}
+              onBlur={() => {
+                setIsEditingText(false);
+                setIsEditingTextLocal(false);
+              }}
               sx={{ backgroundColor: theme.palette.background.paper }}
               InputLabelProps={{
                 shrink: true,
               }}
             />
+            {isEditingTextLocal && isMobile && (
+              <IconButton
+                sx={{
+                  position: 'absolute',
+                  color: theme.palette.grey[500],
+                  bottom: 10,
+                  right: 15,
+                }}
+              >
+                <SaveAsIcon />
+              </IconButton>
+            )}
           </AccordionDetails>
         </Accordion>
       </Box>
