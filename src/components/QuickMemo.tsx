@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
   useMediaQuery,
@@ -18,6 +18,8 @@ import { useAppStateStore } from '../store/appStateStore';
 
 export const QuickMemo = () => {
   const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+  const [textFieldRows, setTextFieldRows] = useState(6);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
@@ -28,6 +30,23 @@ export const QuickMemo = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowHeight(window.innerHeight);
+      if (windowHeight < 600 || isMobile) {
+        setTextFieldRows(6);
+      } else {
+        setTextFieldRows(14);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    // コンポーネントのアンマウント時にイベントリスナーを削除
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <>
@@ -58,7 +77,9 @@ export const QuickMemo = () => {
           sx={{
             p: 0,
             height: isQuickMemoExpanded
-              ? 'calc(215px + env(safe-area-inset-bottom))'
+              ? windowHeight < 600 || isMobile
+                ? 'calc(215px + env(safe-area-inset-bottom))'
+                : 'calc(405px + env(safe-area-inset-bottom))'
               : 'calc(40px + env(safe-area-inset-bottom))',
             paddingBottom: 'env(safe-area-inset-bottom)',
             backgroundColor: darkMode
@@ -118,7 +139,7 @@ export const QuickMemo = () => {
               multiline
               fullWidth
               autoFocus
-              rows={6}
+              rows={textFieldRows}
               value={quickMemoText}
               onChange={(e) => setQuickMemoText(e.target.value)}
               onFocus={() => {
