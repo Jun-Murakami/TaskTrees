@@ -130,11 +130,11 @@ export const useAuth = () => {
           setIsLoggedIn(true);
           setSystemMessage(null);
         }).catch((error) => {
-          setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+          setSystemMessage('Googleログインに失敗しました。Code:100\n\n' + error.code);
           setIsLoading(false);
         });
       } catch (error) {
-        setSystemMessage('Googleログインに失敗しました。\n\n' + error);
+        setSystemMessage('Googleログインに失敗しました。Code:101\n\n' + error);
         setIsLoading(false);
         return;
       }
@@ -146,7 +146,7 @@ export const useAuth = () => {
           setSystemMessage(null);
         })
         .catch((error) => {
-          setSystemMessage('Googleログインに失敗しました。\n\n' + error.code);
+          setSystemMessage('Googleログインに失敗しました。Code:102\n\n' + error.code);
           setIsLoading(false);
         });
     }
@@ -163,7 +163,7 @@ export const useAuth = () => {
         // 2. Sign in on the web layer using the id token
         const provider = new OAuthProvider('apple.com');
         if (!result.credential) {
-          setSystemMessage('Appleログインに失敗しました。\n\ncredentialが取得できませんでした。');
+          setSystemMessage('Appleログインに失敗しました。Code:103\n\ncredentialが取得できませんでした。');
           setIsLoading(false);
           return;
         }
@@ -172,11 +172,11 @@ export const useAuth = () => {
           setIsLoggedIn(true);
           setSystemMessage(null);
         }).catch((error) => {
-          setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
+          setSystemMessage('Appleログインに失敗しました。Code:104\n\n' + error.code);
           setIsLoading(false);
         })
       } catch (error) {
-        setSystemMessage('Appleログインに失敗しました。\n\n' + error);
+        setSystemMessage('Appleログインに失敗しました。Code:105\n\n' + error);
         setIsLoading(false);
         return;
       }
@@ -188,7 +188,7 @@ export const useAuth = () => {
           setSystemMessage(null);
         })
         .catch((error) => {
-          setSystemMessage('Appleログインに失敗しました。\n\n' + error.code);
+          setSystemMessage('Appleログインに失敗しました。Code:106\n\n' + error.code);
           setIsLoading(false);
         })
     }
@@ -211,7 +211,7 @@ export const useAuth = () => {
       } else if (error.code === 'auth/invalid-login-credentials') {
         setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
       } else {
-        setSystemMessage('ログインに失敗しました。\n\n' + error.code);
+        setSystemMessage('ログインに失敗しました。Code:107\n\n' + error.code);
       }
       setIsLoading(false);
     });
@@ -235,7 +235,7 @@ export const useAuth = () => {
           } else if (error.code === 'auth/weak-password') {
             setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
           } else {
-            setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
+            setSystemMessage('サインアップに失敗しました。Code:108\n\n' + error.code);
           }
         });
     } else {
@@ -251,7 +251,7 @@ export const useAuth = () => {
           } else if (error.code === 'auth/weak-password') {
             setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
           } else {
-            setSystemMessage('サインアップに失敗しました。\n\n' + error.code);
+            setSystemMessage('サインアップに失敗しました。Code:109\n\n' + error.code);
           }
         });
     }

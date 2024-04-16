@@ -83,7 +83,8 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     parentId: UniqueIdentifier | null;
     overId: UniqueIdentifier;
   } | null>(null);
-
+  const [importButtonSpacer, setImportButtonSpacer] = useState(176);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
@@ -116,6 +117,23 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     indentationWidth = 22;
   }
 
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowHeight(window.innerHeight);
+      if (windowHeight < 600 || isMobile) {
+        setImportButtonSpacer(176);
+      } else {
+        setImportButtonSpacer(367);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    // コンポーネントのアンマウント時にイベントリスナーを削除
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const measuring = {
     droppable: {
       strategy: MeasuringStrategy.Always,
@@ -127,7 +145,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
           if (isMobile && activeId === activeNewTaskId) {
             rect.y = window.innerHeight - 50;
           } else if (activeId === activeQuickMemoId) {
-            rect.y = window.innerHeight - 176;
+            rect.y = window.innerHeight - importButtonSpacer;
           } else {
             rect.y += window.scrollY - 30;
           }
