@@ -88,15 +88,13 @@ export const useAuth = () => {
       }
     };
     asyncFunc();
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
   }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
 
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setIsLoggedIn(!!user);
+      setIsLoading(!!user);
       if (user) {
         setUid(user.uid);
         setEmail(user.email);
