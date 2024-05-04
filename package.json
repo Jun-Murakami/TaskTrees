@@ -29,6 +29,8 @@
     "@fontsource/m-plus-1p": "^5.0.18",
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "^5.15.15",
+    "dexie": "^4.0.4",
+    "dexie-react-hooks": "^1.1.7",
     "firebase": "^10.6.0",
     "immer": "^10.0.4",
     "lodash": "^4.17.21",

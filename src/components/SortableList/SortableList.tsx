@@ -35,7 +35,7 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
         onDragStart={(event) => {
           setActiveId(event.active.id as number);
         }}
-        onDragEnd={(event) => {
+        onDragEnd={async (event) => {
           setActiveId(null);
           const { active, over } = event;
           if (over == null || active.id === over.id) {
@@ -45,7 +45,7 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
           const newIndex = treesList.findIndex((item) => item.id === over.id);
           const newItems = arrayMove(treesList, oldIndex, newIndex);
           setTreesList(newItems);
-          saveTreesListDb(newItems);
+          await saveTreesListDb(newItems);
         }}
       >
         <SortableContext items={treesList}>

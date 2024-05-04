@@ -132,6 +132,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
     // コンポーネントのアンマウント時にイベントリスナーを削除
     return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const measuring = {

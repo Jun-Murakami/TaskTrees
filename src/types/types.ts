@@ -21,11 +21,17 @@ export type TreesListItem = {
 
 export type TreesList = TreesListItem[];
 
+export type MemberItems = {
+  [key: string]: string;
+};
+
 export type TreesListItemIncludingItems = {
   id?: UniqueIdentifier;
   name?: string;
-  currentTreeName?: string;
+  currentTreeName?: string; //旧バージョンからの移行用 普段は使用しない
   members?: string[];
+  membersV2?: MemberItems;
+  timestamp?: number;
   items: TreeItems;
 };
 

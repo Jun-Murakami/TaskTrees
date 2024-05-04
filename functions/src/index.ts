@@ -73,6 +73,19 @@ exports.addUserToTree = functions.https.onCall(async (data: { email: string; tre
         return currentMembers;
       }
     });
+    const treeMembersRefV2 = admin.database().ref(`trees/${treeId}/membersV2`);
+    await treeMembersRefV2.transaction((currentMembers: { [key: string]: string | boolean } | null) => {
+      if (currentMembers === null) {
+        const newMembers: { [key: string]: string } = {};
+        newMembers[userId] = email; // 新しいメンバーとして追加
+        return newMembers;
+      } else {
+        if (!Object.prototype.hasOwnProperty.call(currentMembers, userId)) {
+          currentMembers[userId] = email; // メンバーが存在しなければ追加
+        }
+        return currentMembers;
+      }
+    });
 
     // users/$userId/treeListにtreeIdを追加
     const userTreeListRef = admin.database().ref(`users/${userId}/treeList`);
@@ -85,6 +98,10 @@ exports.addUserToTree = functions.https.onCall(async (data: { email: string; tre
         return currentTreeList; // 既にtreeListに含まれている場合は何もしない
       }
     });
+
+    // trees/$treeId/timestampに現在の時間を追加
+    const timestampRef = admin.database().ref(`trees/${treeId}/timestamp`);
+    await timestampRef.set(Date.now());
 
     return { success: true };
   } catch (error) {
@@ -138,6 +155,19 @@ exports.removeUserFromTree = functions.https.onCall(async (data: { treeId: strin
         }
       }
     });
+    const treeMembersRefV2 = admin.database().ref(`trees/${treeId}/membersV2`);
+    await treeMembersRefV2.transaction((currentMembers: { [key: string]: string } | null) => {
+      if (currentMembers === null) {
+        return currentMembers; // 何もしない
+      } else {
+        if (Object.prototype.hasOwnProperty.call(currentMembers, userId)) {
+          delete currentMembers[userId]; // userIdをキーとして持つプロパティを削除
+          return currentMembers;
+        } else {
+          return currentMembers; // ユーザーが見つからない場合は何もしない
+        }
+      }
+    });
 
     // users/$userId/treeListからtreeIdを削除
     const userTreeListRef = admin.database().ref(`users/${userId}/treeList`);
@@ -154,6 +184,10 @@ exports.removeUserFromTree = functions.https.onCall(async (data: { treeId: strin
         }
       }
     });
+
+    // trees/$treeId/timestampに現在の時間を追加
+    const timestampRef = admin.database().ref(`trees/${treeId}/timestamp`);
+    await timestampRef.set(Date.now());
 
     return { success: true };
   } catch (error) {
@@ -187,10 +221,26 @@ exports.createNewTree = functions.https.onCall(async (data: { items: ServerTreeI
     const db = admin.database();
     const treesRef = db.ref('trees');
     const newTreeRef = treesRef.push();
+    const emails = await Promise.all(
+      Object.keys(members).map(async (uid) => {
+        const userRecord = await admin.auth().getUser(uid);
+        return userRecord.email;
+      })
+    );
+    const membersV2: { [key: string]: string } = {};
+    Object.keys(members).forEach((uid, index) => {
+      const email = emails[index];
+      if (email) {
+        membersV2[uid] = email;
+      } else {
+        throw new Error('Email not found for UID: ' + uid);
+      }
+    });
     await newTreeRef.set({
       items: items,
       name: name,
       members: members,
+      membersV2: membersV2,
     });
     return newTreeRef.key;
   } catch (error) {
@@ -216,5 +266,26 @@ exports.copyFileInStorage = functions.https.onCall(async (data: { sourcePath: st
   } catch (error) {
     console.error('Error copying file:', error);
     throw new functions.https.HttpsError('unknown', 'Failed to copy file');
+  }
+});
+
+// 指定されたuidリストを指定されたタイムスタンプで更新
+exports.updateTimestamps = functions.https.onCall(async (data: { uids: string[], timestamp: number }) => {
+  const { uids, timestamp } = data;
+  if (!uids || !Array.isArray(uids) || !timestamp) {
+    throw new functions.https.HttpsError('invalid-argument', 'The function must be called with valid "uids" and "timestamp".');
+  }
+  try {
+    const db = admin.database();
+    await Promise.all(
+      uids.map(async (uid) => {
+        const userRef = db.ref(`users/${uid}`);
+        await userRef.update({ timestamp: timestamp });
+      })
+    );
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating timestamps:', error);
+    throw new functions.https.HttpsError('unknown', 'Failed to update timestamps');
   }
 });

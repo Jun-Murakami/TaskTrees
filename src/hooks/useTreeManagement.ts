@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { TreeItem, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
-import { isTreeItemArray, ensureChildrenProperty } from '../components/SortableTree/utilities';
+import { isTreeItemArray } from '../components/SortableTree/utilities';
 import { initialItems, initialOfflineItems } from '../components/SortableTree/mock';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAppStateStore } from '../store/appStateStore';
@@ -9,6 +9,7 @@ import { useTreeStateStore } from '../store/treeStateStore';
 import { useAttachedFile } from './useAttachedFile';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
+import { useIndexedDb } from './useIndexedDb';
 import { useDialogStore, useInputDialogStore } from '../store/dialogStore';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -52,11 +53,17 @@ export const useTreeManagement = () => {
     saveCurrentTreeNameDb,
     loadTreesListFromDb,
     loadTreeNameFromDb,
-    loadItemsFromDb,
-    loadMembersFromDb,
     loadAllTreesDataFromDb,
     deleteTreeFromDb,
   } = useDatabase();
+  const { copyTreeDataToIdbFromDb,
+    loadCurrentTreeDataFromIdb,
+    loadTreesListFromIdb,
+    saveItemsIdb,
+    saveTreesListIdb,
+    saveCurrentTreeNameIdb,
+    deleteTreeIdb
+  } = useIndexedDb();
   const { deleteFile } = useAttachedFile();
 
   // ツリーリストをDBから取得する ---------------------------------------------------------------------------
@@ -104,13 +111,12 @@ export const useTreeManagement = () => {
   };
 
   // ターゲットIDのitems、name、membersをDBからロードする ---------------------------------------------------------------------------
-
-  // 本編
   const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
     if (!isLoading) setIsLoading(true);
     // デバウンスで前のツリーの状態変更が残っていたら保存
     if (prevCurrentTree && prevCurrentTree !== targetTree && prevItems.length !== 0 && prevItems !== items) {
-      saveItemsDb(items, prevCurrentTree);
+      await saveItemsIdb(prevItems, prevCurrentTree);
+      await saveItemsDb(prevItems, prevCurrentTree);
       setPrevItems(items);
     }
 
@@ -118,63 +124,17 @@ export const useTreeManagement = () => {
       if (!uid) {
         throw new Error('ユーザーがログインしていません。');
       }
-
-      // ツリーアイテムを取得
-      const treeItems = await loadItemsFromDb(targetTree);
-      if (treeItems) {
-        const data: TreeItem[] = treeItems;
-        const itemsWithChildren = ensureChildrenProperty(data);
-        if (isTreeItemArray(itemsWithChildren)) {
-          setPrevItems([]);
-          setPrevCurrentTree(targetTree);
-          setItems(itemsWithChildren);
-        } else {
-          throw new Error('取得したデータがTreeItem[]型ではありません。');
+      const treeData = await loadCurrentTreeDataFromIdb(targetTree);
+      if (treeData && treeData.name && treeData.membersV2 && treeData.items) {
+        setCurrentTreeName(treeData.name);
+        const members: { uid: string; email: string }[] = [];
+        for (const member in treeData.membersV2) {
+          members.push({ uid: member, email: treeData.membersV2[member] });
         }
-      } else {
-        setItems([]);
-      }
-
-      // ツリー名を取得
-      const treeName = await loadTreeNameFromDb(targetTree);
-      if (treeName) {
-        setCurrentTreeName(treeName);
-      } else {
-        setCurrentTreeName(null);
-      }
-
-      // メンバーリストからメールアドレスリストを取得するFirebase関数
-      const getMemberEmails = async (memberList: string[]) => {
-        const functions = getFunctions();
-        const getUserEmails = httpsCallable(functions, 'getUserEmails');
-
-        try {
-          const result = await getUserEmails({ userIds: memberList });
-          // レスポンスの処理
-          const emails = (result.data as { emails: string[] }).emails;
-          return emails; // ここでemailsを返す
-        } catch (error) {
-          await showDialog('メンバーのメールアドレスの取得に失敗しました。\n\n' + error, 'Error');
-          return []; // エラーが発生した場合は空の配列を返す
-        }
-      };
-
-      // ツリーメンバーを取得
-      const treeMembers = await loadMembersFromDb(targetTree);
-      if (treeMembers) {
-        const membersObject = treeMembers;
-        const uids = Object.keys(membersObject); // UIDのリストを取得
-
-        // UIDリストを使用して、メールアドレスを取得
-        const emails = await getMemberEmails(uids);
-        // メンバーリストとメールアドレスを組み合わせてオブジェクトの配列を作成
-        const membersWithEmails = uids.map((uid, index) => ({
-          uid,
-          email: emails[index], // 対応するメールアドレス
-        }));
-        setCurrentTreeMembers(membersWithEmails);
-      } else {
-        setCurrentTreeMembers(null);
+        setCurrentTreeMembers(members);
+        setPrevItems([]);
+        setPrevCurrentTree(targetTree);
+        setItems(treeData.items);
       }
 
       setIsLoading(false);
@@ -216,10 +176,12 @@ export const useTreeManagement = () => {
     setIsAccordionExpanded(false);
 
     try {
-      deleteTreeFromDb(targetTree);
+      await deleteTreeIdb(targetTree);
+      await deleteTreeFromDb(targetTree);
       const updatedTreesList = treesList ? treesList.filter((tree) => tree.id !== targetTree) : [];
       setTreesList(updatedTreesList);
-      saveTreesListDb(updatedTreesList);
+      await saveTreesListIdb(updatedTreesList);
+      await saveTreesListDb(updatedTreesList);
     } catch (error) {
       await showDialog('ツリーの削除に失敗しました。\n\n' + error, 'Error');
     }
@@ -232,7 +194,7 @@ export const useTreeManagement = () => {
       true
     );
     if (result) {
-      await deleteTree(currentTree as string);
+      await deleteTree(currentTree as UniqueIdentifier);
     }
   };
 
@@ -301,9 +263,11 @@ export const useTreeManagement = () => {
         const newTree = { id: newTreeRef as UniqueIdentifier, name: '新しいツリー' };
         const updatedTreesListWithNewTree = treesList ? [...treesList, newTree] : [newTree];
         setTreesList(updatedTreesListWithNewTree);
-        saveTreesListDb(updatedTreesListWithNewTree);
+        await saveTreesListIdb(updatedTreesListWithNewTree);
+        await saveTreesListDb(updatedTreesListWithNewTree);
+        await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
         await loadCurrentTreeData(newTreeRef as UniqueIdentifier);
-        await loadTreesList();
+        await loadTreesListFromIdb();
       }
 
       //タイマーをクリア
@@ -435,6 +399,7 @@ export const useTreeManagement = () => {
                 [uid]: true,
               }
             );
+            await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
             if (!newTreeRef) {
               throw new Error('ツリーのデータベースへの保存に失敗しました。');
             }
@@ -445,8 +410,9 @@ export const useTreeManagement = () => {
             temporaryTreesList = [...temporaryTreesList, loadedTreeObject];
           }
           setTreesList(temporaryTreesList);
-          saveTreesListDb(temporaryTreesList);
-          await loadTreesList();
+          await saveTreesListIdb(temporaryTreesList);
+          await saveTreesListDb(temporaryTreesList);
+          await loadTreesListFromIdb();
           await showDialog('複数のツリーが正常に読み込まれました。', 'Information');
         } else {
           // 単体のツリーが含まれる場合、treeStateをDBに保存
@@ -481,8 +447,10 @@ export const useTreeManagement = () => {
             }
             if (isLoading) setIsLoading(false);
             setTreesList(updatedTreesListWithLoadedTree);
-            saveTreesListDb(updatedTreesListWithLoadedTree);
-            await loadTreesList();
+            await saveTreesListIdb(updatedTreesListWithLoadedTree);
+            await saveTreesListDb(updatedTreesListWithLoadedTree);
+            await loadTreesListFromIdb();
+            await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
             await loadCurrentTreeData(newTreeRef as UniqueIdentifier);
             setIsLoading(false);
             const result = await showDialog('ファイルが正常に読み込まれました。', 'Information');
@@ -621,13 +589,14 @@ export const useTreeManagement = () => {
   };
 
   // ツリー名の変更 ---------------------------------------------------------------------------
-  const handleTreeNameSubmit = (editedTreeName: string) => {
+  const handleTreeNameSubmit = async (editedTreeName: string) => {
     if (editedTreeName !== null && editedTreeName !== '' && editedTreeName !== currentTreeName) {
       setCurrentTreeName(editedTreeName);
       if (isOffline) {
         Preferences.set({ key: `treeName_offline`, value: editedTreeName });
       } else {
-        saveCurrentTreeNameDb(editedTreeName, currentTree);
+        await saveCurrentTreeNameIdb(editedTreeName, currentTree);
+        await saveCurrentTreeNameDb(editedTreeName, currentTree);
       }
       if (treesList) {
         const newList = treesList.map((tree) => {
@@ -637,7 +606,8 @@ export const useTreeManagement = () => {
           return tree;
         });
         setTreesList(newList);
-        saveTreesListDb(newList);
+        await saveTreesListIdb(newList);
+        await saveTreesListDb(newList);
       }
     }
   };
@@ -661,7 +631,8 @@ export const useTreeManagement = () => {
         email,
         treeId: currentTree,
       });
-      loadCurrentTreeData(currentTree);
+      await copyTreeDataToIdbFromDb(currentTree);
+      await loadCurrentTreeData(currentTree);
       setIsLoading(false);
       return Promise.resolve(result.data);
     } catch (error) {
@@ -704,7 +675,19 @@ export const useTreeManagement = () => {
           treeId: currentTree,
           userId: rescievedUid,
         });
-        loadCurrentTreeData(currentTree);
+        if (uid && uid === rescievedUid) {
+          setCurrentTree(null);
+          setCurrentTreeName(null);
+          setCurrentTreeMembers(null);
+          setPrevCurrentTree(null);
+          setPrevItems([]);
+          setItems([]);
+          setIsAccordionExpanded(false);
+          await deleteTreeIdb(currentTree);
+        } else {
+          await copyTreeDataToIdbFromDb(currentTree);
+          await loadCurrentTreeData(currentTree);
+        }
         setIsLoading(false);
         return Promise.resolve(result.data);
       } catch (error) {

@@ -63,29 +63,29 @@ export const useAppStateManagement = () => {
   };
 
   // ダークモードと完了済みアイテムの非表示設定を保存 ------------------------------------------------
-  const saveAppSettingsDb = (darkModeNew: boolean, hideDoneItemsNew: boolean) => {
+  const saveAppSettingsDb = async (darkModeNew: boolean, hideDoneItemsNew: boolean) => {
     const db = getDatabase();
     if (!uid || !db) {
       return;
     }
     try {
       const userSettingsRef = ref(db, `users/${uid}/settings`);
-      saveTimeStampDb();
-      set(userSettingsRef, { darkMode: darkModeNew, hideDoneItems: hideDoneItemsNew });
+      await saveTimeStampDb();
+      await set(userSettingsRef, { darkMode: darkModeNew, hideDoneItems: hideDoneItemsNew });
     } catch (error) {
       handleError(error);
     }
   }
 
   // クイックメモをデータベースに保存する関数 ---------------------------------------------------------------------------
-  const saveQuickMemoDb = (quickMemoText: string) => {
+  const saveQuickMemoDb = async (quickMemoText: string) => {
     if (!uid) {
       return;
     }
     try {
       const quickMemoRef = ref(getDatabase(), `users/${uid}/quickMemo`);
-      saveTimeStampDb();
-      set(quickMemoRef, quickMemoText);
+      await saveTimeStampDb();
+      await set(quickMemoRef, quickMemoText);
     } catch (error) {
       handleError('クイックメモの変更をデータベースに保存できませんでした。\n\n' + error);
     }

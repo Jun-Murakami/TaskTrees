@@ -113,7 +113,7 @@ export const useAttachedFile = () => {
           const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
           const updatedItems = await deleteAttachedFile(newItems, fileName);
           setItems(updatedItems);
-          saveItemsDb(updatedItems, currentTree!);
+          await saveItemsDb(updatedItems, currentTree!);
         }
       }
     }

@@ -1,5 +1,8 @@
+import { indexedDb as idb } from '../indexedDb';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 import { useDialogStore } from '../store/dialogStore';
 import { TreeItems, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
 import { isTreeItemArray, validateTreeItems } from '../components/SortableTree/utilities';
@@ -11,54 +14,105 @@ import { useError } from './useError';
 
 export const useDatabase = () => {
   const uid = useAppStateStore((state) => state.uid);
+  const currentTree = useTreeStateStore((state) => state.currentTree);
+  const currentTreeMembers = useTreeStateStore((state) => state.currentTreeMembers);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
   const showDialog = useDialogStore((state) => state.showDialog);
 
   const { handleError } = useError();
 
   // タイムスタンプをデータベースに保存する関数 ---------------------------------------------------------------------------
-  const saveTimeStampDb = () => {
+  const saveTimeStampDb = async () => {
     if (!uid) {
       return;
     }
     try {
       const newTimestamp = Date.now();
+
+      // ローカルのタイムスタンプを更新
       setLocalTimestamp(newTimestamp);
+
+      // indexDBのタイムスタンプを更新
+      await idb.appstate.update(1, { timestamp: newTimestamp });
+
+      // ユーザーのタイムスタンプを更新
       const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
-      set(timestampRef, newTimestamp);
+      await set(timestampRef, newTimestamp);
+
+      // ユーザーのタイムスタンプV2を更新
+      const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
+      await set(timestampV2Ref, newTimestamp);
+
+      // ツリーのタイムスタンプを更新
+      if (currentTree) {
+        const treeRef = ref(getDatabase(), `trees/${currentTree}/timestamp`);
+        await set(treeRef, newTimestamp);
+      }
+
+      // 自分以外のメンバーのuidを抽出してタイムスタンプを更新
+      const treeMemberUids = currentTreeMembers?.filter((member) => member.uid !== uid).map((member) => member.uid);
+      if (treeMemberUids && treeMemberUids.length > 0) {
+        const functions = getFunctions();
+        const updateTimestamps = httpsCallable(functions, 'updateTimestamps');
+        await updateTimestamps({ uids: treeMemberUids, timestamp: newTimestamp });
+      }
+
       return;
     } catch (error) {
       handleError('タイムスタンプの保存に失敗しました。\n\n' + error);
     }
   };
 
+  // ツリーのタイムスタンプを取得する関数 ---------------------------------------------------------------------------
+  const loadTreeTimeStampFromDb = async (targetTree: UniqueIdentifier): Promise<number | null> => {
+    if (!uid || !targetTree) {
+      return null;
+    }
+    try {
+      const treeRef = ref(getDatabase(), `trees/${targetTree}/timestamp`);
+      return await get(treeRef)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            return snapshot.val();
+          }
+          return null;
+        })
+        .catch(() => {
+          return null;
+        });
+    } catch (error) {
+      handleError('タイムスタンプの取得に失敗しました。\n\n' + error);
+      return null;
+    }
+  };
+
   // itemsをデータベースに保存する関数 ---------------------------------------------------------------------------
-  const saveItemsDb = (newItems: TreeItems, targetTree: UniqueIdentifier) => {
+  const saveItemsDb = async (newItems: TreeItems, targetTree: UniqueIdentifier) => {
     if (!uid || !targetTree || !newItems) {
       return;
     }
     try {
       // newItemsの内容をチェック
       if (!isTreeItemArray(newItems)) {
-        showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n※ツリーデータが配列ではありません。', 'Error');
+        await showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n※ツリーデータが配列ではありません。', 'Error');
         return;
       }
 
       // newItemsの内容を詳細にチェック
       const result = validateTreeItems(newItems);
       if (result !== '') {
-        showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n' + result, 'Error');
+        await showDialog('ツリーデータが不正のため、データベースへの保存がキャンセルされました。修正するにはツリーデータをダウンロードし、手動で修正してください。\n\n' + result, 'Error');
         return;
       }
 
       const treeStateRef = ref(getDatabase(), `trees/${targetTree}/items`);
       // 更新対象が存在するかチェック
-      get(treeStateRef)
+      await get(treeStateRef)
         .then(async (snapshot) => {
           if (snapshot.exists()) {
             // 存在する場合、更新を実行
-            saveTimeStampDb();
-            set(treeStateRef, newItems).catch((error) => {
+            await saveTimeStampDb();
+            await set(treeStateRef, newItems).catch((error) => {
               handleError('データベースの保存に失敗しました。code:3\n\n' + error);
             });
           } else {
@@ -75,14 +129,14 @@ export const useDatabase = () => {
   };
 
   // treesListをデータベースに保存する関数 ---------------------------------------------------------------------------
-  const saveTreesListDb = (newTreesList: TreesList) => {
+  const saveTreesListDb = async (newTreesList: TreesList) => {
     if (!uid) {
       return;
     }
     try {
       const userTreeListRef = ref(getDatabase(), `users/${uid}/treeList`);
-      saveTimeStampDb();
-      set(
+      await saveTimeStampDb();
+      await set(
         userTreeListRef,
         newTreesList.map((tree) => tree.id)
       );
@@ -92,25 +146,25 @@ export const useDatabase = () => {
   };
 
   // currentTreeNameをデータベースに保存する関数 ---------------------------------------------------------------------------
-  const saveCurrentTreeNameDb = (editedTreeName: string, targetTree: UniqueIdentifier | null) => {
+  const saveCurrentTreeNameDb = async (editedTreeName: string, targetTree: UniqueIdentifier | null) => {
     if (!uid || !targetTree || !editedTreeName) {
       return;
     }
     try {
       const treeNameRef = ref(getDatabase(), `trees/${targetTree}/name`);
-      saveTimeStampDb();
-      set(treeNameRef, editedTreeName);
+      await saveTimeStampDb();
+      await set(treeNameRef, editedTreeName);
     } catch (error) {
       handleError('ツリー名の変更をデータベースに保存できませんでした。\n\n' + error);
     }
   };
 
   // データベースからツリーを削除する関数 ---------------------------------------------------------------------------
-  const deleteTreeFromDb = (targetTree: UniqueIdentifier) => {
+  const deleteTreeFromDb = async (targetTree: UniqueIdentifier) => {
     const treeRef = ref(getDatabase(), `trees/${targetTree}`);
     try {
-      saveTimeStampDb();
-      set(treeRef, null);
+      await saveTimeStampDb();
+      await set(treeRef, null);
     } catch (error) {
       handleError('ツリーの削除に失敗しました。\n\n' + error);
     }
@@ -211,6 +265,8 @@ export const useDatabase = () => {
                 id: treesListItem.id,
                 name: treeData.name,
                 members: treeData.members,
+                membersV2: treeData.membersV2,
+                timestamp: treeData.timestamp,
                 items: treeData.items,
               };
               return treeItemsIncludingItems;
@@ -232,6 +288,7 @@ export const useDatabase = () => {
     saveItemsDb,
     saveTreesListDb,
     saveCurrentTreeNameDb,
+    loadTreeTimeStampFromDb,
     loadTreesListFromDb,
     loadTreeNameFromDb,
     loadItemsFromDb,

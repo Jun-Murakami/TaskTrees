@@ -219,10 +219,10 @@ export function HomePage() {
                   Appleでログイン
                 </Button>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     setIsOffline(true);
                     setIsLoggedIn(true);
-                    handleCreateOfflineTree();
+                    await handleCreateOfflineTree();
                   }}
                   variant='contained'
                   sx={{ textTransform: 'none' }}
