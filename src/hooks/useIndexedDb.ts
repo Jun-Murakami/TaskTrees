@@ -5,7 +5,6 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getDatabase, ref, set } from 'firebase/database';
 import { isTreeItemArray, validateTreeItems, ensureChildrenProperty } from '../components/SortableTree/utilities';
 import { useAppStateManagement } from './useAppStateManagement';
-import { useTreeManagement } from './useTreeManagement';
 import { useDatabase } from './useDatabase';
 import { useError } from './useError';
 import { useAppStateStore } from '../store/appStateStore';
@@ -22,23 +21,29 @@ export const useIndexedDb = () => {
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
   const localTimestamp = useAppStateStore((state) => state.localTimestamp);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
-  const treesList = useTreeStateStore((state) => state.treesList);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const showDialog = useDialogStore((state) => state.showDialog);
 
   const { loadSettingsFromDb, loadQuickMemoFromDb } = useAppStateManagement();
-  const { loadTreesList } = useTreeManagement();
-  const { loadTreeTimeStampFromDb, loadAllTreesDataFromDb, loadTreeNameFromDb, loadMembersFromDb, loadItemsFromDb } = useDatabase();
+  const { loadTreesListFromDb,
+    loadTreeTimestampFromDb,
+    loadAllTreesDataFromDb,
+    loadTreeNameFromDb,
+    loadMembersFromDb,
+    loadItemsFromDb
+  } = useDatabase();
   const { handleError } = useError();
-
 
   // FirebaseRealtimeDatabaseとIndexedデータベースを同期する ------------------------------------------------
   const syncDb = async () => {
+    if (!uid) {
+      return;
+    }
     try {
       setLocalTimestamp(Date.now());
       await loadSettingsFromDb();
       await loadQuickMemoFromDb();
-      await loadTreesList();
+      const treesListFromDb = await loadTreesListFromDb(uid);
       await idb.appstate.clear();
       await idb.appstate.put({
         id: 1,
@@ -48,9 +53,9 @@ export const useIndexedDb = () => {
           darkMode: darkMode,
           hideDoneItems: hideDoneItems,
         },
-        treesList: treesList,
+        treesList: treesListFromDb,
       });
-      const allTreesData = await loadAllTreesDataFromDb(treesList);
+      const allTreesData = await loadAllTreesDataFromDb(treesListFromDb);
       if (allTreesData) {
         await idb.treestate.clear();
         for (const treeData of allTreesData) {
@@ -86,6 +91,7 @@ export const useIndexedDb = () => {
           }
         }
       }
+      setTreesList(treesListFromDb);
     } catch (error) {
       handleError(error);
     }
@@ -401,7 +407,7 @@ export const useIndexedDb = () => {
 
     // タイムスタンプを取得
     try {
-      const treeTimestamp = await loadTreeTimeStampFromDb(targetTree);
+      const treeTimestamp = await loadTreeTimestampFromDb(targetTree);
       if (treeTimestamp) {
         treeData.timestamp = treeTimestamp;
       }

@@ -26,11 +26,13 @@ export const useObserve = () => {
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
   const prevItems = useTreeStateStore((state) => state.prevItems);
   const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
+  const prevCurrentTree = useTreeStateStore((state) => state.prevCurrentTree);
+  const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
 
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const { loadTreesList, loadCurrentTreeData, handleLoadedContent } = useTreeManagement();
-  const { saveItemsDb } = useDatabase();
+  const { loadCurrentTreeData, handleLoadedContent } = useTreeManagement();
+  const { loadTreesListFromDb, saveItemsDb } = useDatabase();
   const { syncDb,
     checkAndSyncDb,
     loadSettingsFromIdb,
@@ -86,7 +88,7 @@ export const useObserve = () => {
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
         setLocalTimestamp(serverTimestamp);
-        await loadTreesList();
+        await loadTreesListFromDb(uid);
         await saveTreesListIdb(treesList);
         await loadQuickMemoFromDb();
         // treesListを反復して、タイムスタンプをチェックし、最新のツリーをコピー
@@ -127,14 +129,28 @@ export const useObserve = () => {
 
   // ローカルitemsの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    // ツリー変更時には前回のitemsを保存して終了
-    if (prevItems.length === 0) {
-      setPrevItems(items);
-      return;
-    }
     if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems)) {
       return;
     }
+
+    if (currentTree !== prevCurrentTree) {
+      console.log('Tree changed. Saving items to database.');
+      if (prevItems.length > 0) {
+        const asyncFunc = async () => {
+          if (prevCurrentTree) {
+            await saveItemsIdb(prevItems, prevCurrentTree);
+            await saveItemsDb(prevItems, prevCurrentTree);
+          }
+        }
+        asyncFunc();
+      }
+      setPrevCurrentTree(currentTree);
+      setPrevItems([]);
+      return;
+    }
+
+    setPrevItems(items);
+    const targetTree = currentTree;
     const debounceSave = setTimeout(() => {
       try {
         if (isOffline) {
@@ -152,16 +168,16 @@ export const useObserve = () => {
         } else {
           // オンラインモードの場合、データベースに保存
           const asyncFunc = async () => {
-            await saveItemsIdb(items, currentTree);
-            await saveItemsDb(items, currentTree);
+            await saveItemsIdb(items, targetTree);
+            await saveItemsDb(items, targetTree);
           }
           asyncFunc();
         }
-        setPrevItems(items);
+        setPrevItems([]);
       } catch (error) {
         handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error);
       }
-    }, 3000); // 3秒のデバウンス
+    }, 5000); // 3秒のデバウンス
 
     // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
     return () => clearTimeout(debounceSave);

@@ -64,7 +64,7 @@ export const useDatabase = () => {
   };
 
   // ツリーのタイムスタンプを取得する関数 ---------------------------------------------------------------------------
-  const loadTreeTimeStampFromDb = async (targetTree: UniqueIdentifier): Promise<number | null> => {
+  const loadTreeTimestampFromDb = async (targetTree: UniqueIdentifier): Promise<number | null> => {
     if (!uid || !targetTree) {
       return null;
     }
@@ -171,19 +171,38 @@ export const useDatabase = () => {
   };
 
   // データベースからツリーリストを取得する関数 ---------------------------------------------------------------------------
-  const loadTreesListFromDb = async (userId: string): Promise<string[] | null> => {
+  const loadTreesListFromDb = async (userId: string): Promise<TreesList> => {
     const userTreeListRef = ref(getDatabase(), `users/${userId}/treeList`);
     return await get(userTreeListRef)
-      .then((snapshot) => {
+      .then(async (snapshot) => {
         if (snapshot.exists()) {
-          return snapshot.val();
+          let missingTrees: string[] = [];
+          const data: string[] = snapshot.val();
+          let treesListAccumulator: TreesList = [];
+          // 反復してツリー名をDBから取得
+          const promises = data.map(async (treeId) => {
+            const treeTitle = await loadTreeNameFromDb(treeId);
+            if (treeTitle) {
+              treesListAccumulator = [...treesListAccumulator, { id: treeId, name: treeTitle }];
+            } else {
+              console.log('ツリー名が取得できませんでした。' + treeId + 'のツリーは削除されている可能性があります。');
+              missingTrees = missingTrees ? [...missingTrees, treeId] : [treeId];
+            }
+          });
+          await Promise.all(promises);
+          // DBの順序に基づいてtreesListAccumulatorを並び替え
+          const orderedTreesList = data
+            .map((treeId) => treesListAccumulator.find((t) => t.id === treeId))
+            .filter((t): t is TreesListItem => t !== undefined);
+          return orderedTreesList;
+        } else {
+          console.log('ツリーリストが見つかりませんでした。');
+          return [];
         }
-        console.log('ツリーリストのDBフェッチに失敗しました。スナップショットが存在しません。');
-        return null;
       })
       .catch((error) => {
         console.log('ツリーリストのDBフェッチに失敗しました。\n\n' + error);
-        return null;
+        return [];
       });
   };
 
@@ -288,7 +307,7 @@ export const useDatabase = () => {
     saveItemsDb,
     saveTreesListDb,
     saveCurrentTreeNameDb,
-    loadTreeTimeStampFromDb,
+    loadTreeTimestampFromDb,
     loadTreesListFromDb,
     loadTreeNameFromDb,
     loadItemsFromDb,

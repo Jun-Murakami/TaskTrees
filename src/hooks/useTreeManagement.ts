@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { TreeItem, TreesList, TreesListItem, TreesListItemIncludingItems } from '../types/types';
+import { TreeItem, TreesListItemIncludingItems } from '../types/types';
 import { isTreeItemArray } from '../components/SortableTree/utilities';
 import { initialItems, initialOfflineItems } from '../components/SortableTree/mock';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -38,87 +38,30 @@ export const useTreeManagement = () => {
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const currentTreeMembers = useTreeStateStore((state) => state.currentTreeMembers);
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
-  const prevCurrentTree = useTreeStateStore((state) => state.prevCurrentTree);
-  const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
-  const prevItems = useTreeStateStore((state) => state.prevItems);
-  const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
 
   const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
 
   const { handleError } = useError();
   const {
-    saveItemsDb,
     saveTreesListDb,
     saveCurrentTreeNameDb,
-    loadTreesListFromDb,
-    loadTreeNameFromDb,
     loadAllTreesDataFromDb,
     deleteTreeFromDb,
   } = useDatabase();
   const { copyTreeDataToIdbFromDb,
     loadCurrentTreeDataFromIdb,
     loadTreesListFromIdb,
-    saveItemsIdb,
     saveTreesListIdb,
     saveCurrentTreeNameIdb,
     deleteTreeIdb
   } = useIndexedDb();
   const { deleteFile } = useAttachedFile();
 
-  // ツリーリストをDBから取得する ---------------------------------------------------------------------------
-  const loadTreesList = async () => {
-    try {
-      if (!uid) {
-        return;
-      }
-      if (!isLoading) setIsLoading(true);
-      const treesListFromDb = await loadTreesListFromDb(uid);
-      let missingTrees: string[] = [];
-      if (treesListFromDb) {
-        const data: string[] = treesListFromDb;
-        let treesListAccumulator: TreesList = [];
-        // 反復してツリー名をDBから取得
-        const promises = data.map(async (treeId) => {
-          const treeTitle = await loadTreeNameFromDb(treeId);
-          if (treeTitle) {
-            treesListAccumulator = [...treesListAccumulator, { id: treeId, name: treeTitle }];
-          } else {
-            console.log('ツリー名が取得できませんでした。' + treeId + 'のツリーは削除されている可能性があります。');
-            missingTrees = missingTrees ? [...missingTrees, treeId] : [treeId];
-          }
-        });
-        await Promise.all(promises);
-        // DBの順序に基づいてtreesListAccumulatorを並び替え
-        const orderedTreesList = data
-          .map((treeId) => treesListAccumulator.find((t) => t.id === treeId))
-          .filter((t): t is TreesListItem => t !== undefined);
-        setTreesList(orderedTreesList);
-        setIsLoading(false);
-      } else {
-        setTreesList([]);
-        console.log('ツリーリストが見つかりませんでした。');
-        setIsLoading(false);
-      }
-
-      // 削除されたツリーを通知
-      if (missingTrees && missingTrees.length > 0) {
-        await showDialog('1つ以上のツリーが他のユーザーまたはシステムによって削除されました。\n\n' + missingTrees, 'Information');
-      }
-    } catch (error) {
-      handleError('ツリーリストの取得に失敗しました。\n\n' + error);
-    }
-  };
 
   // ターゲットIDのitems、name、membersをDBからロードする ---------------------------------------------------------------------------
   const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
     if (!isLoading) setIsLoading(true);
-    // デバウンスで前のツリーの状態変更が残っていたら保存
-    if (prevCurrentTree && prevCurrentTree !== targetTree && prevItems.length !== 0 && prevItems !== items) {
-      await saveItemsIdb(prevItems, prevCurrentTree);
-      await saveItemsDb(prevItems, prevCurrentTree);
-      setPrevItems(items);
-    }
 
     try {
       if (!uid) {
@@ -132,8 +75,6 @@ export const useTreeManagement = () => {
           members.push({ uid: member, email: treeData.membersV2[member] });
         }
         setCurrentTreeMembers(members);
-        setPrevItems([]);
-        setPrevCurrentTree(targetTree);
         setItems(treeData.items);
       }
 
@@ -170,8 +111,6 @@ export const useTreeManagement = () => {
     setCurrentTree(null);
     setCurrentTreeName(null);
     setCurrentTreeMembers(null);
-    setPrevCurrentTree(null);
-    setPrevItems([]);
     setItems([]);
     setIsAccordionExpanded(false);
 
@@ -679,8 +618,6 @@ export const useTreeManagement = () => {
           setCurrentTree(null);
           setCurrentTreeName(null);
           setCurrentTreeMembers(null);
-          setPrevCurrentTree(null);
-          setPrevItems([]);
           setItems([]);
           setIsAccordionExpanded(false);
           await deleteTreeIdb(currentTree);
@@ -711,7 +648,6 @@ export const useTreeManagement = () => {
     handleAddUserToTree,
     handleDeleteUserFromTree,
     handleDeleteTree,
-    loadTreesList,
     loadCurrentTreeData,
   };
 };
