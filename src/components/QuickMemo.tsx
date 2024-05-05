@@ -175,8 +175,8 @@ export const QuickMemo = () => {
                   position: 'absolute',
                   color: theme.palette.grey[500],
                   bottom:
-                    windowHeight < 600
-                      ? 'calc(env(safe-area-inset-bottom) + 150px)'
+                    windowHeight < 600 || isMobile
+                      ? 'calc(env(safe-area-inset-bottom) + 125px)'
                       : 'calc(env(safe-area-inset-bottom) + 318px)',
                   right: 15,
                 }}
