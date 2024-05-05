@@ -13,6 +13,8 @@ import {
 } from '../components/SortableTree/utilities';
 import { ref, getDatabase, get, set } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { useDatabase } from './useDatabase';
+import { useIndexedDb } from './useIndexedDb';
 import { useAttachedFile } from './useAttachedFile';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useAppStateStore } from '../store/appStateStore';
@@ -30,6 +32,8 @@ export const useTaskManagement = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
 
   const { deleteFile } = useAttachedFile();
+  const { saveTimeStampDb } = useDatabase();
+  const { copyTreeDataToIdbFromDb } = useIndexedDb();
 
   // タスクを追加する ------------------------------
   // ※ SortableTreeコンポーネントに移動した
@@ -283,9 +287,11 @@ export const useTaskManagement = () => {
                   setItems(newItems);
                 } else {
                   //コピー先のDBにコピー用アイテムを追加
-                  set(treeItemsRef, newItems).catch((error) => {
+                  await set(treeItemsRef, newItems).catch((error) => {
                     throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error);
                   });
+                  await saveTimeStampDb(targetTreeId);
+                  await copyTreeDataToIdbFromDb(targetTreeId);
                 }
                 return true;
               } else {
@@ -303,7 +309,7 @@ export const useTaskManagement = () => {
         });
     } catch (error) {
       console.error('エラーが発生しました。\n\n' + error);
-      showDialog('エラーが発生しました。\n\n' + error, 'Error');
+      await showDialog('エラーが発生しました。\n\n' + error, 'Error');
       return false;
     }
     return false;
@@ -379,9 +385,11 @@ export const useTaskManagement = () => {
 
               if (newItems && trashIndex) {
                 //移動先のDBにアイテムを追加
-                set(treeItemsRef, newItems).catch((error) => {
+                await set(treeItemsRef, newItems).catch((error) => {
                   throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error);
                 });
+                await saveTimeStampDb(targetTreeId);
+                await copyTreeDataToIdbFromDb(targetTreeId);
                 setItems(removeItem(items, targetTaskId));
               } else {
                 throw new Error('移動用アイテムの抽出に失敗しました。');
@@ -398,7 +406,7 @@ export const useTaskManagement = () => {
         });
     } catch (error) {
       console.error('エラーが発生しました。\n\n' + error);
-      showDialog('エラーが発生しました。\n\n' + error, 'Error');
+      await showDialog('エラーが発生しました。\n\n' + error, 'Error');
     }
   };
 

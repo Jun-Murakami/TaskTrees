@@ -43,10 +43,11 @@ export const useTreeManagement = () => {
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
 
   const { handleError } = useError();
-  const {
+  const { saveTimeStampDb,
+    loadTreesListFromDb,
+    loadAllTreesDataFromDb,
     saveTreesListDb,
     saveCurrentTreeNameDb,
-    loadAllTreesDataFromDb,
     deleteTreeFromDb,
   } = useDatabase();
   const { copyTreeDataToIdbFromDb,
@@ -108,11 +109,7 @@ export const useTreeManagement = () => {
     };
     await deleteAttachedFiles();
 
-    setCurrentTree(null);
-    setCurrentTreeName(null);
-    setCurrentTreeMembers(null);
-    setItems([]);
-    setIsAccordionExpanded(false);
+
 
     try {
       await deleteTreeIdb(targetTree);
@@ -121,6 +118,15 @@ export const useTreeManagement = () => {
       setTreesList(updatedTreesList);
       await saveTreesListIdb(updatedTreesList);
       await saveTreesListDb(updatedTreesList);
+
+      await saveTimeStampDb(null);
+
+      setCurrentTree(null);
+      setCurrentTreeName(null);
+      setCurrentTreeMembers(null);
+      setItems([]);
+      setIsAccordionExpanded(false);
+
     } catch (error) {
       await showDialog('ツリーの削除に失敗しました。\n\n' + error, 'Error');
     }
@@ -185,19 +191,6 @@ export const useTreeManagement = () => {
         throw new Error('新しいツリーの作成に失敗しました。');
       }
 
-      setIsAccordionExpanded(true);
-      // 0.5秒後にフォーカスをセット
-      const timerOne = setTimeout(() => {
-        setIsFocusedTreeName(true);
-      }, 500);
-      setIsLoading(false);
-      setCurrentTree(newTreeRef as UniqueIdentifier);
-      setCurrentTreeName('新しいツリー');
-      if (email) {
-        setCurrentTreeMembers([{ uid: uid, email: email }]);
-      } else {
-        setCurrentTreeMembers([{ uid: uid, email: 'unknown' }]);
-      }
       if (newTreeRef !== null) {
         const newTree = { id: newTreeRef as UniqueIdentifier, name: '新しいツリー' };
         const updatedTreesListWithNewTree = treesList ? [...treesList, newTree] : [newTree];
@@ -207,7 +200,23 @@ export const useTreeManagement = () => {
         await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
         await loadCurrentTreeData(newTreeRef as UniqueIdentifier);
         await loadTreesListFromIdb();
+        await saveTimeStampDb(newTreeRef as UniqueIdentifier);
       }
+
+      setIsAccordionExpanded(true);
+      // 0.5秒後にフォーカスをセット
+      const timerOne = setTimeout(() => {
+        setIsFocusedTreeName(true);
+      }, 500);
+      setCurrentTree(newTreeRef as UniqueIdentifier);
+      setCurrentTreeName('新しいツリー');
+      if (email) {
+        setCurrentTreeMembers([{ uid: uid, email: email }]);
+      } else {
+        setCurrentTreeMembers([{ uid: uid, email: 'unknown' }]);
+      }
+
+      setIsLoading(false);
 
       //タイマーをクリア
       return () => {
@@ -338,6 +347,7 @@ export const useTreeManagement = () => {
                 [uid]: true,
               }
             );
+            await saveTimeStampDb(newTreeRef as UniqueIdentifier);
             await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
             if (!newTreeRef) {
               throw new Error('ツリーのデータベースへの保存に失敗しました。');
@@ -391,6 +401,7 @@ export const useTreeManagement = () => {
             await loadTreesListFromIdb();
             await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
             await loadCurrentTreeData(newTreeRef as UniqueIdentifier);
+            await saveTimeStampDb(newTreeRef as UniqueIdentifier);
             setIsLoading(false);
             const result = await showDialog('ファイルが正常に読み込まれました。', 'Information');
             if (result && treeName === '読み込まれたツリー') {
@@ -573,6 +584,7 @@ export const useTreeManagement = () => {
       await copyTreeDataToIdbFromDb(currentTree);
       await loadCurrentTreeData(currentTree);
       setIsLoading(false);
+      await saveTimeStampDb(currentTree);
       return Promise.resolve(result.data);
     } catch (error) {
       setIsLoading(false);
@@ -614,6 +626,7 @@ export const useTreeManagement = () => {
           treeId: currentTree,
           userId: rescievedUid,
         });
+        await saveTimeStampDb(currentTree);
         if (uid && uid === rescievedUid) {
           setCurrentTree(null);
           setCurrentTreeName(null);
@@ -621,6 +634,9 @@ export const useTreeManagement = () => {
           setItems([]);
           setIsAccordionExpanded(false);
           await deleteTreeIdb(currentTree);
+          const newTreeList = await loadTreesListFromDb(uid);
+          await saveTreesListIdb(newTreeList);
+          setTreesList(newTreeList);
         } else {
           await copyTreeDataToIdbFromDb(currentTree);
           await loadCurrentTreeData(currentTree);

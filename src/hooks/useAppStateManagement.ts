@@ -11,6 +11,7 @@ export const useAppStateManagement = () => {
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
+  const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
 
   const { saveTimeStampDb } = useDatabase();
   // エラーハンドリング
@@ -53,6 +54,7 @@ export const useAppStateManagement = () => {
           const data = snapshot.val();
           if (typeof data === 'string') {
             // クイックメモの内容をセット
+            setIsLoadedMemoFromDb(true);
             setQuickMemoText(data);
           }
         }
@@ -70,8 +72,8 @@ export const useAppStateManagement = () => {
     }
     try {
       const userSettingsRef = ref(db, `users/${uid}/settings`);
-      await saveTimeStampDb();
       await set(userSettingsRef, { darkMode: darkModeNew, hideDoneItems: hideDoneItemsNew });
+      await saveTimeStampDb(null);
     } catch (error) {
       handleError(error);
     }
@@ -84,8 +86,8 @@ export const useAppStateManagement = () => {
     }
     try {
       const quickMemoRef = ref(getDatabase(), `users/${uid}/quickMemo`);
-      await saveTimeStampDb();
       await set(quickMemoRef, quickMemoText);
+      await saveTimeStampDb(null);
     } catch (error) {
       handleError('クイックメモの変更をデータベースに保存できませんでした。\n\n' + error);
     }

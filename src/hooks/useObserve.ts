@@ -20,7 +20,9 @@ export const useObserve = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
-  const treesList = useTreeStateStore((state) => state.treesList);
+  const isLoadedMemoFromDb = useAppStateStore((state) => state.isLoadedMemoFromDb);
+  const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
+  const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const items = useTreeStateStore((state) => state.items);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
@@ -87,12 +89,12 @@ export const useObserve = () => {
       const serverTimestamp = snapshot.val();
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
-        setLocalTimestamp(serverTimestamp);
-        await loadTreesListFromDb(uid);
-        await saveTreesListIdb(treesList);
+        const newTreesList = await loadTreesListFromDb(uid);
+        setTreesList(newTreesList);
+        await saveTreesListIdb(newTreesList);
         await loadQuickMemoFromDb();
         // treesListを反復して、タイムスタンプをチェックし、最新のツリーをコピー
-        const treeIds = treesList.map((tree) => tree.id);
+        const treeIds = newTreesList.map((tree) => tree.id);
         let treeUpdateCount = 0;
         for (const treeId of treeIds) {
           const treeRef = ref(getDatabase(), `trees/${treeId}`);
@@ -111,7 +113,7 @@ export const useObserve = () => {
           await get(timestampV2Ref).then(async (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.val();
-              if (data <= serverTimestamp) {
+              if (data !== serverTimestamp) {
                 await syncDb();
               }
             }
@@ -123,6 +125,7 @@ export const useObserve = () => {
         }
 
       }
+      setLocalTimestamp(serverTimestamp);
       setIsLoading(false);
     });
   };
@@ -134,7 +137,6 @@ export const useObserve = () => {
     }
 
     if (currentTree !== prevCurrentTree) {
-      console.log('Tree changed. Saving items to database.');
       if (prevItems.length > 0) {
         const asyncFunc = async () => {
           if (prevCurrentTree) {
@@ -187,6 +189,10 @@ export const useObserve = () => {
   // ローカルのクイックメモの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
     if (!uid) {
+      return;
+    }
+    if (isLoadedMemoFromDb) {
+      setIsLoadedMemoFromDb(false);
       return;
     }
     const debounceSave = setTimeout(() => {

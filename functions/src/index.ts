@@ -99,10 +99,6 @@ exports.addUserToTree = functions.https.onCall(async (data: { email: string; tre
       }
     });
 
-    // trees/$treeId/timestampに現在の時間を追加
-    const timestampRef = admin.database().ref(`trees/${treeId}/timestamp`);
-    await timestampRef.set(Date.now());
-
     return { success: true };
   } catch (error) {
     console.error('Error adding user to tree:', error);
@@ -184,10 +180,6 @@ exports.removeUserFromTree = functions.https.onCall(async (data: { treeId: strin
         }
       }
     });
-
-    // trees/$treeId/timestampに現在の時間を追加
-    const timestampRef = admin.database().ref(`trees/${treeId}/timestamp`);
-    await timestampRef.set(Date.now());
 
     return { success: true };
   } catch (error) {
@@ -280,6 +272,7 @@ exports.updateTimestamps = functions.https.onCall(async (data: { uids: string[],
     await Promise.all(
       uids.map(async (uid) => {
         const userRef = db.ref(`users/${uid}`);
+        await userRef.update({ timestampV2: timestamp });
         await userRef.update({ timestamp: timestamp });
       })
     );
@@ -287,5 +280,22 @@ exports.updateTimestamps = functions.https.onCall(async (data: { uids: string[],
   } catch (error) {
     console.error('Error updating timestamps:', error);
     throw new functions.https.HttpsError('unknown', 'Failed to update timestamps');
+  }
+});
+
+// 指定されたツリーのタイムスタンプを更新
+exports.updateTreeTimestamp = functions.https.onCall(async (data: { treeId: string, timestamp: number }) => {
+  const { treeId, timestamp } = data;
+  if (!treeId || !timestamp) {
+    throw new functions.https.HttpsError('invalid-argument', 'The function must be called with valid "treeId" and "timestamp".');
+  }
+  try {
+    const db = admin.database();
+    const treeRef = db.ref(`trees/${treeId}`);
+    await treeRef.update({ timestamp: timestamp });
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating tree timestamp:', error);
+    throw new functions.https.HttpsError('unknown', 'Failed to update tree timestamp');
   }
 });

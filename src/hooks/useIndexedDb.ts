@@ -19,6 +19,7 @@ export const useIndexedDb = () => {
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
+  const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
   const localTimestamp = useAppStateStore((state) => state.localTimestamp);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
@@ -40,6 +41,7 @@ export const useIndexedDb = () => {
       return;
     }
     try {
+      console.log('syncDb');
       setLocalTimestamp(Date.now());
       await loadSettingsFromDb();
       await loadQuickMemoFromDb();
@@ -59,10 +61,10 @@ export const useIndexedDb = () => {
       if (allTreesData) {
         await idb.treestate.clear();
         for (const treeData of allTreesData) {
-          const treeTimestampRef = ref(getDatabase(), `trees/${treeData.id}/timestamp`);
-          await set(treeTimestampRef, localTimestamp);
-          const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
-          await set(timestampV2Ref, localTimestamp);
+          if (treeData.timestamp === undefined || treeData.timestamp === null) {
+            const treeTimestampRef = ref(getDatabase(), `trees/${treeData.id}/timestamp`);
+            await set(treeTimestampRef, localTimestamp);
+          }
           if (treeData.members) {
             const functions = getFunctions();
             const getUserEmails = httpsCallable(functions, 'getUserEmails');
@@ -91,6 +93,10 @@ export const useIndexedDb = () => {
           }
         }
       }
+      const timestaampRef = ref(getDatabase(), `users/${uid}/timestamp`);
+      await set(timestaampRef, localTimestamp);
+      const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
+      await set(timestampV2Ref, localTimestamp);
       setTreesList(treesListFromDb);
     } catch (error) {
       handleError(error);
@@ -135,6 +141,7 @@ export const useIndexedDb = () => {
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
+        setIsLoadedMemoFromDb(true);
         setQuickMemoText(appState.quickMemo);
       }
     } catch (error) {
