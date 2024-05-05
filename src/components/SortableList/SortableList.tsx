@@ -17,6 +17,7 @@ interface SortableListProps {
 export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState }) => {
   const treesList = useTreeStateStore((state) => state.treesList);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
+  const searchResults = useTreeStateStore((state) => state.searchResults);
 
   const [activeId, setActiveId] = useState<number | null>(null);
 
@@ -48,8 +49,8 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
           await saveTreesListDb(newItems);
         }}
       >
-        <SortableContext items={treesList}>
-          {treesList.map((item) => (
+        <SortableContext items={searchResults}>
+          {searchResults.map((item) => (
             <SortableItem
               key={item.id}
               isPreviewMode={isPreviewMode}

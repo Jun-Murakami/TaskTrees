@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { indexedDb as idb } from '../indexedDb';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import type { TreeItems, TreesList, TreesListItemIncludingItems, MemberItems } from '../types/types';
@@ -17,11 +18,14 @@ export const useIndexedDb = () => {
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
+  const searchKey = useAppStateStore((state) => state.searchKey);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
   const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
   const localTimestamp = useAppStateStore((state) => state.localTimestamp);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
+  const setSearchResults = useTreeStateStore((state) => state.setSearchResults);
+  const treesList = useTreeStateStore((state) => state.treesList);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const showDialog = useDialogStore((state) => state.showDialog);
 
@@ -34,6 +38,23 @@ export const useIndexedDb = () => {
     loadItemsFromDb
   } = useDatabase();
   const { handleError } = useError();
+
+  useEffect(() => {
+    if (searchKey || searchKey !== '') {
+      const asyncFunc = async () => {
+        const result = await idb.treestate
+          .filter(tree => tree.items.some(item => item.value.includes(searchKey)))
+          .toArray();
+        if (result) {
+          const ensuredResult = result.map(tree => ({ id: tree.id!, name: tree.name! }));
+          setSearchResults(ensuredResult);
+        }
+      }
+      asyncFunc();
+    } else {
+      setSearchResults(treesList);
+    }
+  }, [searchKey, setSearchResults, treesList]);
 
   // FirebaseRealtimeDatabaseとIndexedデータベースを同期する ------------------------------------------------
   const syncDb = async () => {
