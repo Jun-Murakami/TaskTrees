@@ -20,6 +20,8 @@ export const useObserve = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
+  const isLoadedItemsFromDb = useAppStateStore((state) => state.isLoadedItemsFromDb);
+  const setIsLoadedItemsFromDb = useAppStateStore((state) => state.setIsLoadedItemsFromDb);
   const isLoadedMemoFromDb = useAppStateStore((state) => state.isLoadedMemoFromDb);
   const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
@@ -148,6 +150,15 @@ export const useObserve = () => {
       }
       setPrevCurrentTree(currentTree);
       setPrevItems([]);
+      return;
+    }
+
+    if (!isLoadedItemsFromDb) {
+      setIsLoadedItemsFromDb(false);
+      return;
+    }
+
+    if (items.length === 0) {
       return;
     }
 

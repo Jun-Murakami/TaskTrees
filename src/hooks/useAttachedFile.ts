@@ -4,7 +4,6 @@ import { useDialogStore } from '../store/dialogStore';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { useDatabase } from './useDatabase';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -14,9 +13,6 @@ export const useAttachedFile = () => {
   const showDialog = useDialogStore((state) => state.showDialog);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
-  const currentTree = useTreeStateStore((state) => state.currentTree);
-
-  const { saveItemsDb } = useDatabase();
 
   // ファイルをFirebaseStorageにアップロードする処理 ------------------------------------------------
   const uploadFile = async (file: File, targetTree: UniqueIdentifier): Promise<string | undefined> => {
@@ -113,7 +109,6 @@ export const useAttachedFile = () => {
           const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
           const updatedItems = await deleteAttachedFile(newItems, fileName);
           setItems(updatedItems);
-          await saveItemsDb(updatedItems, currentTree!);
         }
       }
     }
@@ -147,7 +142,6 @@ export const useAttachedFile = () => {
       const updatedItems = await deleteAttachedFile(newItems, fileName);
       if (!isSilent) {
         setItems(updatedItems);
-        await saveItemsDb(updatedItems, currentTree!);
       }
       setIsLoading(false);
     } catch (error) {
@@ -162,7 +156,6 @@ export const useAttachedFile = () => {
         const newItems: TreeItem[] = JSON.parse(JSON.stringify(items));
         const updatedItems = await deleteAttachedFile(newItems, fileName);
         setItems(updatedItems);
-        await saveItemsDb(updatedItems, currentTree!);
       }
     }
   };
