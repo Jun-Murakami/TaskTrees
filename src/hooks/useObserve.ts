@@ -20,8 +20,6 @@ export const useObserve = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
-  const isLoadedItemsFromDb = useAppStateStore((state) => state.isLoadedItemsFromDb);
-  const setIsLoadedItemsFromDb = useAppStateStore((state) => state.setIsLoadedItemsFromDb);
   const isLoadedMemoFromDb = useAppStateStore((state) => state.isLoadedMemoFromDb);
   const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
@@ -91,6 +89,7 @@ export const useObserve = () => {
       const serverTimestamp = snapshot.val();
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
+        setLocalTimestamp(serverTimestamp);
         const newTreesList = await loadTreesListFromDb(uid);
         setTreesList(newTreesList);
         await saveTreesListIdb(newTreesList);
@@ -127,7 +126,6 @@ export const useObserve = () => {
         }
 
       }
-      setLocalTimestamp(serverTimestamp);
       setIsLoading(false);
     });
   };
@@ -150,15 +148,6 @@ export const useObserve = () => {
       }
       setPrevCurrentTree(currentTree);
       setPrevItems([]);
-      return;
-    }
-
-    if (!isLoadedItemsFromDb) {
-      setIsLoadedItemsFromDb(false);
-      return;
-    }
-
-    if (items.length === 0) {
       return;
     }
 

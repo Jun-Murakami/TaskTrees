@@ -25,7 +25,6 @@ export const useTreeManagement = () => {
   const email = useAppStateStore((state) => state.email);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
-  const setIsLoadedItemsFromDb = useAppStateStore((state) => state.setIsLoadedItemsFromDb);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
   const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
 
@@ -77,7 +76,6 @@ export const useTreeManagement = () => {
           members.push({ uid: member, email: treeData.membersV2[member] });
         }
         setCurrentTreeMembers(members);
-        setIsLoadedItemsFromDb(true);
         setItems(treeData.items);
       }
 

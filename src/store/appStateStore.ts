@@ -18,7 +18,6 @@ type AppState = {
   searchKey: string;
   isEditingText: boolean;
   quickMemoText: string;
-  isLoadedItemsFromDb: boolean;
   isLoadedMemoFromDb: boolean;
   setIsOffline: (isOffline: boolean) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
@@ -37,7 +36,6 @@ type AppState = {
   setSearchKey: (searchKey: string) => void;
   setIsEditingText: (isEditingText: boolean) => void;
   setQuickMemoText: (quickMemoText: string) => void;
-  setIsLoadedItemsFromDb: (isLoadedItemsFromDb: boolean) => void;
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb: boolean) => void;
 };
 
@@ -59,7 +57,6 @@ export const useAppStateStore = create<AppState>((set) => ({
   searchKey: '',
   isEditingText: false,
   quickMemoText: '',
-  isLoadedItemsFromDb: false,
   isLoadedMemoFromDb: false,
   setIsOffline: (isOffline) => set({ isOffline }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
@@ -78,6 +75,5 @@ export const useAppStateStore = create<AppState>((set) => ({
   setSearchKey: (searchKey) => set({ searchKey }),
   setIsEditingText: (isEditingText) => set({ isEditingText }),
   setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
-  setIsLoadedItemsFromDb: (isLoadedItemsFromDb) => set({ isLoadedItemsFromDb }),
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb) => set({ isLoadedMemoFromDb }),
 }));
