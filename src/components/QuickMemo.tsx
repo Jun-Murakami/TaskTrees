@@ -35,7 +35,6 @@ export const QuickMemo = () => {
   useEffect(() => {
     const handleResize = () => {
       setWindowHeight(window.innerHeight);
-      console.log(windowHeight);
       if (windowHeight < 600 || isMobile) {
         setTextFieldRows(6);
       } else {

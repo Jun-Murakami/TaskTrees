@@ -89,7 +89,6 @@ export const useObserve = () => {
       const serverTimestamp = snapshot.val();
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
-        const currentTree = useTreeStateStore.getState().currentTree;
         setLocalTimestamp(serverTimestamp);
         const newTreesList = await loadTreesListFromDb(uid);
         setTreesList(newTreesList);
@@ -106,11 +105,6 @@ export const useObserve = () => {
               if (data.timestamp > currentLocalTimestamp) {
                 await copyTreeDataToIdbFromDb(treeId);
                 treeUpdateCount++;
-                if (currentTree && treeId === currentTree) {
-                  setPrevCurrentTree(null);
-                  setPrevItems([]);
-                  await loadCurrentTreeData(currentTree);
-                }
               }
             }
           });
@@ -122,14 +116,14 @@ export const useObserve = () => {
               const data = snapshot.val();
               if (data !== serverTimestamp) {
                 await syncDb();
-                if (currentTree) {
-                  setPrevCurrentTree(null);
-                  setPrevItems([]);
-                  await loadCurrentTreeData(currentTree);
-                }
               }
             }
           });
+        }
+        const currentTree = useTreeStateStore.getState().currentTree;
+        if (currentTree) {
+          setPrevCurrentTree(null);
+          await loadCurrentTreeData(currentTree);
         }
 
       }
@@ -143,7 +137,7 @@ export const useObserve = () => {
       return;
     }
 
-    if (!prevCurrentTree || currentTree !== prevCurrentTree) {
+    if (currentTree !== prevCurrentTree) {
       if (prevItems.length > 0) {
         const asyncFunc = async () => {
           if (prevCurrentTree) {
