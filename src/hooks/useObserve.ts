@@ -122,6 +122,8 @@ export const useObserve = () => {
         }
         const currentTree = useTreeStateStore.getState().currentTree;
         if (currentTree) {
+          setPrevCurrentTree(null);
+          setPrevItems([]);
           await loadCurrentTreeData(currentTree);
         }
 
