@@ -138,7 +138,7 @@ export const useObserve = () => {
       return;
     }
 
-    if (currentTree !== prevCurrentTree) {
+    if (!prevCurrentTree || currentTree !== prevCurrentTree) {
       if (prevItems.length > 0) {
         const asyncFunc = async () => {
           if (prevCurrentTree) {
