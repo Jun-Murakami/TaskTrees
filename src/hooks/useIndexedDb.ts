@@ -26,12 +26,13 @@ export const useIndexedDb = () => {
   const showDialog = useDialogStore((state) => state.showDialog);
 
   const { loadSettingsFromDb, loadQuickMemoFromDb } = useAppStateManagement();
-  const { loadTreesListFromDb,
+  const {
+    loadTreesListFromDb,
     loadTreeTimestampFromDb,
     loadAllTreesDataFromDb,
     loadTreeNameFromDb,
     loadMembersFromDb,
-    loadItemsFromDb
+    loadItemsFromDb,
   } = useDatabase();
   const { handleError } = useError();
 
@@ -101,7 +102,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // データベースが空かどうかをチェックして、空の場合は初期データを同期 ------------------------------------------------
   const checkAndSyncDb = async () => {
@@ -110,7 +111,7 @@ export const useIndexedDb = () => {
     }
     try {
       // データベースが空かどうかをチェック
-      const isEmpty = await idb.appstate.count() === 0;
+      const isEmpty = (await idb.appstate.count()) === 0;
       if (isEmpty) {
         // データベースが空の場合、初期データを登録
         await syncDb();
@@ -137,7 +138,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースからクイックメモを読み込む ------------------------------------------------
   const loadQuickMemoFromIdb = async () => {
@@ -153,7 +154,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースからツリーリストを読み込む ------------------------------------------------
   const loadTreesListFromIdb = async () => {
@@ -168,7 +169,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // IndexedデータベースからDarkMode設定を読み込む ------------------------------------------------
   const loadDarkModeFromIdb = async () => {
@@ -183,7 +184,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースから完了済みアイテムの非表示設定を読み込む ------------------------------------------------
   const loadHideDoneItemsFromIdb = async () => {
@@ -198,12 +199,12 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースから指定されたツリーのデータを読み込む ------------------------------------------------
   const loadCurrentTreeDataFromIdb = async (targetTree: UniqueIdentifier) => {
     if (!uid || !targetTree) {
-      return;
+      return null;
     }
     try {
       const treeData = await idb.treestate.get(targetTree);
@@ -211,11 +212,14 @@ export const useIndexedDb = () => {
         const ensuredItems = ensureChildrenProperty(treeData.items);
         const ensuredTreeData = { ...treeData, items: ensuredItems };
         return ensuredTreeData;
+      } else {
+        return null;
       }
     } catch (error) {
       handleError(error);
+      return null;
     }
-  }
+  };
 
   // IndexedデータベースにItemsを保存 ------------------------------------------------
   const saveItemsIdb = async (newItems: TreeItems, targetTree: UniqueIdentifier) => {
@@ -246,7 +250,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースにツリーリストを保存 ------------------------------------------------
   const saveTreesListIdb = async (newTreesList: TreesList) => {
@@ -255,7 +259,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースに現在のツリー名を保存 ------------------------------------------------
   const saveCurrentTreeNameIdb = async (editedTreeName: string, targetTree: UniqueIdentifier | null) => {
@@ -275,7 +279,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースにクイックメモを保存 ------------------------------------------------
   const saveQuickMemoIdb = async (quickMemoText: string) => {
@@ -284,7 +288,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースにメンバーを追加 ------------------------------------------------
   const updateMembersIdb = async (targetTree: UniqueIdentifier, newMembers: { uid: string; email: string }[]) => {
@@ -311,7 +315,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースからユーザーを削除 ------------------------------------------------
   const deleteMemberIdb = async (targetTree: UniqueIdentifier, targetUid: string) => {
@@ -335,7 +339,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // Indexedデータベースから指定されたツリーを削除 ------------------------------------------------
   const deleteTreeIdb = async (targetTree: UniqueIdentifier) => {
@@ -347,7 +351,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  }
+  };
 
   // 指定されたツリーのデータをIndexedデータベースに保存 ------------------------------------------------
   const copyTreeDataToIdbFromDb = async (targetTree: UniqueIdentifier) => {
@@ -450,7 +454,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       await showDialog('Indexedデータベースへの保存に失敗しました。\n\n' + error, 'Error');
     }
-  }
+  };
 
   return {
     syncDb,
@@ -471,4 +475,3 @@ export const useIndexedDb = () => {
     copyTreeDataToIdbFromDb,
   };
 };
-
