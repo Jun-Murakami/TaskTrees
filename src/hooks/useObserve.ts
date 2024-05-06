@@ -60,6 +60,7 @@ export const useObserve = () => {
     await loadSettingsFromIdb();
     await loadTreesListFromIdb();
     await loadQuickMemoFromIdb();
+    setIsLoading(false);
     // ローカルストレージからitems_offlineとtreeName_offline、quick_memo_offlineを読み込む
     const { value: itemsOffline } = await Preferences.get({ key: `items_offline` });
     const { value: treeNameOffline } = await Preferences.get({ key: `treeName_offline` });

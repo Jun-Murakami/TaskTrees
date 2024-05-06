@@ -79,7 +79,6 @@ export const useTreeManagement = () => {
       return;
     }
     try {
-      if (!isLoading) setIsLoading(true);
       const treeData = await loadCurrentTreeDataFromIdb(targetTree);
       if (treeData && treeData.name && treeData.membersV2 && treeData.items) {
         setCurrentTreeName(treeData.name);
@@ -91,9 +90,7 @@ export const useTreeManagement = () => {
         setItems(treeData.items);
       }
 
-      setIsLoading(false);
     } catch (error) {
-      setIsLoading(false);
       await showDialog('ツリーのデータの取得に失敗しました。\n\n' + error, 'Error');
     }
   };
