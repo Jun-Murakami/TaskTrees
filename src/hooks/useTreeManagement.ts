@@ -75,10 +75,9 @@ export const useTreeManagement = () => {
 
   // ターゲットIDのitems、name、membersをDBからロードする ---------------------------------------------------------------------------
   const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
-    if (!uid || (!isConnected && !isOffline)) {
+    if (!uid) {
       return;
     }
-
     try {
       if (!isLoading) setIsLoading(true);
       const treeData = await loadCurrentTreeDataFromIdb(targetTree);
