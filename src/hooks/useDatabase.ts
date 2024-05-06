@@ -20,8 +20,6 @@ export const useDatabase = () => {
 
   const { handleError } = useError();
 
-
-
   // タイムスタンプをデータベースに保存する関数 ---------------------------------------------------------------------------
   const saveTimeStampDb = async (targetTree: UniqueIdentifier | null) => {
     if (!uid) {

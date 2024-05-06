@@ -1,15 +1,16 @@
 import { useEffect } from 'react';
 import isEqual from 'lodash/isEqual';
 import { get } from 'firebase/database';
-import { useTreeStateStore } from '../store/treeStateStore';
 import { useTreeManagement } from './useTreeManagement';
 import { useAppStateManagement } from './useAppStateManagement';
-import { useDialogStore } from '../store/dialogStore';
+import { useFirebaseConnection } from './useFirebaseConnection';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
 import { useIndexedDb } from './useIndexedDb';
 import { getDatabase, ref, onValue, } from 'firebase/database';
 import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
+import { useDialogStore } from '../store/dialogStore';
 import { Preferences } from '@capacitor/preferences';
 
 export const useObserve = () => {
@@ -47,6 +48,7 @@ export const useObserve = () => {
   } = useIndexedDb();
   const { loadQuickMemoFromDb, saveQuickMemoDb } = useAppStateManagement();
   const { handleError } = useError();
+  const isConnected = useFirebaseConnection();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
   const observeTimeStamp = async () => {
@@ -133,7 +135,7 @@ export const useObserve = () => {
 
   // ローカルitemsの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems)) {
+    if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems) || !isConnected) {
       return;
     }
 
@@ -189,7 +191,7 @@ export const useObserve = () => {
 
   // ローカルのクイックメモの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!uid) {
+    if (!uid || !isConnected || !quickMemoText) {
       return;
     }
     if (isLoadedMemoFromDb) {

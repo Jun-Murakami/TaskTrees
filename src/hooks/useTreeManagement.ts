@@ -7,9 +7,9 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useAttachedFile } from './useAttachedFile';
-import { useError } from './useError';
 import { useDatabase } from './useDatabase';
 import { useIndexedDb } from './useIndexedDb';
+import { useFirebaseConnection } from './useFirebaseConnection';
 import { useDialogStore, useInputDialogStore } from '../store/dialogStore';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -42,7 +42,6 @@ export const useTreeManagement = () => {
   const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
 
-  const { handleError } = useError();
   const { saveTimeStampDb,
     loadTreesListFromDb,
     loadAllTreesDataFromDb,
@@ -58,16 +57,17 @@ export const useTreeManagement = () => {
     deleteTreeIdb
   } = useIndexedDb();
   const { deleteFile } = useAttachedFile();
+  const isConnected = useFirebaseConnection();
 
 
   // ターゲットIDのitems、name、membersをDBからロードする ---------------------------------------------------------------------------
   const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
-    if (!isLoading) setIsLoading(true);
+    if (!uid || !isConnected) {
+      return;
+    }
 
     try {
-      if (!uid) {
-        throw new Error('ユーザーがログインしていません。');
-      }
+      if (!isLoading) setIsLoading(true);
       const treeData = await loadCurrentTreeDataFromIdb(targetTree);
       if (treeData && treeData.name && treeData.membersV2 && treeData.items) {
         setCurrentTreeName(treeData.name);
@@ -82,15 +82,16 @@ export const useTreeManagement = () => {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      handleError('ツリーのデータの取得に失敗しました。\n\n' + error);
+      await showDialog('ツリーのデータの取得に失敗しました。\n\n' + error, 'Error');
     }
   };
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = async (targetTree: UniqueIdentifier) => {
-    if (!uid) {
+    if (!uid || !isConnected) {
       return;
     }
+
     // ツリーを削除する前に現在のツリー内の子要素を含むすべてのattachedFileを再帰的に削除
     const deleteAttachedFiles = async () => {
       const deleteAttachedFilesRecursively = async (items: TreeItem[]) => {
@@ -108,8 +109,6 @@ export const useTreeManagement = () => {
       await deleteAttachedFilesRecursively(items);
     };
     await deleteAttachedFiles();
-
-
 
     try {
       await deleteTreeIdb(targetTree);
@@ -164,7 +163,7 @@ export const useTreeManagement = () => {
         const treeId: string = result.data as string; // result.dataをstring型としてキャスト
         return treeId;
       } catch (error) {
-        showDialog('メンバーのメールアドレスの取得に失敗しました。\n\n' + error, 'Error');
+        await showDialog('ツリーの作成に失敗しました。\n\n' + error, 'Error');
         return []; // エラーが発生した場合は空の配列を返す
       }
     },
@@ -176,7 +175,7 @@ export const useTreeManagement = () => {
     if (isOffline) {
       await showDialog('オフラインモードでは新しいツリーを作成できません。', 'Information');
     }
-    if (!uid) {
+    if (!uid || !isConnected) {
       return Promise.reject();
     }
 
@@ -264,7 +263,7 @@ export const useTreeManagement = () => {
 
   // ファイルを読み込んでツリーの状態を復元する ---------------------------------------------------------------------------
   const handleFileUpload = async (file: File) => {
-    if (!uid) {
+    if (!uid || !isConnected) {
       return Promise.reject();
     }
     if (!file) {
@@ -308,7 +307,7 @@ export const useTreeManagement = () => {
 
   // 本編
   const handleLoadedContent = async (data: string | null) => {
-    if (!uid) {
+    if (!uid || !isConnected) {
       return Promise.reject();
     }
     const treesList = useTreeStateStore.getState().treesList;
@@ -470,7 +469,7 @@ export const useTreeManagement = () => {
         });
         return result.uri;
       } catch (e) {
-        console.error('Error saving file:', e);
+        await showDialog('ファイルの保存に失敗しました。\n\n' + e, 'Error');
         return '';
       }
     } else {
@@ -484,7 +483,7 @@ export const useTreeManagement = () => {
 
   // すべてのツリーをJSONファイルとしてダウンロードする --------------------------------------------------------------------------
   const handleDownloadAllTrees = async (isSilent: boolean = false) => {
-    if (!uid && !treesList) {
+    if (!uid || !isConnected || !treesList) {
       return Promise.reject('');
     }
     try {
@@ -540,6 +539,9 @@ export const useTreeManagement = () => {
 
   // ツリー名の変更 ---------------------------------------------------------------------------
   const handleTreeNameSubmit = async (editedTreeName: string) => {
+    if (!uid || !isConnected) {
+      return;
+    }
     if (editedTreeName !== null && editedTreeName !== '' && editedTreeName !== currentTreeName) {
       setCurrentTreeName(editedTreeName);
       if (isOffline) {
@@ -564,7 +566,7 @@ export const useTreeManagement = () => {
 
   // メンバーの追加 ---------------------------------------------------------------------------
   const handleAddUserToTree = async () => {
-    if (!currentTree) return Promise.resolve();
+    if (!currentTree || !uid || !isConnected) return Promise.resolve();
     const email = await showInputDialog(
       '追加する編集メンバーのメールアドレスを入力してください。共有メンバーはこのアプリにユーザー登録されている必要があります。',
       'Add Member',
@@ -598,7 +600,7 @@ export const useTreeManagement = () => {
 
   // メンバーの削除 ---------------------------------------------------------------------------
   const handleDeleteUserFromTree = async (rescievedUid: string, rescievedEmail: string) => {
-    if (!currentTree) return Promise.resolve();
+    if (!currentTree || !uid || !isConnected) return Promise.resolve();
     let result;
     if (currentTreeMembers && currentTreeMembers.length === 1) {
       await showDialog('最後のメンバーを削除することはできません。', 'Information');

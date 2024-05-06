@@ -143,6 +143,9 @@ export const useIndexedDb = () => {
 
   // IndexedデータベースからAppの設定を読み込む ------------------------------------------------
   const loadSettingsFromIdb = async () => {
+    if (!uid) {
+      return;
+    }
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
@@ -159,6 +162,9 @@ export const useIndexedDb = () => {
 
   // Indexedデータベースからクイックメモを読み込む ------------------------------------------------
   const loadQuickMemoFromIdb = async () => {
+    if (!uid) {
+      return;
+    }
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
@@ -172,6 +178,9 @@ export const useIndexedDb = () => {
 
   // Indexedデータベースからツリーリストを読み込む ------------------------------------------------
   const loadTreesListFromIdb = async () => {
+    if (!uid) {
+      return;
+    }
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
@@ -184,6 +193,9 @@ export const useIndexedDb = () => {
 
   // IndexedデータベースからDarkMode設定を読み込む ------------------------------------------------
   const loadDarkModeFromIdb = async () => {
+    if (!uid) {
+      return;
+    }
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
@@ -196,6 +208,9 @@ export const useIndexedDb = () => {
 
   // Indexedデータベースから完了済みアイテムの非表示設定を読み込む ------------------------------------------------
   const loadHideDoneItemsFromIdb = async () => {
+    if (!uid) {
+      return;
+    }
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
@@ -208,6 +223,9 @@ export const useIndexedDb = () => {
 
   // Indexedデータベースから指定されたツリーのデータを読み込む ------------------------------------------------
   const loadCurrentTreeDataFromIdb = async (targetTree: UniqueIdentifier) => {
+    if (!uid || !targetTree) {
+      return;
+    }
     try {
       const treeData = await idb.treestate.get(targetTree);
       if (treeData) {
@@ -354,6 +372,9 @@ export const useIndexedDb = () => {
 
   // 指定されたツリーのデータをIndexedデータベースに保存 ------------------------------------------------
   const copyTreeDataToIdbFromDb = async (targetTree: UniqueIdentifier) => {
+    if (!uid || !targetTree) {
+      return;
+    }
     const treeData: TreesListItemIncludingItems = {
       id: targetTree,
       name: '',
