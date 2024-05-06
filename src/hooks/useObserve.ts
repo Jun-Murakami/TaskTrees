@@ -135,7 +135,7 @@ export const useObserve = () => {
 
   // ローカルitemsの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems) || !isConnected) {
+    if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems) || (!isConnected && !isOffline)) {
       return;
     }
 
@@ -191,7 +191,7 @@ export const useObserve = () => {
 
   // ローカルのクイックメモの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!uid || !isConnected || !quickMemoText) {
+    if ((!uid && !isOffline) || (!isConnected && !isOffline) || !quickMemoText) {
       return;
     }
     if (isLoadedMemoFromDb) {

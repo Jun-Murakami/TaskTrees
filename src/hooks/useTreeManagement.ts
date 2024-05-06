@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { TreeItem, TreesListItemIncludingItems } from '../types/types';
+import { TreeItem, TreesList, TreesListItemIncludingItems } from '../types/types';
 import { isTreeItemArray } from '../components/SortableTree/utilities';
 import { initialItems, initialOfflineItems } from '../components/SortableTree/mock';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -60,9 +60,22 @@ export const useTreeManagement = () => {
   const isConnected = useFirebaseConnection();
 
 
+  // ツリーリストを保存する関数 ---------------------------------------------------------------------------
+  const handleSaveTreesList = async (treesList: TreesList) => {
+    if (!uid || (!isConnected && !isOffline)) {
+      return;
+    }
+    try {
+      await saveTreesListIdb(treesList);
+      await saveTreesListDb(treesList);
+    } catch (error) {
+      await showDialog('ツリーリストの保存に失敗しました。\n\n' + error, 'Error');
+    }
+  };
+
   // ターゲットIDのitems、name、membersをDBからロードする ---------------------------------------------------------------------------
   const loadCurrentTreeData = async (targetTree: UniqueIdentifier) => {
-    if (!uid || !isConnected) {
+    if (!uid || (!isConnected && !isOffline)) {
       return;
     }
 
@@ -88,7 +101,7 @@ export const useTreeManagement = () => {
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = async (targetTree: UniqueIdentifier) => {
-    if (!uid || !isConnected) {
+    if (!uid || (!isConnected && !isOffline)) {
       return;
     }
 
@@ -175,7 +188,7 @@ export const useTreeManagement = () => {
     if (isOffline) {
       await showDialog('オフラインモードでは新しいツリーを作成できません。', 'Information');
     }
-    if (!uid || !isConnected) {
+    if (!uid || (!isConnected && !isOffline)) {
       return Promise.reject();
     }
 
@@ -263,7 +276,7 @@ export const useTreeManagement = () => {
 
   // ファイルを読み込んでツリーの状態を復元する ---------------------------------------------------------------------------
   const handleFileUpload = async (file: File) => {
-    if (!uid || !isConnected) {
+    if (!uid || (!isConnected && !isOffline)) {
       return Promise.reject();
     }
     if (!file) {
@@ -307,7 +320,7 @@ export const useTreeManagement = () => {
 
   // 本編
   const handleLoadedContent = async (data: string | null) => {
-    if (!uid || !isConnected) {
+    if (!uid || (!isConnected && !isOffline)) {
       return Promise.reject();
     }
     const treesList = useTreeStateStore.getState().treesList;
@@ -483,7 +496,7 @@ export const useTreeManagement = () => {
 
   // すべてのツリーをJSONファイルとしてダウンロードする --------------------------------------------------------------------------
   const handleDownloadAllTrees = async (isSilent: boolean = false) => {
-    if (!uid || !isConnected || !treesList) {
+    if (!uid || (!isConnected && !isOffline) || !treesList) {
       return Promise.reject('');
     }
     try {
@@ -539,7 +552,7 @@ export const useTreeManagement = () => {
 
   // ツリー名の変更 ---------------------------------------------------------------------------
   const handleTreeNameSubmit = async (editedTreeName: string) => {
-    if (!uid || !isConnected) {
+    if (!uid || (!isConnected && !isOffline)) {
       return;
     }
     if (editedTreeName !== null && editedTreeName !== '' && editedTreeName !== currentTreeName) {
@@ -566,7 +579,7 @@ export const useTreeManagement = () => {
 
   // メンバーの追加 ---------------------------------------------------------------------------
   const handleAddUserToTree = async () => {
-    if (!currentTree || !uid || !isConnected) return Promise.resolve();
+    if (!currentTree || !uid || (!isConnected && !isOffline)) return Promise.resolve();
     const email = await showInputDialog(
       '追加する編集メンバーのメールアドレスを入力してください。共有メンバーはこのアプリにユーザー登録されている必要があります。',
       'Add Member',
@@ -600,7 +613,7 @@ export const useTreeManagement = () => {
 
   // メンバーの削除 ---------------------------------------------------------------------------
   const handleDeleteUserFromTree = async (rescievedUid: string, rescievedEmail: string) => {
-    if (!currentTree || !uid || !isConnected) return Promise.resolve();
+    if (!currentTree || !uid || (!isConnected && !isOffline)) return Promise.resolve();
     let result;
     if (currentTreeMembers && currentTreeMembers.length === 1) {
       await showDialog('最後のメンバーを削除することはできません。', 'Information');
@@ -656,6 +669,7 @@ export const useTreeManagement = () => {
 
   return {
     deleteTree,
+    handleSaveTreesList,
     handleCreateNewTree,
     handleCreateOfflineTree,
     handleFileUpload,

@@ -5,7 +5,7 @@ import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
-import { useDatabase } from '../../hooks/useDatabase';
+import { useTreeManagement } from '../../hooks/useTreeManagement';
 import { SortableSource } from './SortableSource';
 import { SortableItem } from './SortableItem';
 
@@ -21,7 +21,7 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
 
   const [activeId, setActiveId] = useState<number | null>(null);
 
-  const { saveTreesListDb } = useDatabase();
+  const { handleSaveTreesList } = useTreeManagement();
 
   const isPreviewMode = false;
   const activeItem = treesList.find((item) => item.id === activeId?.toString());
@@ -46,7 +46,7 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
           const newIndex = treesList.findIndex((item) => item.id === over.id);
           const newItems = arrayMove(treesList, oldIndex, newIndex);
           setTreesList(newItems);
-          await saveTreesListDb(newItems);
+          await handleSaveTreesList(newItems);
         }}
       >
         <SortableContext items={searchResults}>
