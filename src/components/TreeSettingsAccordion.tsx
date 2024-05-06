@@ -148,11 +148,11 @@ export function TreeSettingsAccordion() {
                 onClick={(e) => e.stopPropagation()}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
-                onKeyDown={(e) => {
+                onKeyDown={async (e) => {
                   if (e.key === 'Enter' && !isComposing) {
                     e.preventDefault(); // エンターキーのデフォルト動作を防ぐ
                     if (editedTreeName && editedTreeName !== '') {
-                      handleTreeNameSubmit(editedTreeName);
+                      await handleTreeNameSubmit(editedTreeName);
                     }
                     setIsAccordionExpanded(false);
                   }

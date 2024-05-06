@@ -11,6 +11,7 @@ export const useAppStateManagement = () => {
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
+  const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
 
   const { saveTimeStampDb } = useDatabase();
   // エラーハンドリング
@@ -53,6 +54,7 @@ export const useAppStateManagement = () => {
           const data = snapshot.val();
           if (typeof data === 'string') {
             // クイックメモの内容をセット
+            setIsLoadedMemoFromDb(true);
             setQuickMemoText(data);
           }
         }
@@ -63,29 +65,29 @@ export const useAppStateManagement = () => {
   };
 
   // ダークモードと完了済みアイテムの非表示設定を保存 ------------------------------------------------
-  const saveAppSettingsDb = (darkModeNew: boolean, hideDoneItemsNew: boolean) => {
+  const saveAppSettingsDb = async (darkModeNew: boolean, hideDoneItemsNew: boolean) => {
     const db = getDatabase();
     if (!uid || !db) {
       return;
     }
     try {
       const userSettingsRef = ref(db, `users/${uid}/settings`);
-      saveTimeStampDb();
-      set(userSettingsRef, { darkMode: darkModeNew, hideDoneItems: hideDoneItemsNew });
+      await set(userSettingsRef, { darkMode: darkModeNew, hideDoneItems: hideDoneItemsNew });
+      await saveTimeStampDb(null);
     } catch (error) {
       handleError(error);
     }
   }
 
   // クイックメモをデータベースに保存する関数 ---------------------------------------------------------------------------
-  const saveQuickMemoDb = (quickMemoText: string) => {
+  const saveQuickMemoDb = async (quickMemoText: string) => {
     if (!uid) {
       return;
     }
     try {
       const quickMemoRef = ref(getDatabase(), `users/${uid}/quickMemo`);
-      saveTimeStampDb();
-      set(quickMemoRef, quickMemoText);
+      await set(quickMemoRef, quickMemoText);
+      await saveTimeStampDb(null);
     } catch (error) {
       handleError('クイックメモの変更をデータベースに保存できませんでした。\n\n' + error);
     }

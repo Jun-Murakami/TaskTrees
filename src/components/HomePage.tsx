@@ -81,7 +81,7 @@ export function HomePage() {
                 <>
                   <TreeSettingsAccordion />
                   <Box
-                    sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 30 : 8 }}
+                    sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 50 : 8 }}
                     id='tree-container'
                   >
                     <Box
@@ -219,10 +219,10 @@ export function HomePage() {
                   Appleでログイン
                 </Button>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     setIsOffline(true);
                     setIsLoggedIn(true);
-                    handleCreateOfflineTree();
+                    await handleCreateOfflineTree();
                   }}
                   variant='contained'
                   sx={{ textTransform: 'none' }}

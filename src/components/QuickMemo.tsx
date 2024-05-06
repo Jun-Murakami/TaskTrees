@@ -14,6 +14,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useAppStateStore } from '../store/appStateStore';
 
 export const QuickMemo = () => {
@@ -46,6 +47,7 @@ export const QuickMemo = () => {
 
     // コンポーネントのアンマウント時にイベントリスナーを削除
     return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -165,6 +167,22 @@ export const QuickMemo = () => {
                 }}
               >
                 <SaveAsIcon />
+              </IconButton>
+            )}
+            {isQuickMemoExpanded && quickMemoText && quickMemoText !== '' && (
+              <IconButton
+                sx={{
+                  position: 'absolute',
+                  color: theme.palette.grey[500],
+                  bottom:
+                    windowHeight < 600 || isMobile
+                      ? 'calc(env(safe-area-inset-bottom) + 125px)'
+                      : 'calc(env(safe-area-inset-bottom) + 318px)',
+                  right: 15,
+                }}
+                onClick={() => setQuickMemoText('')}
+              >
+                <ClearIcon />
               </IconButton>
             )}
           </AccordionDetails>

@@ -74,8 +74,11 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   // ツリーのリストから選択されたツリーを表示する
   const handleListClick = async (treeId: UniqueIdentifier): Promise<void> => {
-    await loadCurrentTreeData(treeId);
+    if (currentTree === treeId) {
+      return;
+    }
     setCurrentTree(treeId);
+    await loadCurrentTreeData(treeId);
     if (isAccordionExpanded) {
       // 0.5秒後にフォーカスをセット
       setTimeout(() => {
