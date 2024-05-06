@@ -81,7 +81,7 @@ export function HomePage() {
                 <>
                   <TreeSettingsAccordion />
                   <Box
-                    sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 30 : 8 }}
+                    sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 50 : 8 }}
                     id='tree-container'
                   >
                     <Box
