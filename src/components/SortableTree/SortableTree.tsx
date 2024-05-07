@@ -84,7 +84,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     overId: UniqueIdentifier;
   } | null>(null);
   const [importButtonSpacer, setImportButtonSpacer] = useState(176);
-  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
@@ -119,8 +118,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowHeight(window.innerHeight);
-      if (windowHeight < 600 || isMobile) {
+      if (window.innerHeight < 600 || isMobile) {
         setImportButtonSpacer(176);
       } else {
         setImportButtonSpacer(367);

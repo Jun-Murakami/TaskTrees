@@ -19,7 +19,6 @@ import { useAppStateStore } from '../store/appStateStore';
 
 export const QuickMemo = () => {
   const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
-  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [textFieldRows, setTextFieldRows] = useState(6);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
@@ -34,8 +33,7 @@ export const QuickMemo = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowHeight(window.innerHeight);
-      if (windowHeight < 600 || isMobile) {
+      if (window.innerHeight < 600 || isMobile) {
         setTextFieldRows(6);
       } else {
         setTextFieldRows(14);
@@ -79,7 +77,7 @@ export const QuickMemo = () => {
           sx={{
             p: 0,
             height: isQuickMemoExpanded
-              ? windowHeight < 600 || isMobile
+              ? window.innerHeight < 600 || isMobile
                 ? 'calc(215px + env(safe-area-inset-bottom))'
                 : 'calc(405px + env(safe-area-inset-bottom))'
               : 'calc(40px + env(safe-area-inset-bottom))',
@@ -175,7 +173,7 @@ export const QuickMemo = () => {
                   position: 'absolute',
                   color: theme.palette.grey[500],
                   bottom:
-                    windowHeight < 600 || isMobile
+                    window.innerHeight < 600 || isMobile
                       ? 'calc(env(safe-area-inset-bottom) + 125px)'
                       : 'calc(env(safe-area-inset-bottom) + 318px)',
                   right: 15,

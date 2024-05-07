@@ -111,7 +111,7 @@ export const useSearch = () => {
     }
   };
 
-  // Prev ボタンクリック時の処理
+  // Prev ボタンクリック時の処理 ----------------------------------------------
   const handlePrevButtonClick = () => {
     const matches = searchDocument();
     if (matches.length === 0) return;
@@ -130,7 +130,7 @@ export const useSearch = () => {
     selectText(matches[newIndex].node, searchKey, matches[newIndex].matchIndexes[newMatchIndex]);
   };
 
-  // Next ボタンクリック時の処理
+  // Next ボタンクリック時の処理 ----------------------------------------------
   const handleNextButtonClick = () => {
     const matches = searchDocument();
     if (matches.length === 0) return;

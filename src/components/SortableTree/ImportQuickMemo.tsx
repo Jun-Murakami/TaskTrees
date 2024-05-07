@@ -14,7 +14,6 @@ interface Props {
 
 export function ImportQuickMemo({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
-  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [importButtonSpacer, setImportButtonSpacer] = useState(176);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
 
@@ -23,8 +22,7 @@ export function ImportQuickMemo({ id, ...Props }: Props) {
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowHeight(window.innerHeight);
-      if (windowHeight < 600 || isMobile) {
+      if (window.innerHeight < 600 || isMobile) {
         setImportButtonSpacer(176);
       } else {
         setImportButtonSpacer(367);
