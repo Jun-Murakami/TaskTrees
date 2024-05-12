@@ -39,7 +39,6 @@ export const useObserve = () => {
   const { syncDb,
     checkAndSyncDb,
     loadSettingsFromIdb,
-    loadQuickMemoFromIdb,
     loadTreesListFromIdb,
     saveItemsIdb,
     saveTreesListIdb,
@@ -59,7 +58,7 @@ export const useObserve = () => {
     await checkAndSyncDb();
     await loadSettingsFromIdb();
     await loadTreesListFromIdb();
-    await loadQuickMemoFromIdb();
+    await loadQuickMemoFromDb();
     setIsLoading(false);
     // ローカルストレージからitems_offlineとtreeName_offline、quick_memo_offlineを読み込む
     const { value: itemsOffline } = await Preferences.get({ key: `items_offline` });
@@ -92,6 +91,7 @@ export const useObserve = () => {
       const serverTimestamp = snapshot.val();
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
+        if (!isLoading) setIsLoading(true);
         setLocalTimestamp(serverTimestamp);
         const newTreesList = await loadTreesListFromDb(uid);
         setTreesList(newTreesList);
@@ -101,6 +101,7 @@ export const useObserve = () => {
         const treeIds = newTreesList.map((tree) => tree.id);
         let treeUpdateCount = 0;
         for (const treeId of treeIds) {
+          if (!isLoading) setIsLoading(true);
           const treeRef = ref(getDatabase(), `trees/${treeId}`);
           await get(treeRef).then(async (snapshot) => {
             if (snapshot.exists()) {
@@ -113,6 +114,7 @@ export const useObserve = () => {
           });
         }
         if (treeUpdateCount == 0) {
+          if (!isLoading) setIsLoading(true);
           const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
           await get(timestampV2Ref).then(async (snapshot) => {
             if (snapshot.exists()) {
@@ -125,6 +127,7 @@ export const useObserve = () => {
         }
         const currentTree = useTreeStateStore.getState().currentTree;
         if (currentTree) {
+          if (!isLoading) setIsLoading(true);
           setPrevCurrentTree(null);
           await loadCurrentTreeData(currentTree);
         }
