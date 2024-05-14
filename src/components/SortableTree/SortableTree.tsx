@@ -372,9 +372,11 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
         setItems(newItems);
       }
     } else {
-      // 新規タスクの場合、新規タスクを削除
+      // 新規タスクの場合、新規タスクを先頭に移動し、IDを最大ID+1に更新
       if (active.id === activeNewTaskId || active.id === activeQuickMemoId) {
-        setItems(items.filter((item) => item.id !== active.id));
+        const newId = (findMaxId(items) + 1).toString();
+        const updatedItems = items.map((item) => (item.id === active.id ? { ...item, id: newId, value: '' } : item));
+        setItems([updatedItems.find((item) => item.id === newId)!, ...items.filter((item) => item.id !== active.id)]);
         const newActiveId = (parseInt(active.id.toString()) - 1).toString();
         if (active.id === activeNewTaskId) {
           setActiveNewTaskId(newActiveId);
@@ -387,9 +389,11 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
   function handleDragCancel() {
     resetState();
-    // 新規タスクの場合、新規タスクを削除
+    // 新規タスクの場合、新規タスクを先頭に移動し、IDを最大ID+1に更新
     if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
-      setItems(items.filter((item) => item.id !== activeId));
+      const newId = (findMaxId(items) + 1).toString();
+      const updatedItems = items.map((item) => (item.id === activeId ? { ...item, id: newId, value: '' } : item));
+      setItems([updatedItems.find((item) => item.id === newId)!, ...items.filter((item) => item.id !== activeId)]);
       const newActiveId = (parseInt(activeId.toString()) - 1).toString();
       if (activeId === activeNewTaskId) {
         setActiveNewTaskId(newActiveId);
