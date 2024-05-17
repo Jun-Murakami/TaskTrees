@@ -123,6 +123,7 @@ export const darkTheme = createTheme({
     secondary: {
       main: '#ef0a0a',
     },
+    divider: 'rgba(255, 255, 255, 0.23)',
   },
   typography: typographyStyles,
   components: {
