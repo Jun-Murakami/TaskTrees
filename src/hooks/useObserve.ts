@@ -14,6 +14,8 @@ import { useDialogStore } from '../store/dialogStore';
 import { Preferences } from '@capacitor/preferences';
 
 export const useObserve = () => {
+  const darkMode = useAppStateStore((state) => state.darkMode);
+  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const isOffline = useAppStateStore((state) => state.isOffline);
   const uid = useAppStateStore((state) => state.uid);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
@@ -40,12 +42,13 @@ export const useObserve = () => {
     checkAndSyncDb,
     loadSettingsFromIdb,
     loadTreesListFromIdb,
+    saveSettingsIdb,
     saveItemsIdb,
     saveTreesListIdb,
     saveQuickMemoIdb,
     copyTreeDataToIdbFromDb
   } = useIndexedDb();
-  const { loadQuickMemoFromDb, saveQuickMemoDb } = useAppStateManagement();
+  const { loadSettingsFromDb, loadQuickMemoFromDb, saveQuickMemoDb } = useAppStateManagement();
   const { handleError } = useError();
   const isConnected = useFirebaseConnection();
 
@@ -96,6 +99,8 @@ export const useObserve = () => {
         const newTreesList = await loadTreesListFromDb(uid);
         setTreesList(newTreesList);
         await saveTreesListIdb(newTreesList);
+        await loadSettingsFromDb();
+        await saveSettingsIdb(darkMode, hideDoneItems);
         await loadQuickMemoFromDb();
         // treesListを反復して、タイムスタンプをチェックし、最新のツリーをコピー
         const treeIds = newTreesList.map((tree) => tree.id);

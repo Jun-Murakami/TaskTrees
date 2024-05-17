@@ -129,8 +129,7 @@ export const useIndexedDb = () => {
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
-        setQuickMemoText(appState.quickMemo);
-        setTreesList(appState.treesList);
+        setIsLoadedMemoFromDb(true);
         setDarkMode(appState.settings.darkMode);
         setHideDoneItems(appState.settings.hideDoneItems);
         setLocalTimestamp(appState.timestamp);
@@ -171,36 +170,6 @@ export const useIndexedDb = () => {
     }
   };
 
-  // IndexedデータベースからDarkMode設定を読み込む ------------------------------------------------
-  const loadDarkModeFromIdb = async () => {
-    if (!uid) {
-      return;
-    }
-    try {
-      const appState = await idb.appstate.get(1);
-      if (appState) {
-        setDarkMode(appState.settings.darkMode);
-      }
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
-  // Indexedデータベースから完了済みアイテムの非表示設定を読み込む ------------------------------------------------
-  const loadHideDoneItemsFromIdb = async () => {
-    if (!uid) {
-      return;
-    }
-    try {
-      const appState = await idb.appstate.get(1);
-      if (appState) {
-        setHideDoneItems(appState.settings.hideDoneItems);
-      }
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
   // Indexedデータベースから指定されたツリーのデータを読み込む ------------------------------------------------
   const loadCurrentTreeDataFromIdb = async (targetTree: UniqueIdentifier) => {
     if (!uid || !targetTree) {
@@ -218,6 +187,15 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
       return null;
+    }
+  };
+
+  // Indexedデータベースに設定を保存 ------------------------------------------------
+  const saveSettingsIdb = async (darkMode: boolean, hideDoneItems: boolean) => {
+    try {
+      await idb.appstate.update(1, { settings: { darkMode, hideDoneItems } });
+    } catch (error) {
+      handleError(error);
     }
   };
 
@@ -462,9 +440,8 @@ export const useIndexedDb = () => {
     loadSettingsFromIdb,
     loadQuickMemoFromIdb,
     loadTreesListFromIdb,
-    loadDarkModeFromIdb,
-    loadHideDoneItemsFromIdb,
     loadCurrentTreeDataFromIdb,
+    saveSettingsIdb,
     saveItemsIdb,
     saveTreesListIdb,
     saveCurrentTreeNameIdb,
