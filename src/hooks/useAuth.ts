@@ -1,13 +1,24 @@
 import { useEffect } from 'react';
 import { getApp, initializeApp } from 'firebase/app';
 import {
-  getAuth, indexedDBLocalPersistence, initializeAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+  getAuth,
+  indexedDBLocalPersistence,
+  initializeAuth,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signInWithPopup,
+  signInWithCredential,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { useObserve } from './useObserve';
+import { useIndexedDb } from './useIndexedDb';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useInputDialogStore } from '../store/dialogStore';
@@ -62,11 +73,14 @@ export const useAuth = () => {
 
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
 
+  const { loadSettingsFromIdb } = useIndexedDb(); // 追加
+
   const { observeTimeStamp } = useObserve();
 
   // ログイン状態の監視
   useEffect(() => {
     const asyncFunc = async () => {
+      await loadSettingsFromIdb();
       if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
         FirebaseAuthentication.addListener('authStateChange', async (result) => {
           if (result.user) {
@@ -85,10 +99,10 @@ export const useAuth = () => {
       return () => {
         unsubscribe();
         FirebaseAuthentication.removeAllListeners();
-      }
+      };
     };
     asyncFunc();
-  }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
+  }, [setIsLoading, setIsLoggedIn, setUid, setEmail, loadSettingsFromIdb]);
 
   useEffect(() => {
     const auth = getAuth();
@@ -124,13 +138,15 @@ export const useAuth = () => {
         const result = await FirebaseAuthentication.signInWithGoogle();
         // 2. Sign in on the web layer using the id token
         const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-        await signInWithCredential(await auth, credential).then(async () => {
-          setIsLoggedIn(true);
-          setSystemMessage(null);
-        }).catch((error) => {
-          setSystemMessage('Googleログインに失敗しました。Code:100\n\n' + error.code);
-          setIsLoading(false);
-        });
+        await signInWithCredential(await auth, credential)
+          .then(async () => {
+            setIsLoggedIn(true);
+            setSystemMessage(null);
+          })
+          .catch((error) => {
+            setSystemMessage('Googleログインに失敗しました。Code:100\n\n' + error.code);
+            setIsLoading(false);
+          });
       } catch (error) {
         setSystemMessage('Googleログインに失敗しました。Code:101\n\n' + error);
         setIsLoading(false);
@@ -166,13 +182,15 @@ export const useAuth = () => {
           return;
         }
         const credential = provider.credential({ idToken: result.credential.idToken, rawNonce: result.credential.nonce });
-        await signInWithCredential(await auth, credential).then(async () => {
-          setIsLoggedIn(true);
-          setSystemMessage(null);
-        }).catch((error) => {
-          setSystemMessage('Appleログインに失敗しました。Code:104\n\n' + error.code);
-          setIsLoading(false);
-        })
+        await signInWithCredential(await auth, credential)
+          .then(async () => {
+            setIsLoggedIn(true);
+            setSystemMessage(null);
+          })
+          .catch((error) => {
+            setSystemMessage('Appleログインに失敗しました。Code:104\n\n' + error.code);
+            setIsLoading(false);
+          });
       } catch (error) {
         setSystemMessage('Appleログインに失敗しました。Code:105\n\n' + error);
         setIsLoading(false);
@@ -188,7 +206,7 @@ export const useAuth = () => {
         .catch((error) => {
           setSystemMessage('Appleログインに失敗しました。Code:106\n\n' + error.code);
           setIsLoading(false);
-        })
+        });
     }
   };
 
@@ -200,19 +218,25 @@ export const useAuth = () => {
     }
     setSystemMessage('ログイン中...');
     setIsLoading(true);
-    signInWithEmailAndPassword(await auth, email, password).then(() => {
-      setIsLoggedIn(true);
-      setSystemMessage(null);
-    }).catch((error) => {
-      if (error.code === 'auth/invalid-credential') {
-        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-      } else if (error.code === 'auth/invalid-login-credentials') {
-        setSystemMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。');
-      } else {
-        setSystemMessage('ログインに失敗しました。Code:107\n\n' + error.code);
-      }
-      setIsLoading(false);
-    });
+    signInWithEmailAndPassword(await auth, email, password)
+      .then(() => {
+        setIsLoggedIn(true);
+        setSystemMessage(null);
+      })
+      .catch((error) => {
+        if (error.code === 'auth/invalid-credential') {
+          setSystemMessage(
+            'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
+          );
+        } else if (error.code === 'auth/invalid-login-credentials') {
+          setSystemMessage(
+            'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
+          );
+        } else {
+          setSystemMessage('ログインに失敗しました。Code:107\n\n' + error.code);
+        }
+        setIsLoading(false);
+      });
   };
 
   // メールアドレスとパスワードでサインアップ
@@ -417,5 +441,13 @@ export const useAuth = () => {
     }
     setIsWaitingForDelete(false);
   };
-  return { handleGoogleLogin, handleAppleLogin, handleEmailLogin, handleSignup, handleResetPassword, handleLogout, handleDeleteAccount };
+  return {
+    handleGoogleLogin,
+    handleAppleLogin,
+    handleEmailLogin,
+    handleSignup,
+    handleResetPassword,
+    handleLogout,
+    handleDeleteAccount,
+  };
 };

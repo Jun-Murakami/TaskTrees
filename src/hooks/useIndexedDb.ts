@@ -123,9 +123,6 @@ export const useIndexedDb = () => {
 
   // IndexedデータベースからAppの設定を読み込む ------------------------------------------------
   const loadSettingsFromIdb = async () => {
-    if (!uid) {
-      return;
-    }
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
