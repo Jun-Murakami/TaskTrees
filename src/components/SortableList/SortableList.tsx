@@ -5,7 +5,7 @@ import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useTheme } from '@mui/material/styles';
 import { useTreeStateStore } from '../../store/treeStateStore';
-import { useDatabase } from '../../hooks/useDatabase';
+import { useTreeManagement } from '../../hooks/useTreeManagement';
 import { SortableSource } from './SortableSource';
 import { SortableItem } from './SortableItem';
 
@@ -17,10 +17,11 @@ interface SortableListProps {
 export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState }) => {
   const treesList = useTreeStateStore((state) => state.treesList);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
+  const searchResults = useTreeStateStore((state) => state.searchResults);
 
   const [activeId, setActiveId] = useState<number | null>(null);
 
-  const { saveTreesListDb } = useDatabase();
+  const { handleSaveTreesList } = useTreeManagement();
 
   const isPreviewMode = false;
   const activeItem = treesList.find((item) => item.id === activeId?.toString());
@@ -35,7 +36,7 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
         onDragStart={(event) => {
           setActiveId(event.active.id as number);
         }}
-        onDragEnd={(event) => {
+        onDragEnd={async (event) => {
           setActiveId(null);
           const { active, over } = event;
           if (over == null || active.id === over.id) {
@@ -45,11 +46,11 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
           const newIndex = treesList.findIndex((item) => item.id === over.id);
           const newItems = arrayMove(treesList, oldIndex, newIndex);
           setTreesList(newItems);
-          saveTreesListDb(newItems);
+          await handleSaveTreesList(newItems);
         }}
       >
-        <SortableContext items={treesList}>
-          {treesList.map((item) => (
+        <SortableContext items={searchResults}>
+          {searchResults.map((item) => (
             <SortableItem
               key={item.id}
               isPreviewMode={isPreviewMode}

@@ -495,7 +495,6 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
 
   const anchorElParent = useRef<HTMLButtonElement>(null);
   const prevAttachedFileRef = useRef<string | null>(null);
-  const currentTreeRef = useRef<UniqueIdentifier | null>(null);
 
   const theme = useTheme();
 
@@ -508,7 +507,7 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
   };
 
   useEffect(() => {
-    if (prevAttachedFileRef.current !== attachedFile || currentTreeRef.current !== currentTree) {
+    if (prevAttachedFileRef.current !== attachedFile) {
       if (attachedFile?.match(/\.(jpg|jpeg|png|gif|svg|webp|tif|tiff|bmp|ico|cur)$/i) && currentTree) {
         const storage = getStorage();
         const imageRef = ref(storage, `trees/${currentTree}/${attachedFile}`);
@@ -525,8 +524,6 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
     }
     // 現在のattachedFileを記録
     prevAttachedFileRef.current = attachedFile;
-    // 現在のcurrentTreeを記録
-    currentTreeRef.current = currentTree;
   }, [attachedFile, currentTree]);
 
   return (

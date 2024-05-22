@@ -1,16 +1,21 @@
 import { useEffect } from 'react';
 import isEqual from 'lodash/isEqual';
-import { useTreeStateStore } from '../store/treeStateStore';
+import { get } from 'firebase/database';
 import { useTreeManagement } from './useTreeManagement';
 import { useAppStateManagement } from './useAppStateManagement';
-import { useDialogStore } from '../store/dialogStore';
+import { useFirebaseConnection } from './useFirebaseConnection';
 import { useError } from './useError';
 import { useDatabase } from './useDatabase';
+import { useIndexedDb } from './useIndexedDb';
 import { getDatabase, ref, onValue, } from 'firebase/database';
 import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
+import { useDialogStore } from '../store/dialogStore';
 import { Preferences } from '@capacitor/preferences';
 
 export const useObserve = () => {
+  const darkMode = useAppStateStore((state) => state.darkMode);
+  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const isOffline = useAppStateStore((state) => state.isOffline);
   const uid = useAppStateStore((state) => state.uid);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
@@ -18,18 +23,34 @@ export const useObserve = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
+  const isLoadedMemoFromDb = useAppStateStore((state) => state.isLoadedMemoFromDb);
+  const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
+  const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const items = useTreeStateStore((state) => state.items);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
   const prevItems = useTreeStateStore((state) => state.prevItems);
   const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
+  const prevCurrentTree = useTreeStateStore((state) => state.prevCurrentTree);
+  const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
 
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const { loadTreesList, loadCurrentTreeData, handleLoadedContent } = useTreeManagement();
-  const { saveItemsDb, saveTimeStampDb } = useDatabase();
+  const { loadCurrentTreeData, handleLoadedContent } = useTreeManagement();
+  const { loadTreesListFromDb, saveItemsDb } = useDatabase();
+  const { syncDb,
+    checkAndSyncDb,
+    loadSettingsFromIdb,
+    loadTreesListFromIdb,
+    saveSettingsIdb,
+    saveItemsIdb,
+    saveTreesListIdb,
+    saveQuickMemoIdb,
+    copyTreeDataToIdbFromDb
+  } = useIndexedDb();
   const { loadSettingsFromDb, loadQuickMemoFromDb, saveQuickMemoDb } = useAppStateManagement();
   const { handleError } = useError();
+  const isConnected = useFirebaseConnection();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
   const observeTimeStamp = async () => {
@@ -37,9 +58,11 @@ export const useObserve = () => {
       return;
     }
     if (!isLoading) setIsLoading(true);
-    await loadSettingsFromDb();
-    await loadTreesList();
+    await checkAndSyncDb();
+    await loadSettingsFromIdb();
+    await loadTreesListFromIdb();
     await loadQuickMemoFromDb();
+    setIsLoading(false);
     // ローカルストレージからitems_offlineとtreeName_offline、quick_memo_offlineを読み込む
     const { value: itemsOffline } = await Preferences.get({ key: `items_offline` });
     const { value: treeNameOffline } = await Preferences.get({ key: `treeName_offline` });
@@ -71,12 +94,46 @@ export const useObserve = () => {
       const serverTimestamp = snapshot.val();
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
+        if (!isLoading) setIsLoading(true);
         setLocalTimestamp(serverTimestamp);
+        const newTreesList = await loadTreesListFromDb(uid);
+        setTreesList(newTreesList);
+        await saveTreesListIdb(newTreesList);
         await loadSettingsFromDb();
-        await loadTreesList();
+        await saveSettingsIdb(darkMode, hideDoneItems);
         await loadQuickMemoFromDb();
+        // treesListを反復して、タイムスタンプをチェックし、最新のツリーをコピー
+        const treeIds = newTreesList.map((tree) => tree.id);
+        let treeUpdateCount = 0;
+        for (const treeId of treeIds) {
+          if (!isLoading) setIsLoading(true);
+          const treeRef = ref(getDatabase(), `trees/${treeId}`);
+          await get(treeRef).then(async (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              if (data.timestamp > currentLocalTimestamp) {
+                await copyTreeDataToIdbFromDb(treeId);
+                treeUpdateCount++;
+              }
+            }
+          });
+        }
+        if (treeUpdateCount == 0) {
+          if (!isLoading) setIsLoading(true);
+          const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
+          await get(timestampV2Ref).then(async (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              if (data !== serverTimestamp) {
+                await syncDb();
+              }
+            }
+          });
+        }
         const currentTree = useTreeStateStore.getState().currentTree;
         if (currentTree) {
+          if (!isLoading) setIsLoading(true);
+          setPrevCurrentTree(null);
           await loadCurrentTreeData(currentTree);
         }
 
@@ -87,14 +144,27 @@ export const useObserve = () => {
 
   // ローカルitemsの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    // ツリー変更時には前回のitemsを保存して終了
-    if (prevItems.length === 0) {
-      setPrevItems(items);
+    if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems) || (!isConnected && !isOffline)) {
       return;
     }
-    if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems)) {
+
+    if (currentTree !== prevCurrentTree) {
+      if (prevItems.length > 0) {
+        const asyncFunc = async () => {
+          if (prevCurrentTree) {
+            await saveItemsIdb(prevItems, prevCurrentTree);
+            await saveItemsDb(prevItems, prevCurrentTree);
+          }
+        }
+        asyncFunc();
+      }
+      setPrevCurrentTree(currentTree);
+      setPrevItems([]);
       return;
     }
+
+    setPrevItems(items);
+    const targetTree = currentTree;
     const debounceSave = setTimeout(() => {
       try {
         if (isOffline) {
@@ -111,13 +181,17 @@ export const useObserve = () => {
           }
         } else {
           // オンラインモードの場合、データベースに保存
-          saveItemsDb(items, currentTree);
+          const asyncFunc = async () => {
+            await saveItemsIdb(items, targetTree);
+            await saveItemsDb(items, targetTree);
+          }
+          asyncFunc();
         }
-        setPrevItems(items);
+        setPrevItems([]);
       } catch (error) {
         handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error);
       }
-    }, 3000); // 3秒のデバウンス
+    }, 5000); // 3秒のデバウンス
 
     // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
     return () => clearTimeout(debounceSave);
@@ -126,7 +200,11 @@ export const useObserve = () => {
 
   // ローカルのクイックメモの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!uid || !quickMemoText) {
+    if ((!uid && !isOffline) || (!isConnected && !isOffline) || !quickMemoText) {
+      return;
+    }
+    if (isLoadedMemoFromDb) {
+      setIsLoadedMemoFromDb(false);
       return;
     }
     const debounceSave = setTimeout(() => {
@@ -138,8 +216,11 @@ export const useObserve = () => {
             value: quickMemoText,
           });
         } else {
-          saveTimeStampDb();
-          saveQuickMemoDb(quickMemoText);
+          const asyncFunc = async () => {
+            await saveQuickMemoIdb(quickMemoText);
+            await saveQuickMemoDb(quickMemoText);
+          }
+          asyncFunc();
         }
       } catch (error) {
         handleError('クイックメモの変更をデータベースに保存できませんでした。\n\n' + error);

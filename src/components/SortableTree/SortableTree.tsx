@@ -83,7 +83,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     parentId: UniqueIdentifier | null;
     overId: UniqueIdentifier;
   } | null>(null);
-
+  const [importButtonSpacer, setImportButtonSpacer] = useState(176);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
@@ -116,6 +116,23 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     indentationWidth = 22;
   }
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerHeight < 600 || isMobile) {
+        setImportButtonSpacer(176);
+      } else {
+        setImportButtonSpacer(367);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    // コンポーネントのアンマウント時にイベントリスナーを削除
+    return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const measuring = {
     droppable: {
       strategy: MeasuringStrategy.Always,
@@ -124,11 +141,10 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       measure: (node: HTMLElement | null) => {
         if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
           const rect = node!.getBoundingClientRect();
-          const safeAreaInsetBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('padding-bottom'));
           if (isMobile && activeId === activeNewTaskId) {
-            rect.y = window.innerHeight - safeAreaInsetBottom - 50;
+            rect.y = window.innerHeight - 50;
           } else if (activeId === activeQuickMemoId) {
-            rect.y = window.innerHeight - safeAreaInsetBottom - 176;
+            rect.y = window.innerHeight - importButtonSpacer;
           } else {
             rect.y += window.scrollY - 30;
           }
@@ -212,7 +228,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
           .filter(({ value }) => value.toLowerCase().includes(searchKey.toLowerCase()))
-          .filter((item) => (searchKey !== '' ? !isDescendantOfTrash(items, item.id) : true))
+          //.filter((item) => (searchKey !== '' ? !isDescendantOfTrash(items, item.id) : true))
           .map(({ id, value, done, attachedFile, children, collapsed, depth }) => (
             <SortableTreeItem
               key={id}
@@ -356,9 +372,11 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
         setItems(newItems);
       }
     } else {
-      // 新規タスクの場合、新規タスクを削除
+      // 新規タスクの場合、新規タスクを先頭に移動し、IDを最大ID+1に更新
       if (active.id === activeNewTaskId || active.id === activeQuickMemoId) {
-        setItems(items.filter((item) => item.id !== active.id));
+        const newId = (findMaxId(items) + 1).toString();
+        const updatedItems = items.map((item) => (item.id === active.id ? { ...item, id: newId, value: '' } : item));
+        setItems([updatedItems.find((item) => item.id === newId)!, ...items.filter((item) => item.id !== active.id)]);
         const newActiveId = (parseInt(active.id.toString()) - 1).toString();
         if (active.id === activeNewTaskId) {
           setActiveNewTaskId(newActiveId);
@@ -371,9 +389,11 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
 
   function handleDragCancel() {
     resetState();
-    // 新規タスクの場合、新規タスクを削除
+    // 新規タスクの場合、新規タスクを先頭に移動し、IDを最大ID+1に更新
     if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
-      setItems(items.filter((item) => item.id !== activeId));
+      const newId = (findMaxId(items) + 1).toString();
+      const updatedItems = items.map((item) => (item.id === activeId ? { ...item, id: newId, value: '' } : item));
+      setItems([updatedItems.find((item) => item.id === newId)!, ...items.filter((item) => item.id !== activeId)]);
       const newActiveId = (parseInt(activeId.toString()) - 1).toString();
       if (activeId === activeNewTaskId) {
         setActiveNewTaskId(newActiveId);

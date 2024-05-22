@@ -24,6 +24,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ClearIcon from '@mui/icons-material/Clear';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateManagement } from '../hooks/useAppStateManagement';
+import { useIndexedDb } from '../hooks/useIndexedDb';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useTreeManagement } from '../hooks/useTreeManagement';
@@ -50,6 +51,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
   const treesList = useTreeStateStore((state) => state.treesList);
 
   const { saveAppSettingsDb } = useAppStateManagement();
+  const { saveSettingsIdb } = useIndexedDb();
   const { loadCurrentTreeData, handleCreateNewTree } = useTreeManagement();
   const { handlePrevButtonClick, handleNextButtonClick } = useSearch();
 
@@ -74,8 +76,11 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
 
   // ツリーのリストから選択されたツリーを表示する
   const handleListClick = async (treeId: UniqueIdentifier): Promise<void> => {
-    await loadCurrentTreeData(treeId);
+    if (currentTree === treeId) {
+      return;
+    }
     setCurrentTree(treeId);
+    await loadCurrentTreeData(treeId);
     if (isAccordionExpanded) {
       // 0.5秒後にフォーカスをセット
       setTimeout(() => {
@@ -171,9 +176,10 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
               control={
                 <Switch
                   checked={hideDoneItems}
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
                     setHideDoneItems(event.target.checked);
-                    saveAppSettingsDb(darkMode, event.target.checked);
+                    await saveSettingsIdb(darkMode, event.target.checked);
+                    await saveAppSettingsDb(darkMode, event.target.checked);
                   }}
                 />
               }

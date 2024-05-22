@@ -1,10 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type { TreeItem } from '../types/types';
+import { indexedDb as idb } from '../indexedDb';
 import { useAppStateStore } from '../store/appStateStore';
+import { useTreeStateStore } from '../store/treeStateStore';
 
 export const useSearch = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(0);
   const searchKey = useAppStateStore((state) => state.searchKey);
+  const setSearchResults = useTreeStateStore((state) => state.setSearchResults);
+  const treesList = useTreeStateStore((state) => state.treesList);
+
+  // 再帰的にアイテムを検索する関数
+  const containsSearchKey = useCallback((item: TreeItem, searchKey: string): boolean => {
+    if (item.value.toLowerCase().includes(searchKey.toLowerCase())) {
+      return true;
+    }
+    return item.children.some(child => containsSearchKey(child, searchKey));
+  }, []);
+
+  useEffect(() => {
+    if (searchKey || searchKey !== '') {
+      const asyncFunc = async () => {
+        const result = await idb.treestate
+          .filter(tree => tree.items.some(item => containsSearchKey(item, searchKey)))
+          .toArray();
+        if (result) {
+          const ensuredResult = result.map(tree => ({ id: tree.id!, name: tree.name! }));
+          setSearchResults(ensuredResult);
+        }
+      }
+      asyncFunc();
+    } else {
+      setSearchResults(treesList);
+    }
+  }, [searchKey, setSearchResults, treesList, containsSearchKey]);
+
 
   const searchDocument = () => {
     const matchingNodes: { node: Node; matchIndexes: number[] }[] = [];
@@ -80,7 +111,7 @@ export const useSearch = () => {
     }
   };
 
-  // Prev ボタンクリック時の処理
+  // Prev ボタンクリック時の処理 ----------------------------------------------
   const handlePrevButtonClick = () => {
     const matches = searchDocument();
     if (matches.length === 0) return;
@@ -99,7 +130,7 @@ export const useSearch = () => {
     selectText(matches[newIndex].node, searchKey, matches[newIndex].matchIndexes[newMatchIndex]);
   };
 
-  // Next ボタンクリック時の処理
+  // Next ボタンクリック時の処理 ----------------------------------------------
   const handleNextButtonClick = () => {
     const matches = searchDocument();
     if (matches.length === 0) return;
