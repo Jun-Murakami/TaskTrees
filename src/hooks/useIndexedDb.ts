@@ -144,11 +144,13 @@ export const useIndexedDb = () => {
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
-        setDarkMode(appState.settings.darkMode);
+        return appState.settings.darkMode;
       }
     } catch (error) {
-      handleError(error);
+      console.error('Failed to load dark mode from IndexedDB', error);
+      return false;
     }
+    return false; // デフォルト値
   };
 
   // Indexedデータベースからクイックメモを読み込む ------------------------------------------------

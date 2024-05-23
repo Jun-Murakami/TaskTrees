@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useIndexedDb } from '../hooks/useIndexedDb';
 
 type AppState = {
   isOffline: boolean;
@@ -39,41 +40,46 @@ type AppState = {
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb: boolean) => void;
 };
 
-export const useAppStateStore = create<AppState>((set) => ({
-  isOffline: false,
-  localTimestamp: 0,
-  darkMode: false,
-  hideDoneItems: false,
-  systemMessage: null,
-  isLoggedIn: true,
-  uid: null,
-  email: null,
-  isLoading: true,
-  isWaitingForDelete: false,
-  isAccordionExpanded: false,
-  isQuickMemoExpanded: false,
-  isFocusedTreeName: false,
-  containerWidth: 0,
-  searchKey: '',
-  isEditingText: false,
-  quickMemoText: '',
-  isLoadedMemoFromDb: false,
-  setIsOffline: (isOffline) => set({ isOffline }),
-  setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
-  setDarkMode: (darkMode) => set({ darkMode }),
-  setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),
-  setSystemMessage: (systemMessage) => set({ systemMessage }),
-  setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
-  setUid: (uid) => set({ uid }),
-  setEmail: (email) => set({ email }),
-  setIsLoading: (isLoading) => set({ isLoading }),
-  setIsWaitingForDelete: (isWaitingForDelete) => set({ isWaitingForDelete }),
-  setIsAccordionExpanded: (isAccordionExpanded) => set({ isAccordionExpanded }),
-  setIsQuickMemoExpanded: (isQuickMemoExpanded) => set({ isQuickMemoExpanded }),
-  setIsFocusedTreeName: (isFocusedTreeName) => set({ isFocusedTreeName }),
-  setContainerWidth: (containerWidth) => set({ containerWidth }),
-  setSearchKey: (searchKey) => set({ searchKey }),
-  setIsEditingText: (isEditingText) => set({ isEditingText }),
-  setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
-  setIsLoadedMemoFromDb: (isLoadedMemoFromDb) => set({ isLoadedMemoFromDb }),
-}));
+export const useAppStateStore = create<AppState>((set) => {
+  const { loadDarkModeFromIdb } = useIndexedDb();
+  loadDarkModeFromIdb().then((darkMode) => set({ darkMode }));
+
+  return {
+    isOffline: false,
+    localTimestamp: 0,
+    darkMode: false,
+    hideDoneItems: false,
+    systemMessage: null,
+    isLoggedIn: true,
+    uid: null,
+    email: null,
+    isLoading: true,
+    isWaitingForDelete: false,
+    isAccordionExpanded: false,
+    isQuickMemoExpanded: false,
+    isFocusedTreeName: false,
+    containerWidth: 0,
+    searchKey: '',
+    isEditingText: false,
+    quickMemoText: '',
+    isLoadedMemoFromDb: false,
+    setIsOffline: (isOffline: boolean) => set({ isOffline }),
+    setLocalTimestamp: (localTimestamp: number) => set({ localTimestamp }),
+    setDarkMode: (darkMode: boolean) => set({ darkMode }),
+    setHideDoneItems: (hideDoneItems: boolean) => set({ hideDoneItems }),
+    setSystemMessage: (systemMessage: string | null) => set({ systemMessage }),
+    setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
+    setUid: (uid: string | null) => set({ uid }),
+    setEmail: (email: string | null) => set({ email }),
+    setIsLoading: (isLoading: boolean) => set({ isLoading }),
+    setIsWaitingForDelete: (isWaitingForDelete: boolean) => set({ isWaitingForDelete }),
+    setIsAccordionExpanded: (isAccordionExpanded: boolean) => set({ isAccordionExpanded }),
+    setIsQuickMemoExpanded: (isQuickMemoExpanded: boolean) => set({ isQuickMemoExpanded }),
+    setIsFocusedTreeName: (isFocusedTreeName: boolean) => set({ isFocusedTreeName }),
+    setContainerWidth: (containerWidth: number) => set({ containerWidth }),
+    setSearchKey: (searchKey: string) => set({ searchKey }),
+    setIsEditingText: (isEditingText: boolean) => set({ isEditingText }),
+    setQuickMemoText: (quickMemoText: string) => set({ quickMemoText }),
+    setIsLoadedMemoFromDb: (isLoadedMemoFromDb: boolean) => set({ isLoadedMemoFromDb }),
+  };
+});
