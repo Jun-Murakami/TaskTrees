@@ -18,7 +18,6 @@ import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/s
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { useObserve } from './useObserve';
-import { useIndexedDb } from './useIndexedDb';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useInputDialogStore } from '../store/dialogStore';
@@ -73,14 +72,11 @@ export const useAuth = () => {
 
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
 
-  const { loadSettingsFromIdb } = useIndexedDb(); // 追加
-
   const { observeTimeStamp } = useObserve();
 
   // ログイン状態の監視
   useEffect(() => {
     const asyncFunc = async () => {
-      await loadSettingsFromIdb();
       if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
         FirebaseAuthentication.addListener('authStateChange', async (result) => {
           if (result.user) {
@@ -102,7 +98,7 @@ export const useAuth = () => {
       };
     };
     asyncFunc();
-  }, [setIsLoading, setIsLoggedIn, setUid, setEmail, loadSettingsFromIdb]);
+  }, [setIsLoading, setIsLoggedIn, setUid, setEmail]);
 
   useEffect(() => {
     const auth = getAuth();
