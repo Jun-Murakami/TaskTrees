@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useIndexedDb } from '../hooks/useIndexedDb';
 import { useTreeManagement } from '../hooks/useTreeManagement';
 import { ModalDialog } from '../components/ModalDialog';
 import { InputDialog } from '../components/InputDialog';
@@ -47,11 +48,20 @@ export function HomePage() {
     handleDeleteAccount,
   } = useAuth();
 
+  const { loadSettingsFromIdb } = useIndexedDb();
+
   const { handleCreateOfflineTree } = useTreeManagement();
 
   const theme = useTheme();
 
   const drawerWidth = 300;
+
+  useEffect(() => {
+    const asyncFunc = async () => {
+      await loadSettingsFromIdb();
+    };
+    asyncFunc();
+  }, [loadSettingsFromIdb]);
 
   return (
     <>
