@@ -123,6 +123,9 @@ export const useIndexedDb = () => {
 
   // IndexedデータベースからAppの設定を読み込む ------------------------------------------------
   const loadSettingsFromIdb = async () => {
+    if (!uid) {
+      return;
+    }
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
@@ -130,6 +133,18 @@ export const useIndexedDb = () => {
         setDarkMode(appState.settings.darkMode);
         setHideDoneItems(appState.settings.hideDoneItems);
         setLocalTimestamp(appState.timestamp);
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  // Indexedデータベースからダークモードの設定を読み込む ------------------------------------------------
+  const loadDarkModeFromIdb = async () => {
+    try {
+      const appState = await idb.appstate.get(1);
+      if (appState) {
+        setDarkMode(appState.settings.darkMode);
       }
     } catch (error) {
       handleError(error);
@@ -435,6 +450,7 @@ export const useIndexedDb = () => {
     syncDb,
     checkAndSyncDb,
     loadSettingsFromIdb,
+    loadDarkModeFromIdb,
     loadQuickMemoFromIdb,
     loadTreesListFromIdb,
     loadCurrentTreeDataFromIdb,

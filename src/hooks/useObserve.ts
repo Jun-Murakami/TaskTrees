@@ -41,6 +41,7 @@ export const useObserve = () => {
   const {
     syncDb,
     checkAndSyncDb,
+    loadSettingsFromIdb,
     loadTreesListFromIdb,
     saveSettingsIdb,
     saveItemsIdb,
@@ -59,6 +60,7 @@ export const useObserve = () => {
     }
     if (!isLoading) setIsLoading(true);
     await checkAndSyncDb();
+    await loadSettingsFromIdb();
     await loadTreesListFromIdb();
     await loadQuickMemoFromDb();
     setIsLoading(false);
