@@ -8,13 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Dependencies
-        run: npm ci
-      - name: Clean npm cache
+      - name: Clean npm cache and remove lock file
         run: |
-          rm -rf node_modules
           npm cache clean --force
-      - run: npm install
+          rm -rf node_modules
+          rm -f package-lock.json
+      - name: Install Dependencies
+        run: npm install
       - run: npm run build
         env:
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
