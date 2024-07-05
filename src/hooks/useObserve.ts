@@ -159,7 +159,7 @@ export const useObserve = () => {
       return;
     }
 
-    const checkAndUpdateItems = () => {
+    const checkAndUpdateItems = async () => {
       const recentItems = useTreeStateStore.getState().items;
       const updatedItems = [...recentItems];
       let hasChanges = false;
@@ -203,11 +203,15 @@ export const useObserve = () => {
 
       if (hasChanges) {
         setItems(updatedItems);
-        notificationMessages.forEach((message) => showDialog(message, 'Alerm'));
+        for (const message of notificationMessages) {
+          await showDialog(message, 'Alerm');
+        }
       }
     };
 
-    const intervalId = setInterval(checkAndUpdateItems, 60000); // 1分ごとにチェック
+    const intervalId = setInterval(async () => {
+      await checkAndUpdateItems();
+    }, 60000); // 1分ごとにチェック
 
     if (!isEqual(items, prevItems)) {
       if (currentTree !== prevCurrentTree) {
