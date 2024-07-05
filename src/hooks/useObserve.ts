@@ -192,6 +192,8 @@ export const useObserve = () => {
               formattedDiff = `${hours}時間 ${minutes}分`;
             } else if (hours > 0) {
               formattedDiff = `${hours}時間`;
+            } else if (minutes === 0) {
+              formattedDiff = '';
             } else {
               formattedDiff = `${minutes}分`;
             }
