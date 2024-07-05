@@ -215,7 +215,7 @@ export function MenuItems({
   const handleiOSImagePicker = async () => {
     try {
       const result = await FilePicker.pickImages({
-        limit: 1, // 複数選択を許可するかどうか
+        multiple: true, // 複数選択を許可するかどうか
         readData: true, // Base64データを読み込む
       });
       if (result.files.length > 0) {
@@ -241,7 +241,7 @@ export function MenuItems({
   const handleiOSFilePicker = async () => {
     try {
       const result = await FilePicker.pickFiles({
-        limit: 1, // 複数選択を許可するかどうか
+        multiple: true, // 複数選択を許可するかどうか
         readData: true, // Base64データを読み込む
       });
       if (result.files.length > 0) {
