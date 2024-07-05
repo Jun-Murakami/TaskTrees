@@ -233,6 +233,11 @@ export const useObserve = () => {
       }
     };
 
+    const asyncFunc = async () => {
+      await checkAndUpdateItems();
+    };
+    asyncFunc();
+
     const intervalId = setInterval(async () => {
       await checkAndUpdateItems();
     }, 60000); // 1分ごとにチェック
