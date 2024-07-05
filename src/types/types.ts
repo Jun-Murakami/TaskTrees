@@ -8,6 +8,11 @@ export type TreeItem = {
   value: string;
   done?: boolean;
   attachedFile?: string;
+  timer?: string;
+  isUpLift?: boolean;
+  upLiftMinute?: number;
+  isNotify?: boolean;
+  notifyMinute?: number;
   depth?: number;
   parentId?: UniqueIdentifier | null;
 };

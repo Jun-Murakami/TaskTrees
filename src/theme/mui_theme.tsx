@@ -92,6 +92,9 @@ export const theme = createTheme({
     secondary: {
       main: '#ef0a0a',
     },
+    warning: {
+      main: '#ffcc02',
+    },
   },
   typography: typographyStyles,
   components: {
@@ -122,6 +125,9 @@ export const darkTheme = createTheme({
     },
     secondary: {
       main: '#ef0a0a',
+    },
+    warning: {
+      main: '#edcc02',
     },
     divider: 'rgba(255, 255, 255, 0.18)',
   },

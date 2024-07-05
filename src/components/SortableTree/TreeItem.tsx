@@ -1,4 +1,4 @@
-import { forwardRef, HTMLAttributes, useState, useEffect, useRef, useCallback, memo } from 'react';
+import { forwardRef, HTMLAttributes, useState, useRef, useCallback, memo } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery, ListItem, Stack, Badge, TextField, Checkbox, Button, Typography, IconButton } from '@mui/material';
@@ -8,9 +8,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
 import { useAttachedFile } from '../../hooks/useAttachedFile';
+import { useTreeStackStyles } from '../../hooks/useTreeStackStyles';
 import { useAppStateStore } from '../../store/appStateStore';
 import { useTreeStateStore } from '../../store/treeStateStore';
-import { MenuItems, MenuItemsTrash, MenuItemsTrashRoot, MenuItemsAttachedFile } from './MenuItems';
+import { MenuItems, MenuItemsTrash, MenuItemsTrashRoot, MenuItemsAttachedFile, MenuItemsTimer } from './MenuItems';
 
 export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' | 'onChange' | 'onSelect'> {
   id: UniqueIdentifier;
@@ -18,6 +19,9 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   collapsed?: boolean;
   done?: boolean;
   attachedFile?: string;
+  timer?: string;
+  isUpLift?: boolean;
+  upLiftMinute?: number;
   childCount?: number;
   clone?: boolean;
   depth: number;
@@ -41,7 +45,6 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   removeTrashDescendants?: () => Promise<void>;
   removeTrashDescendantsWithDone?: () => Promise<void>;
   isNewTask?: boolean;
-  addedTaskId?: UniqueIdentifier | null;
   isItemDescendantOfTrash?: boolean;
 }
 
@@ -61,6 +64,9 @@ const TreeItemContent = memo(
     value,
     done,
     attachedFile,
+    timer,
+    isUpLift,
+    upLiftMinute,
     childCount,
     clone,
     collapsed,
@@ -182,6 +188,16 @@ const TreeItemContent = memo(
                 <AttachFileIcon />
               </IconButton>
             )}
+            {!clone && timer && (
+              <MenuItemsTimer
+                key={`timer-${id}-${done}-${timer}-${isUpLift}-${upLiftMinute}`}
+                id={id}
+                timerDef={timer}
+                done={done}
+                isUpLiftDef={isUpLift}
+                upLiftMinuteDef={upLiftMinute}
+              />
+            )}
             {!clone && attachedFile && <MenuItemsAttachedFile attachedFile={attachedFile} />}
             {isEditingTextLocal && isMobile ? (
               <IconButton
@@ -194,6 +210,7 @@ const TreeItemContent = memo(
               </IconButton>
             ) : !clone && onRemove && !isItemDescendantOfTrash ? (
               <MenuItems
+                key={`menu-${id}-${done}-${timer}-${isUpLift}-${upLiftMinute}`}
                 onRemove={onRemove}
                 handleAttachFile={handleAttachFile}
                 onCopyItems={onCopyItems}
@@ -201,6 +218,9 @@ const TreeItemContent = memo(
                 currenTreeId={currentTree}
                 id={id}
                 attachedFile={attachedFile}
+                timerDef={timer}
+                isUpLiftDef={isUpLift}
+                upLiftMinuteDef={upLiftMinute}
               />
             ) : (
               <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />
@@ -229,6 +249,9 @@ const TreeItemContent = memo(
       prevProps.style === nextProps.style &&
       prevProps.done === nextProps.done &&
       prevProps.attachedFile === nextProps.attachedFile &&
+      prevProps.timer === nextProps.timer &&
+      prevProps.isUpLift === nextProps.isUpLift &&
+      prevProps.upLiftMinute === nextProps.upLiftMinute &&
       prevProps.childCount === nextProps.childCount &&
       prevProps.clone === nextProps.clone &&
       prevProps.collapsed === nextProps.collapsed &&
@@ -255,7 +278,6 @@ const TreeItemContent = memo(
       prevProps.indicator === nextProps.indicator &&
       prevProps.indentationWidth === nextProps.indentationWidth &&
       prevProps.isNewTask === nextProps.isNewTask &&
-      prevProps.addedTaskId === nextProps.addedTaskId &&
       prevProps.isItemDescendantOfTrash === nextProps.isItemDescendantOfTrash
     );
   }
@@ -269,6 +291,9 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       done,
       collapsed,
       attachedFile,
+      timer,
+      isUpLift,
+      upLiftMinute,
       childCount,
       clone,
       depth,
@@ -291,21 +316,19 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       removeTrashDescendants,
       removeTrashDescendantsWithDone,
       isNewTask,
-      addedTaskId,
       isItemDescendantOfTrash,
       ...props
     },
     ref
   ) => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const currentTree = useTreeStateStore((state) => state.currentTree);
     const [isDragOver, setIsDragOver] = useState(false);
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
 
-    const { uploadFile } = useAttachedFile();
-
     const darkMode = useAppStateStore((state) => state.darkMode);
+
+    const stackStyles = useTreeStackStyles(clone, ghost, depth, isDragOver, darkMode, isNewTask);
+    const { uploadFile } = useAttachedFile();
 
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -340,90 +363,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       setIsDragOver(false);
     }, []);
 
-    // ドロップ後にテキストフィールドにフォーカスを当てる
-    useEffect(() => {
-      if (addedTaskId === id && inputRef.current && !isMobile) {
-        const timer = setTimeout(() => inputRef.current?.focus(), 500);
-        return () => clearTimeout(timer);
-      }
-      return () => {};
-    }, [addedTaskId, id, isMobile]);
-
-    useEffect(() => {
-      const timer = setTimeout(() => setIsFocusedOrHovered(false), 300);
-      return () => clearTimeout(timer);
-    }, []);
-
-    const stackStyles = (clone: boolean | undefined, ghost: boolean | undefined) => ({
-      width: '100%',
-      padding: { xs: 0.7, sm: 1 },
-      border: '1px solid',
-      backgroundColor: isDragOver
-        ? theme.palette.action.focus
-        : darkMode
-        ? depth >= 4
-          ? theme.palette.grey[800]
-          : depth === 3
-          ? '#303030'
-          : depth === 2
-          ? theme.palette.grey[900]
-          : depth === 1
-          ? '#1a1a1a'
-          : theme.palette.background.default
-        : depth >= 4
-        ? theme.palette.grey[300]
-        : depth === 3
-        ? theme.palette.grey[200]
-        : depth === 2
-        ? theme.palette.grey[100]
-        : depth === 1
-        ? theme.palette.grey[50]
-        : theme.palette.background.default,
-      borderColor: theme.palette.divider,
-      boxSizing: 'border-box',
-      ...(clone && {
-        zIndex: 1000,
-        opacity: 0.9,
-        position: 'absolute',
-        width: '250px',
-        boxShadow: '0px 15px 15px 0 rgba(34, 33, 81, 0.1)',
-        '& textarea': {
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-        },
-      }),
-      ...(clone &&
-        isNewTask && {
-          left: '50%',
-          transform: 'translateX(calc(-50% +125px))',
-        }),
-      ...(ghost && {
-        zIndex: -1,
-        padding: 0,
-        height: '8px',
-        borderColor: theme.palette.primary.main,
-        backgroundColor: theme.palette.primary.main,
-        '&:before': {
-          zIndex: -1,
-          position: 'absolute',
-          left: '-8px',
-          top: '-4px',
-          display: 'block',
-          content: '""',
-          width: '12px',
-          height: '12px',
-          borderRadius: '50%',
-          border: '1px solid',
-          borderColor: theme.palette.primary.main,
-          backgroundColor: theme.palette.background.default,
-        },
-        '> *': {
-          opacity: 0,
-          height: 0,
-        },
-      }),
-    });
-
     return (
       <ListItem
         ref={wrapperRef}
@@ -455,7 +394,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           direction='row'
           ref={ref}
           style={style}
-          sx={stackStyles(clone, ghost)}
+          sx={stackStyles}
           onDrop={onDrop}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
@@ -466,6 +405,9 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             depth={depth}
             done={done}
             attachedFile={attachedFile}
+            timer={timer}
+            isUpLift={isUpLift}
+            upLiftMinute={upLiftMinute}
             childCount={childCount}
             clone={clone}
             collapsed={collapsed}

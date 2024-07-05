@@ -1,24 +1,12 @@
 import { CSSProperties } from 'react';
-import type { UniqueIdentifier } from '@dnd-kit/core';
 import { AnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
 import { TreeItem, TreeItemProps } from './TreeItem';
 import { iOS } from './utilities';
 
-interface Props extends TreeItemProps {
-  id: UniqueIdentifier;
-  isNewTask?: boolean;
-  addedTaskId?: UniqueIdentifier | null;
-  attachedFile?: string;
-  handleAttachFile(id: UniqueIdentifier, fileName: string): void;
-  removeTrashDescendants?: () => Promise<void>;
-  removeTrashDescendantsWithDone?: () => Promise<void>;
-}
-
 const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) => (isSorting || wasDragging ? false : true);
 
-export function SortableTreeItem({ id, depth, handleAttachFile, ...props }: Props) {
+export function SortableTreeItem({ id, depth, ...props }: TreeItemProps) {
   const { attributes, isDragging, isSorting, listeners, setDraggableNodeRef, setDroppableNodeRef, transform, transition } =
     useSortable({
       id,
@@ -44,10 +32,6 @@ export function SortableTreeItem({ id, depth, handleAttachFile, ...props }: Prop
         ...attributes,
         ...listeners,
       }}
-      attachedFile={props.attachedFile}
-      handleAttachFile={handleAttachFile}
-      isNewTask={props.isNewTask}
-      addedTaskId={props.addedTaskId}
       {...props}
     />
   );

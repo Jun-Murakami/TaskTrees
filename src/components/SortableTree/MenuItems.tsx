@@ -1,6 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { IconButton, Menu, MenuItem, Divider, Box } from '@mui/material';
+import dayjs, { Dayjs } from 'dayjs';
+import {
+  IconButton,
+  Menu,
+  MenuItem,
+  Divider,
+  Box,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Autocomplete,
+  TextField,
+  Button,
+} from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
@@ -11,10 +26,12 @@ import UndoIcon from '@mui/icons-material/Undo';
 import FlakyIcon from '@mui/icons-material/Flaky';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
 import ImageIcon from '@mui/icons-material/Image';
 import FolderIcon from '@mui/icons-material/Folder';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { useTheme } from '@mui/material/styles';
+import { useTaskManagement } from '../../hooks/useTaskManagement';
 import { useTreeStateStore } from '../../store/treeStateStore';
 import { useDialogStore } from '../../store/dialogStore';
 import { useAttachedFile } from '../../hooks/useAttachedFile';
@@ -25,6 +42,9 @@ import { FilePicker } from '@capawesome/capacitor-file-picker';
 interface MenuItemsProps {
   id: UniqueIdentifier;
   attachedFile?: string;
+  timerDef?: string;
+  isUpLiftDef?: boolean;
+  upLiftMinuteDef?: number;
   currenTreeId: UniqueIdentifier | null;
   handleAttachFile?(id: UniqueIdentifier, fileName: string): void;
   onRemove?: () => void;
@@ -48,6 +68,14 @@ interface MenuItemsAttachedFileProps {
   attachedFile: string;
 }
 
+interface MenuItemsTimerProps {
+  id: UniqueIdentifier;
+  timerDef?: string;
+  done?: boolean;
+  isUpLiftDef?: boolean;
+  upLiftMinuteDef?: number;
+}
+
 const iconButtonStyle = {
   top: 0,
   width: { xs: '22px', sm: '30px' },
@@ -65,6 +93,9 @@ const iconButtonStyle = {
 export function MenuItems({
   id,
   attachedFile,
+  timerDef,
+  isUpLiftDef,
+  upLiftMinuteDef,
   currenTreeId,
   handleAttachFile,
   onRemove,
@@ -75,15 +106,21 @@ export function MenuItems({
   const [openCopyMenu, setOpenCopyMenu] = useState<boolean>(false);
   const [openMoveMenu, setOpenMoveMenu] = useState<boolean>(false);
   const [openIOSMenu, setOpenIOSMenu] = useState<boolean>(false);
+  const [openTimerMenu, setOpenTimerMenu] = useState<boolean>(false);
+  const [time, setTime] = useState<Dayjs | null>(null);
+  const [isUpLift, setIsUpLift] = useState<boolean>(false);
+  const [upLiftHour, setUpLiftHour] = useState<number | undefined>(undefined);
+  const [upLiftMinute, setUpLiftMinute] = useState<number | undefined>(undefined);
 
-  const showDialog = useDialogStore((state) => state.showDialog);
-
-  const { uploadFile, deleteFile } = useAttachedFile();
+  // const [isNotify, setIsNotify] = useState<boolean>(false);
+  // const [notifyHour, setNotifyHour] = useState<number | undefined>(undefined);
+  // const [notifyMinute, setNotifyMinute] = useState<number | undefined>(undefined);
 
   const anchorElParent = useRef<HTMLButtonElement>(null);
   const anchorElCopy = useRef<HTMLButtonElement>(null);
   const anchorElMove = useRef<HTMLButtonElement>(null);
   const anchorEliOS = useRef<HTMLButtonElement>(null);
+  const anchorElTimer = useRef<HTMLButtonElement>(null);
 
   const isOffline = useAppStateStore((state) => state.isOffline);
   const currentTree = useTreeStateStore((state) => state.currentTree);
@@ -91,6 +128,31 @@ export function MenuItems({
   const treesListWithoutId = treesList.filter((tree) => tree.id !== currenTreeId);
 
   const theme = useTheme();
+
+  const hours = [...Array(49).keys()];
+  const minutes = [...Array(60).keys()];
+
+  const showDialog = useDialogStore((state) => state.showDialog);
+
+  const { uploadFile, deleteFile } = useAttachedFile();
+  const { handleSetTimer } = useTaskManagement();
+
+  const updateTimerValues = () => {
+    setTime(timerDef ? dayjs(timerDef) : dayjs(Date.now()));
+    setIsUpLift(isUpLiftDef || false);
+    if (upLiftMinuteDef) {
+      setUpLiftHour(Math.floor((upLiftMinuteDef - 1) / 60));
+      setUpLiftMinute(upLiftMinuteDef % 60);
+    } else {
+      setUpLiftHour(undefined);
+      setUpLiftMinute(undefined);
+    }
+  };
+
+  const handleOpenTimerMenu = () => {
+    updateTimerValues();
+    setOpenTimerMenu(true);
+  };
 
   const handleParentClick = () => {
     setOpenParentMenu(!openParentMenu);
@@ -153,7 +215,7 @@ export function MenuItems({
   const handleiOSImagePicker = async () => {
     try {
       const result = await FilePicker.pickImages({
-        multiple: false, // 複数選択を許可するかどうか
+        limit: 1, // 複数選択を許可するかどうか
         readData: true, // Base64データを読み込む
       });
       if (result.files.length > 0) {
@@ -179,7 +241,7 @@ export function MenuItems({
   const handleiOSFilePicker = async () => {
     try {
       const result = await FilePicker.pickFiles({
-        multiple: false, // 複数選択を許可するかどうか
+        limit: 1, // 複数選択を許可するかどうか
         readData: true, // Base64データを読み込む
       });
       if (result.files.length > 0) {
@@ -229,6 +291,187 @@ export function MenuItems({
         </MenuItem>
         {!isOffline && (
           <Box>
+            <Divider />
+            <Box ref={anchorElTimer}>
+              <MenuItem
+                disableRipple
+                onClick={() => {
+                  if (!openTimerMenu) {
+                    handleOpenTimerMenu();
+                  }
+                }}
+              >
+                <ListItemIcon>
+                  <AccessAlarmIcon fontSize='small' />
+                </ListItemIcon>
+                タイマーをセット
+                <Menu
+                  anchorEl={anchorElTimer.current}
+                  id='menu-item-management-timer'
+                  open={openTimerMenu}
+                  onClose={() => {
+                    setOpenTimerMenu(false);
+                    handleParentClose();
+                  }}
+                >
+                  <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 1 }}>
+                    <DateTimePicker
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
+                      label='タイマー'
+                      value={time}
+                      onChange={(newValue) => {
+                        setTime(newValue);
+                      }}
+                      sx={{ marginX: 'auto', my: 2 }}
+                    />
+                  </Box>
+                  <Box sx={{ px: 2 }}>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={
+                          <>
+                            <Checkbox checked={isUpLift} onChange={(e) => setIsUpLift(e.target.checked)} />
+                            <Autocomplete
+                              freeSolo
+                              options={hours}
+                              renderInput={(params) => <TextField {...params} label='時間' size='small' />}
+                              value={upLiftHour !== undefined ? upLiftHour : null}
+                              onChange={(_, newValue) => {
+                                const parsedValue = parseInt(newValue as string, 10);
+                                if (!isNaN(parsedValue) && parsedValue >= 0) {
+                                  setUpLiftHour(parsedValue);
+                                } else {
+                                  setUpLiftHour(undefined);
+                                }
+                              }}
+                              onInputChange={(_, newInputValue) => {
+                                const parsedValue = parseInt(newInputValue, 10);
+                                if (!isNaN(parsedValue) && parsedValue >= 0) {
+                                  setUpLiftHour(parsedValue);
+                                } else {
+                                  setUpLiftHour(undefined);
+                                }
+                              }}
+                              sx={{ width: 100, mr: 1 }}
+                              size='small'
+                              getOptionLabel={(option) => (option !== null ? option.toString() : '')}
+                            />
+                            <Autocomplete
+                              freeSolo
+                              options={minutes}
+                              renderInput={(params) => <TextField {...params} label='分' size='small' />}
+                              value={upLiftMinute !== undefined ? upLiftMinute : null}
+                              onChange={(_, newValue) => {
+                                const parsedValue = parseInt(newValue as string, 10);
+                                if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue < 60) {
+                                  setUpLiftMinute(parsedValue);
+                                } else {
+                                  setUpLiftMinute(undefined);
+                                }
+                              }}
+                              onInputChange={(_, newInputValue) => {
+                                const parsedValue = parseInt(newInputValue, 10);
+                                if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue < 60) {
+                                  setUpLiftMinute(parsedValue);
+                                } else {
+                                  setUpLiftMinute(undefined);
+                                }
+                              }}
+                              sx={{ width: 80, mr: 1 }}
+                              size='small'
+                              getOptionLabel={(option) => (option !== null ? option.toString() : '')}
+                            />
+                          </>
+                        }
+                        label='前に上へ移動'
+                      />
+                    </FormGroup>
+                  </Box>
+                  {/*
+                  <MenuItem disableRipple>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={
+                          <>
+                            <Checkbox checked={isNotify} onChange={(e) => setIsNotify(e.target.checked)} />
+                            <Autocomplete
+                              freeSolo
+                              options={hours}
+                              renderInput={(params) => <TextField {...params} label='時間' size='small' />}
+                              value={notifyHour}
+                              onChange={(_, newValue) => {
+                                const parsedValue = parseInt(newValue as string, 10);
+                                if (!isNaN(parsedValue) && parsedValue >= 0) {
+                                  setNotifyHour(parsedValue);
+                                } else {
+                                  setNotifyHour(undefined);
+                                }
+                              }}
+                              sx={{ width: 100, mr: 1 }}
+                              size='small'
+                            />
+                            <Autocomplete
+                              freeSolo
+                              options={minutes}
+                              renderInput={(params) => <TextField {...params} label='分' size='small' />}
+                              value={notifyMinute}
+                              onChange={(_, newValue) => {
+                                const parsedValue = parseInt(newValue as string, 10);
+                                if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue < 60) {
+                                  setNotifyMinute(parsedValue);
+                                } else {
+                                  setNotifyMinute(undefined);
+                                }
+                              }}
+                              sx={{ width: 80, mr: 1 }}
+                              size='small'
+                            />
+                          </>
+                        }
+                        label='前に通知'
+                      />
+                    </FormGroup>
+                  </MenuItem>
+                  */}
+                  <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', my: 2 }}>
+                    <Button
+                      onClick={() => {
+                        if (!time) return;
+                        const uh = upLiftHour ? upLiftHour * 60 : 0;
+                        const um = upLiftMinute ? upLiftMinute : 0;
+                        const uhm = uh + um === 0 ? undefined : uh + um;
+                        // const nh = notifyHour ? notifyHour * 60 : 0;
+                        // const nm = notifyMinute ? notifyMinute : 0;
+                        // const nhm = nh + nm === 0 ? undefined : nh + nm;
+                        handleSetTimer(id, time.toISOString(), isUpLift, uhm, undefined, undefined);
+                        setOpenTimerMenu(false);
+                        handleParentClose();
+                      }}
+                      variant='contained'
+                      color='primary'
+                      sx={{ mr: 2 }}
+                    >
+                      セット
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        handleSetTimer(id, undefined, undefined, undefined, undefined, undefined);
+                        setOpenTimerMenu(false);
+                        handleParentClose();
+                      }}
+                      variant='contained'
+                      color='error'
+                    >
+                      解除
+                    </Button>
+                  </Box>
+                </Menu>
+              </MenuItem>
+            </Box>
             <Divider />
             <Box ref={anchorEliOS}>
               <MenuItem
@@ -595,6 +838,170 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
           削除
         </MenuItem>
       </Menu>
+    </>
+  );
+}
+
+export function MenuItemsTimer({ id, timerDef, done, isUpLiftDef, upLiftMinuteDef }: MenuItemsTimerProps) {
+  const [openTimerMenu, setOpenTimerMenu] = useState<boolean>(false);
+  const [time, setTime] = useState<Dayjs | null>(timerDef ? dayjs(timerDef) : null);
+  const [isUpLift, setIsUpLift] = useState<boolean>(isUpLiftDef || false);
+  const [upLiftHour, setUpLiftHour] = useState<number | undefined>(
+    upLiftMinuteDef ? Math.floor((upLiftMinuteDef - 1) / 60) : undefined
+  );
+  const [upLiftMinute, setUpLiftMinute] = useState<number | undefined>(upLiftMinuteDef ? upLiftMinuteDef % 60 : undefined);
+
+  const anchorElTimer = useRef<HTMLButtonElement>(null);
+
+  const hours = [...Array(49).keys()];
+  const minutes = [...Array(60).keys()];
+
+  const { handleSetTimer } = useTaskManagement();
+
+  const theme = useTheme();
+
+  if (!timerDef) return;
+  const upLiftTime = upLiftMinuteDef ? dayjs(timerDef).subtract(upLiftMinuteDef, 'minutes') : undefined;
+  const timerColor = time
+    ? done
+      ? theme.palette.primary.main
+      : dayjs(Date.now()) > time
+      ? theme.palette.error.main
+      : upLiftTime && dayjs(Date.now()) > upLiftTime
+      ? theme.palette.warning.main
+      : theme.palette.grey[500]
+    : undefined;
+
+  return (
+    <>
+      {time && (
+        <>
+          <IconButton
+            key={id}
+            ref={anchorElTimer}
+            onClick={() => setOpenTimerMenu(true)}
+            sx={{ ...iconButtonStyle, color: timerColor }}
+          >
+            <AccessAlarmIcon fontSize='small' />
+          </IconButton>
+          <Menu
+            anchorEl={anchorElTimer.current}
+            id='menu-item-management-timer'
+            open={openTimerMenu}
+            onClose={() => {
+              setOpenTimerMenu(false);
+            }}
+          >
+            <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 1 }}>
+              <DateTimePicker
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                  seconds: renderTimeViewClock,
+                }}
+                label='タイマー'
+                value={time}
+                onChange={(newValue) => {
+                  setTime(newValue);
+                }}
+                sx={{ marginX: 'auto', my: 2 }}
+              />
+            </Box>
+            <Box sx={{ px: 2 }}>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <>
+                      <Checkbox checked={isUpLift} onChange={(e) => setIsUpLift(e.target.checked)} />
+                      <Autocomplete
+                        freeSolo
+                        options={hours}
+                        renderInput={(params) => <TextField {...params} label='時間' size='small' />}
+                        value={upLiftHour !== undefined ? upLiftHour : null}
+                        onChange={(_, newValue) => {
+                          const parsedValue = parseInt(newValue as string, 10);
+                          if (!isNaN(parsedValue) && parsedValue >= 0) {
+                            setUpLiftHour(parsedValue);
+                          } else {
+                            setUpLiftHour(undefined);
+                          }
+                        }}
+                        onInputChange={(_, newInputValue) => {
+                          const parsedValue = parseInt(newInputValue, 10);
+                          if (!isNaN(parsedValue) && parsedValue >= 0) {
+                            setUpLiftHour(parsedValue);
+                          } else {
+                            setUpLiftHour(undefined);
+                          }
+                        }}
+                        sx={{ width: 100, mr: 1 }}
+                        size='small'
+                        getOptionLabel={(option) => (option !== null ? option.toString() : '')}
+                      />
+                      <Autocomplete
+                        freeSolo
+                        options={minutes}
+                        renderInput={(params) => <TextField {...params} label='分' size='small' />}
+                        value={upLiftMinute !== undefined ? upLiftMinute : null}
+                        onChange={(_, newValue) => {
+                          const parsedValue = parseInt(newValue as string, 10);
+                          if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue < 60) {
+                            setUpLiftMinute(parsedValue);
+                          } else {
+                            setUpLiftMinute(undefined);
+                          }
+                        }}
+                        onInputChange={(_, newInputValue) => {
+                          const parsedValue = parseInt(newInputValue, 10);
+                          if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue < 60) {
+                            setUpLiftMinute(parsedValue);
+                          } else {
+                            setUpLiftMinute(undefined);
+                          }
+                        }}
+                        sx={{ width: 80, mr: 1 }}
+                        size='small'
+                        getOptionLabel={(option) => (option !== null ? option.toString() : '')}
+                      />
+                    </>
+                  }
+                  label='前に上へ移動'
+                />
+              </FormGroup>
+            </Box>
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', my: 2 }}>
+              <Button
+                onClick={() => {
+                  if (!time) return;
+                  const uh = upLiftHour ? upLiftHour * 60 : 0;
+                  const um = upLiftMinute ? upLiftMinute : 0;
+                  const uhm = uh + um === 0 ? undefined : uh + um;
+                  // const nh = notifyHour ? notifyHour * 60 : 0;
+                  // const nm = notifyMinute ? notifyMinute : 0;
+                  // const nhm = nh + nm === 0 ? undefined : nh + nm;
+                  handleSetTimer(id, time.toISOString(), isUpLift, uhm, undefined, undefined);
+                  setOpenTimerMenu(false);
+                }}
+                variant='contained'
+                color='primary'
+                sx={{ mr: 2 }}
+              >
+                セット
+              </Button>
+              <Button
+                onClick={() => {
+                  handleSetTimer(id, undefined, undefined, undefined, undefined, undefined);
+                  setOpenTimerMenu(false);
+                }}
+                variant='contained'
+                color='error'
+              >
+                解除
+              </Button>
+            </Box>
+          </Menu>
+        </>
+      )}
     </>
   );
 }

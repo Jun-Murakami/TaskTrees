@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import dayjs from 'dayjs';
 import isEqual from 'lodash/isEqual';
 import { get } from 'firebase/database';
 import { useTreeManagement } from './useTreeManagement';
@@ -11,6 +12,7 @@ import { getDatabase, ref, onValue } from 'firebase/database';
 import { useAppStateStore } from '../store/appStateStore';
 import { useTreeStateStore } from '../store/treeStateStore';
 import { useDialogStore } from '../store/dialogStore';
+import type { TreeItem } from '../types/types';
 import { Preferences } from '@capacitor/preferences';
 
 export const useObserve = () => {
@@ -27,6 +29,7 @@ export const useObserve = () => {
   const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const items = useTreeStateStore((state) => state.items);
+  const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
   const prevItems = useTreeStateStore((state) => state.prevItems);
@@ -152,57 +155,107 @@ export const useObserve = () => {
 
   // ローカルitemsの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
-    if ((!uid && !isOffline) || !currentTree || isEqual(items, prevItems) || (!isConnected && !isOffline)) {
+    if ((!uid && !isOffline) || !currentTree || (!isConnected && !isOffline)) {
       return;
     }
 
-    if (currentTree !== prevCurrentTree) {
-      if (prevItems.length > 0) {
-        const asyncFunc = async () => {
-          if (prevCurrentTree) {
-            await saveItemsIdb(prevItems, prevCurrentTree);
-            await saveItemsDb(prevItems, prevCurrentTree);
+    const checkAndUpdateItems = () => {
+      const recentItems = useTreeStateStore.getState().items;
+      const updatedItems = [...recentItems];
+      let hasChanges = false;
+      const notificationMessages: string[] = [];
+
+      const checkItem = (item: TreeItem, parentArray: TreeItem[], index: number) => {
+        if (
+          item.timer &&
+          item.isUpLift &&
+          item.upLiftMinute !== undefined &&
+          item.upLiftMinute > 0 &&
+          dayjs(Date.now()).isAfter(dayjs(item.timer).subtract(item.upLiftMinute, 'minutes'))
+        ) {
+          item.isUpLift = false;
+          parentArray.splice(index, 1);
+          parentArray.unshift(item);
+          hasChanges = true;
+          const now = dayjs();
+          const timerTime = dayjs(item.timer);
+          const diff = timerTime.diff(now, 'minute');
+          const hours = Math.floor(diff / 60);
+          const minutes = (diff % 60) + 1;
+
+          let formattedDiff;
+          if (hours > 0 && minutes > 0) {
+            formattedDiff = `${hours}時間 ${minutes}分`;
+          } else if (hours > 0) {
+            formattedDiff = `${hours}時間`;
+          } else {
+            formattedDiff = `${minutes}分`;
           }
-        };
-        asyncFunc();
+
+          const noticeHMTime = formattedDiff;
+          notificationMessages.push(`タスク "${item.value}" タイマー設定時刻の ${noticeHMTime} 前です。`);
+        }
+
+        item.children.forEach((child, childIndex) => checkItem(child, item.children, childIndex));
+      };
+
+      updatedItems.forEach((item, index) => checkItem(item, updatedItems, index));
+
+      if (hasChanges) {
+        setItems(updatedItems);
+        notificationMessages.forEach((message) => showDialog(message, 'Alerm'));
       }
-      setPrevCurrentTree(currentTree);
-      setPrevItems([]);
-      return;
-    }
+    };
 
-    setPrevItems(items);
-    const targetTree = currentTree;
-    const debounceSave = setTimeout(() => {
-      try {
-        if (isOffline) {
-          // オフラインモードの場合、ローカルストレージに保存
-          Preferences.set({
-            key: `items_offline`,
-            value: JSON.stringify(items),
-          });
-          if (currentTreeName) {
-            Preferences.set({
-              key: `treeName_offline`,
-              value: currentTreeName,
-            });
-          }
-        } else {
-          // オンラインモードの場合、データベースに保存
+    const intervalId = setInterval(checkAndUpdateItems, 60000); // 1分ごとにチェック
+
+    if (!isEqual(items, prevItems)) {
+      if (currentTree !== prevCurrentTree) {
+        if (prevItems.length > 0) {
           const asyncFunc = async () => {
-            await saveItemsIdb(items, targetTree);
-            await saveItemsDb(items, targetTree);
+            if (prevCurrentTree) {
+              await saveItemsIdb(prevItems, prevCurrentTree);
+              await saveItemsDb(prevItems, prevCurrentTree);
+            }
           };
           asyncFunc();
         }
+        setPrevCurrentTree(currentTree);
         setPrevItems([]);
-      } catch (error) {
-        handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error);
-      }
-    }, 5000); // 3秒のデバウンス
+      } else {
+        setPrevItems(items);
+        const targetTree = currentTree;
+        const debounceSave = setTimeout(() => {
+          try {
+            if (isOffline) {
+              Preferences.set({
+                key: `items_offline`,
+                value: JSON.stringify(items),
+              });
+              if (currentTreeName) {
+                Preferences.set({
+                  key: `treeName_offline`,
+                  value: currentTreeName,
+                });
+              }
+            } else {
+              const asyncFunc = async () => {
+                await saveItemsIdb(items, targetTree);
+                await saveItemsDb(items, targetTree);
+              };
+              asyncFunc();
+            }
+            setPrevItems([]);
+          } catch (error) {
+            handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error);
+          }
+        }, 5000);
 
-    // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
-    return () => clearTimeout(debounceSave);
+        return () => clearTimeout(debounceSave);
+      }
+    }
+
+    return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 

@@ -445,6 +445,23 @@ export const useTaskManagement = () => {
     setItems(newItems);
   };
 
+  // アイテムにタイマーをセットする ------------------------------
+  const handleSetTimer = (id: UniqueIdentifier, timer: string | undefined, isUpLift: boolean | undefined, upLiftMinute: number | undefined, isNotify: boolean | undefined, notifyMinute: number | undefined) => {
+    const currentItems = useTreeStateStore.getState().items;
+    const setTimer = (items: TreeItems, id: UniqueIdentifier, timer: string | undefined, isUpLift: boolean | undefined, upLiftMinute: number | undefined, isNotify: boolean | undefined, notifyMinute: number | undefined): TreeItems => {
+      return items.map((item) => {
+        if (item.id === id) {
+          return { ...item, ['timer']: timer, ['isUpLift']: isUpLift, ['upLiftMinute']: upLiftMinute, ['isNotify']: isNotify, ['notifyMinute']: notifyMinute };
+        } else if (item.children.length) {
+          return { ...item, children: setTimer(item.children, id, timer, isUpLift, upLiftMinute, isNotify, notifyMinute) };
+        }
+        return item;
+      })
+    }
+    const newItems = setTimer(currentItems, id, timer ? timer : undefined, isUpLift ? isUpLift : undefined, upLiftMinute ? upLiftMinute : undefined, isNotify ? isNotify : undefined, notifyMinute ? notifyMinute : undefined);
+    setItems(newItems);
+  }
+
   return {
     handleRemove,
     handleValueChange,
@@ -453,6 +470,7 @@ export const useTaskManagement = () => {
     handleMove,
     handleRestore,
     handleAttachFile,
+    handleSetTimer,
     removeTrashDescendants,
     removeTrashDescendantsWithDone,
   };

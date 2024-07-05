@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Announcements,
   DndContext,
   closestCenter,
   KeyboardSensor,
@@ -76,13 +75,8 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeNewTaskId, setActiveNewTaskId] = useState<UniqueIdentifier>('-1');
   const [activeQuickMemoId, setActiveQuickMemoId] = useState<UniqueIdentifier>('-10000');
-  const [addedTaskId, setAddedTaskId] = useState<UniqueIdentifier | null>(null);
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [offsetLeft, setOffsetLeft] = useState(0);
-  const [currentPosition, setCurrentPosition] = useState<{
-    parentId: UniqueIdentifier | null;
-    overId: UniqueIdentifier;
-  } | null>(null);
   const [importButtonSpacer, setImportButtonSpacer] = useState(176);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
@@ -128,7 +122,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // コンポーネントのアンマウント時にイベントリスナーを削除
     return () => window.removeEventListener('resize', handleResize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -162,7 +155,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       (acc, { children, collapsed, id }) => (collapsed && children.length ? [...acc, id.toString()] : acc),
       []
     );
-    // searchKeyが空でない場合、collapsedItemsを空の配列にする
+    // searchKeyが設定されていた場合、collapsedItemsを空の配列にする
     if (searchKey !== '') {
       collapsedItems = [];
     }
@@ -192,27 +185,8 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     };
   }, [flattenedItems, offsetLeft]);
 
-  const announcements: Announcements = {
-    onDragStart({ active }) {
-      return `Picked up ${active.id}.`;
-    },
-    onDragMove({ active, over }) {
-      return getMovementAnnouncement('onDragMove', active.id, over?.id);
-    },
-    onDragOver({ active, over }) {
-      return getMovementAnnouncement('onDragOver', active.id, over?.id);
-    },
-    onDragEnd({ active, over }) {
-      return getMovementAnnouncement('onDragEnd', active.id, over?.id);
-    },
-    onDragCancel({ active }) {
-      return `Moving was cancelled. ${active.id} was dropped in its original position.`;
-    },
-  };
-
   return (
     <DndContext
-      accessibility={{ announcements }}
       sensors={sensors}
       collisionDetection={closestCenter}
       measuring={measuring}
@@ -228,13 +202,17 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
           .filter(({ value }) => value.toLowerCase().includes(searchKey.toLowerCase()))
-          //.filter((item) => (searchKey !== '' ? !isDescendantOfTrash(items, item.id) : true))
-          .map(({ id, value, done, attachedFile, children, collapsed, depth }) => (
+          //.filter((item) => (searchKey !== '' ? !isDescendantOfTrash(items, item.id) : true)) // ゴミ箱の中は検索しない
+          .map(({ id, value, done, attachedFile, timer, isUpLift, upLiftMinute, children, collapsed, depth }) => (
             <SortableTreeItem
               key={id}
               id={id.toString()}
-              value={value.toString()}
+              value={value}
               done={done}
+              attachedFile={attachedFile}
+              timer={timer}
+              isUpLift={isUpLift}
+              upLiftMinute={upLiftMinute}
               depth={id === activeId && projected ? projected.depth : depth}
               indentationWidth={indentationWidth}
               indicator={indicator}
@@ -246,11 +224,9 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
               onCopyItems={handleCopy}
               onMoveItems={handleMove}
               onRestoreItems={handleRestore}
-              attachedFile={attachedFile}
               handleAttachFile={handleAttachFile}
               removeTrashDescendants={removeTrashDescendants}
               removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
-              addedTaskId={addedTaskId}
               isItemDescendantOfTrash={isDescendantOfTrash(items, id)}
             />
           ))}
@@ -294,14 +270,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     setActiveId(activeId);
     setOverId(activeId);
 
-    const activeItem = flattenedItems.find(({ id }) => id === activeId);
-
-    if (activeItem) {
-      setCurrentPosition({
-        parentId: activeItem.parentId,
-        overId: activeId,
-      });
-    }
     document.body.style.setProperty('cursor', 'grabbing');
   }
 
@@ -358,7 +326,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
           });
         };
         const newItemsWithId = updateItemIdRecursively(newItems, active.id, (findMaxId(newItems) + 1).toString());
-        setAddedTaskId(findMaxId(newItemsWithId).toString());
         setItems(newItemsWithId);
         const newActiveId = (parseInt(active.id.toString()) - 1).toString();
         if (active.id === activeNewTaskId) {
@@ -407,7 +374,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     setOverId(null);
     setActiveId(null);
     setOffsetLeft(0);
-    setCurrentPosition(null);
 
     document.body.style.setProperty('cursor', '');
   }
@@ -417,55 +383,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       return !value;
     });
     setItems(newItems);
-  }
-
-  function getMovementAnnouncement(eventName: string, activeId: UniqueIdentifier, overId?: UniqueIdentifier) {
-    if (overId && projected) {
-      if (eventName !== 'onDragEnd') {
-        if (currentPosition && projected.parentId === currentPosition.parentId && overId === currentPosition.overId) {
-          return;
-        } else {
-          setCurrentPosition({
-            parentId: projected.parentId,
-            overId,
-          });
-        }
-      }
-
-      const clonedItems: FlattenedItem[] = JSON.parse(JSON.stringify(flattenTree(items)));
-      const overIndex = clonedItems.findIndex(({ id }) => id === overId);
-      const activeIndex = clonedItems.findIndex(({ id }) => id === activeId);
-      const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
-
-      const previousItem = sortedItems[overIndex - 1];
-
-      let announcement;
-      const movedVerb = eventName === 'onDragEnd' ? 'dropped' : 'moved';
-      const nestedVerb = eventName === 'onDragEnd' ? 'dropped' : 'nested';
-
-      if (!previousItem) {
-        const nextItem = sortedItems[overIndex + 1];
-        announcement = `${activeId} was ${movedVerb} before ${nextItem.id}.`;
-      } else {
-        if (projected.depth > previousItem.depth) {
-          announcement = `${activeId} was ${nestedVerb} under ${previousItem.id}.`;
-        } else {
-          let previousSibling: FlattenedItem | undefined = previousItem;
-          while (previousSibling && projected.depth < previousSibling.depth) {
-            const parentId: UniqueIdentifier | null = previousSibling.parentId;
-            previousSibling = sortedItems.find(({ id }) => id === parentId);
-          }
-
-          if (previousSibling) {
-            announcement = `${activeId} was ${movedVerb} after ${previousSibling.id}.`;
-          }
-        }
-      }
-
-      return announcement;
-    }
-
-    return;
   }
 }
 
