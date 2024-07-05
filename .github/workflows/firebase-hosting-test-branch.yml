@@ -9,7 +9,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
+      - name: Clean npm cache
+        run: |
+          rm -rf node_modules
+          npm cache clean --force
+      - run: npm install
       - run: npm run build
         env:
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
