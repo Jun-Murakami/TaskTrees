@@ -850,6 +850,7 @@ export function MenuItemsTimer({ id, timerDef, done, isUpLiftDef, upLiftMinuteDe
     upLiftMinuteDef ? Math.floor((upLiftMinuteDef - 1) / 60) : undefined
   );
   const [upLiftMinute, setUpLiftMinute] = useState<number | undefined>(upLiftMinuteDef ? upLiftMinuteDef % 60 : undefined);
+  const [currentTime, setCurrentTime] = useState<Dayjs>(dayjs());
 
   const anchorElTimer = useRef<HTMLButtonElement>(null);
 
@@ -860,14 +861,23 @@ export function MenuItemsTimer({ id, timerDef, done, isUpLiftDef, upLiftMinuteDe
 
   const theme = useTheme();
 
-  if (!timerDef) return;
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(dayjs());
+    }, 60000); // 1分ごとに更新
+
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!timerDef) return null;
+
   const upLiftTime = upLiftMinuteDef ? dayjs(timerDef).subtract(upLiftMinuteDef, 'minutes') : undefined;
   const timerColor = time
     ? done
       ? theme.palette.primary.main
-      : dayjs(Date.now()) > time
+      : currentTime.isAfter(time)
       ? theme.palette.error.main
-      : upLiftTime && dayjs(Date.now()) > upLiftTime
+      : upLiftTime && currentTime.isAfter(upLiftTime)
       ? theme.palette.warning.main
       : theme.palette.grey[500]
     : undefined;
