@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { TreeItem, TreesList } from '../types/types';
 
@@ -21,21 +22,23 @@ type TreeState = {
   setPrevItems: (prevItems: TreeItem[]) => void;
 };
 
-export const useTreeStateStore = create<TreeState>((set) => ({
-  items: [],
-  treesList: [],
-  searchResults: [],
-  currentTree: null,
-  currentTreeName: null,
-  currentTreeMembers: null,
-  prevCurrentTree: null,
-  prevItems: [],
-  setItems: (items) => set({ items }),
-  setTreesList: (treesList) => set({ treesList }),
-  setSearchResults: (searchResults) => set({ searchResults }),
-  setCurrentTree: (currentTree) => set({ currentTree }),
-  setCurrentTreeName: (currentTreeName) => set({ currentTreeName }),
-  setCurrentTreeMembers: (currentTreeMembers) => set({ currentTreeMembers }),
-  setPrevCurrentTree: (prevCurrentTree) => set({ prevCurrentTree }),
-  setPrevItems: (prevItems) => set({ prevItems }),
-}));
+export const useTreeStateStore = create<TreeState>()(
+  devtools((set) => ({
+    items: [],
+    treesList: [],
+    searchResults: [],
+    currentTree: null,
+    currentTreeName: null,
+    currentTreeMembers: null,
+    prevCurrentTree: null,
+    prevItems: [],
+    setItems: (items) => set({ items }),
+    setTreesList: (treesList) => set({ treesList }),
+    setSearchResults: (searchResults) => set({ searchResults }),
+    setCurrentTree: (currentTree) => set({ currentTree }),
+    setCurrentTreeName: (currentTreeName) => set({ currentTreeName }),
+    setCurrentTreeMembers: (currentTreeMembers) => set({ currentTreeMembers }),
+    setPrevCurrentTree: (prevCurrentTree) => set({ prevCurrentTree }),
+    setPrevItems: (prevItems) => set({ prevItems }),
+  }))
+);

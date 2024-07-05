@@ -111,8 +111,8 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
                 },
               }}
               onClick={async () => {
-                await handleCreateNewTree();
                 setDrawerState(false);
+                await handleCreateNewTree();
               }}
             >
               <ListItemIcon>

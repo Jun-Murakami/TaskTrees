@@ -1,27 +1,17 @@
-import { useEffect, useState } from 'react';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { useCallback } from 'react';
 import { useAppStateStore } from '../store/appStateStore';
+import { useFirebaseConnectionStatus } from './useFirebaseConnectionStatus';
 
 export const useFirebaseConnection = () => {
-  const [isConnected, setIsConnected] = useState(false);
-
-  const isLoading = useAppStateStore((state) => state.isLoading);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
 
-  useEffect(() => {
-    const db = getDatabase();
-    const connectedRef = ref(db, '.info/connected');
-    const unsubscribe = onValue(connectedRef, (snap) => {
-      setIsConnected(snap.val() === true);
-      if (snap.val() === true && isLoading) {
-        setIsLoading(false);
-      } else if (snap.val() === false && !isLoading) {
-        setIsLoading(true);
-      }
-    });
+  const onConnected = useCallback(() => {
+    setIsLoading(false);
+  }, [setIsLoading]);
 
-    return () => unsubscribe();
-  }, [isLoading, setIsLoading]);
+  const onDisconnected = useCallback(() => {
+    setIsLoading(true);
+  }, [setIsLoading]);
 
-  return isConnected;
+  return useFirebaseConnectionStatus(onConnected, onDisconnected);
 };

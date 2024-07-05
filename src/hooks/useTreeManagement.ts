@@ -195,27 +195,27 @@ export const useTreeManagement = () => {
       const newTreeRef: unknown = await saveNewTree(initialItems, '新しいツリー', {
         [uid]: true,
       });
+
       if (!newTreeRef) {
         throw new Error('新しいツリーの作成に失敗しました。');
       }
 
-      if (newTreeRef !== null) {
-        const newTree = { id: newTreeRef as UniqueIdentifier, name: '新しいツリー' };
-        const updatedTreesListWithNewTree = treesList ? [...treesList, newTree] : [newTree];
-        setTreesList(updatedTreesListWithNewTree);
-        await saveTreesListIdb(updatedTreesListWithNewTree);
-        await saveTreesListDb(updatedTreesListWithNewTree);
-        await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
-        await loadCurrentTreeData(newTreeRef as UniqueIdentifier);
-        await loadTreesListFromIdb();
-        await saveTimeStampDb(newTreeRef as UniqueIdentifier);
-      }
+      const newTree = { id: newTreeRef as UniqueIdentifier, name: '新しいツリー' };
+      const updatedTreesListWithNewTree = treesList ? [...treesList, newTree] : [newTree];
+      setTreesList(updatedTreesListWithNewTree);
+      await saveTreesListIdb(updatedTreesListWithNewTree);
+      await saveTreesListDb(updatedTreesListWithNewTree);
+      setIsLoading(true);
+      await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
+      await loadCurrentTreeData(newTreeRef as UniqueIdentifier);
+      await loadTreesListFromIdb();
+      await saveTimeStampDb(newTreeRef as UniqueIdentifier);
+      setIsLoading(true);
 
       setIsAccordionExpanded(true);
       // 0.5秒後にフォーカスをセット
-      const timerOne = setTimeout(() => {
-        setIsFocusedTreeName(true);
-      }, 500);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIsFocusedTreeName(true);
       setCurrentTree(newTreeRef as UniqueIdentifier);
       setCurrentTreeName('新しいツリー');
       if (email) {
@@ -225,12 +225,8 @@ export const useTreeManagement = () => {
       }
 
       setIsLoading(false);
-
       //タイマーをクリア
-      return () => {
-        clearTimeout(timerOne);
-        Promise.resolve();
-      };
+      return Promise.resolve();
     } catch (error) {
       await showDialog('新しいツリーの作成に失敗しました。\n\n' + error, 'Error');
       setIsLoading(false);
