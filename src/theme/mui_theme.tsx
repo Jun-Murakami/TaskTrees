@@ -1,18 +1,8 @@
 import { createTheme } from '@mui/material/styles';
-import '@fontsource/biz-udpgothic';
 import '@fontsource/m-plus-1p';
 
-// ユーザーのデバイスのDPIを検出
-const dpi = window.devicePixelRatio;
-
-let mainFont = '"BIZ UDPGothic"';
-
-if (dpi >= 1.5) {
-  // 1.5倍以上のDPIの場合、M PLIUS 1Pにする
-  mainFont = '"M PLUS 1p"';
-}
 const fontFamilySet = [
-  `${mainFont}`,
+  'M PLUS 1p',
   '-apple-system',
   'BlinkMacSystemFont',
   '"Segoe UI"',
@@ -24,23 +14,6 @@ const fontFamilySet = [
   '"Segoe UI Emoji"',
   '"Segoe UI Symbol"',
 ].join(',');
-
-let typographyStyles = {};
-if (dpi >= 1.5) {
-  typographyStyles = {
-    fontFamily: fontFamilySet,
-  };
-} else {
-  typographyStyles = {
-    fontFamily: fontFamilySet,
-    h3: {
-      fontSize: '35px',
-    },
-    caption: {
-      fontSize: '11px',
-    },
-  };
-}
 
 const breakpointsValues = {
   xs: 0,
@@ -81,6 +54,7 @@ const windowsScrollbarStylesDark = {
 };
 
 export const theme = createTheme({
+  cssVariables: true,
   breakpoints: {
     values: breakpointsValues,
   },
@@ -96,12 +70,35 @@ export const theme = createTheme({
       main: '#ffcc02',
     },
   },
-  typography: typographyStyles,
+  typography: {
+    fontFamily: fontFamilySet,
+    h3: {
+      fontSize: '38px',
+    },
+    caption: {
+      fontSize: '11px',
+    },
+  },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         // ユーザーエージェントにWinを含むか、プラットフォームがWinから始まる場合にスクロールバーのスタイルを適用
-        body: navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win') ? windowsScrollbarStyles : {},
+        body:
+          navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win') ? windowsScrollbarStyles : undefined,
+        a: {
+          color: 'var(--mui-palette-primary-main)',
+          textDecoration: 'none',
+          '&:hover': {
+            textDecoration: 'underline',
+          },
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          transform: 'rotate(0.05deg)',
+        },
       },
     },
     MuiTextField: {
@@ -115,13 +112,14 @@ export const theme = createTheme({
 });
 
 export const darkTheme = createTheme({
+  cssVariables: true,
   breakpoints: {
     values: breakpointsValues,
   },
   palette: {
     mode: 'dark',
     primary: {
-      main: '#325599',
+      main: '#5275b9',
     },
     secondary: {
       main: '#ef0a0a',
@@ -131,12 +129,37 @@ export const darkTheme = createTheme({
     },
     divider: 'rgba(255, 255, 255, 0.18)',
   },
-  typography: typographyStyles,
+  typography: {
+    fontFamily: fontFamilySet,
+    h3: {
+      fontSize: '38px',
+    },
+    caption: {
+      fontSize: '11px',
+    },
+  },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         // ユーザーエージェントにWinを含むか、プラットフォームがWinから始まる場合にスクロールバーのスタイルを適用
-        body: navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win') ? windowsScrollbarStylesDark : {},
+        body:
+          navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win')
+            ? windowsScrollbarStylesDark
+            : undefined,
+        a: {
+          color: 'var(--mui-palette-primary-main)',
+          textDecoration: 'none',
+          '&:hover': {
+            textDecoration: 'underline',
+          },
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          transform: 'rotate(0.05deg)',
+        },
       },
     },
     MuiTextField: {

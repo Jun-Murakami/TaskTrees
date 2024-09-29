@@ -1,26 +1,23 @@
-import { indexedDb as idb } from '../indexedDb';
+import { useCallback } from 'react';
+import { indexedDb as idb } from '@/indexedDb';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import type { TreeItems, TreesList, TreesListItemIncludingItems, MemberItems } from '../types/types';
+import type { TreeItems, TreesList, TreesListItemIncludingItems, MemberItems } from '@/types/types';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getDatabase, ref, set } from 'firebase/database';
-import { isTreeItemArray, validateTreeItems, ensureChildrenProperty } from '../components/SortableTree/utilities';
-import { useAppStateManagement } from './useAppStateManagement';
-import { useDatabase } from './useDatabase';
-import { useError } from './useError';
-import { useAppStateStore } from '../store/appStateStore';
-import { useTreeStateStore } from '../store/treeStateStore';
-import { useDialogStore } from '../store/dialogStore';
+import { isTreeItemArray, validateTreeItems, ensureChildrenProperty } from '@/features/sortableTree/utilities';
+import { useAppStateManagement } from '@/hooks/useAppStateManagement';
+import { useDatabase } from '@/hooks/useDatabase';
+import { useError } from '@/hooks/useError';
+import { useAppStateStore } from '@/store/appStateStore';
+import { useTreeStateStore } from '@/store/treeStateStore';
+import { useDialogStore } from '@/store/dialogStore';
+
 
 export const useIndexedDb = () => {
-  const uid = useAppStateStore((state) => state.uid);
-  const darkMode = useAppStateStore((state) => state.darkMode);
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
-  const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
-  const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
   const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
-  const localTimestamp = useAppStateStore((state) => state.localTimestamp);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -37,13 +34,18 @@ export const useIndexedDb = () => {
   const { handleError } = useError();
 
   // FirebaseRealtimeDatabaseとIndexedデータベースを同期する ------------------------------------------------
-  const syncDb = async () => {
+  const syncDb = useCallback(async () => {
+    const uid = useAppStateStore.getState().uid;
+    const darkMode = useAppStateStore.getState().darkMode;
+    const hideDoneItems = useAppStateStore.getState().hideDoneItems;
+    const quickMemoText = useAppStateStore.getState().quickMemoText;
+    const localTimestamp = Date.now();
     if (!uid) {
       return;
     }
     try {
       console.log('syncDb');
-      setLocalTimestamp(Date.now());
+      setLocalTimestamp(localTimestamp);
       await loadSettingsFromDb();
       await loadQuickMemoFromDb();
       const treesListFromDb = await loadTreesListFromDb(uid);
@@ -102,11 +104,11 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [loadSettingsFromDb, loadQuickMemoFromDb, loadTreesListFromDb, loadAllTreesDataFromDb, handleError, showDialog, setLocalTimestamp, setTreesList,]);
 
   // データベースが空かどうかをチェックして、空の場合は初期データを同期 ------------------------------------------------
-  const checkAndSyncDb = async () => {
-    if (!uid) {
+  const checkAndSyncDb = useCallback(async () => {
+    if (!useAppStateStore.getState().uid) {
       return;
     }
     try {
@@ -119,11 +121,11 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError, syncDb]);
 
   // IndexedデータベースからAppの設定を読み込む ------------------------------------------------
-  const loadSettingsFromIdb = async () => {
-    if (!uid) {
+  const loadSettingsFromIdb = useCallback(async () => {
+    if (!useAppStateStore.getState().uid) {
       return;
     }
     try {
@@ -137,10 +139,10 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [setIsLoadedMemoFromDb, setDarkMode, setHideDoneItems, setLocalTimestamp, handleError]);
 
   // Indexedデータベースからダークモードの設定を読み込む ------------------------------------------------
-  const loadDarkModeFromIdb = async () => {
+  const loadDarkModeFromIdb = useCallback(async () => {
     try {
       const appState = await idb.appstate.get(1);
       if (appState) {
@@ -151,11 +153,11 @@ export const useIndexedDb = () => {
       return false;
     }
     return false; // デフォルト値
-  };
+  }, []);
 
   // Indexedデータベースからクイックメモを読み込む ------------------------------------------------
-  const loadQuickMemoFromIdb = async () => {
-    if (!uid) {
+  const loadQuickMemoFromIdb = useCallback(async () => {
+    if (!useAppStateStore.getState().uid) {
       return;
     }
     try {
@@ -167,11 +169,11 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [setIsLoadedMemoFromDb, setQuickMemoText, handleError]);
 
   // Indexedデータベースからツリーリストを読み込む ------------------------------------------------
-  const loadTreesListFromIdb = async () => {
-    if (!uid) {
+  const loadTreesListFromIdb = useCallback(async () => {
+    if (!useAppStateStore.getState().uid) {
       return;
     }
     try {
@@ -182,12 +184,12 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [setTreesList, handleError]);
 
   // Indexedデータベースから指定されたツリーのデータを読み込む ------------------------------------------------
-  const loadCurrentTreeDataFromIdb = async (targetTree: UniqueIdentifier) => {
-    if (!uid || !targetTree) {
-      return null;
+  const loadCurrentTreeDataFromIdb = useCallback(async (targetTree: UniqueIdentifier) => {
+    if (!useAppStateStore.getState().uid || !targetTree) {
+      return;
     }
     try {
       const treeData = await idb.treestate.get(targetTree);
@@ -202,20 +204,20 @@ export const useIndexedDb = () => {
       handleError(error);
       return null;
     }
-  };
+  }, [handleError]);
 
   // Indexedデータベースに設定を保存 ------------------------------------------------
-  const saveSettingsIdb = async (darkMode: boolean, hideDoneItems: boolean) => {
+  const saveSettingsIdb = useCallback(async (darkMode: boolean, hideDoneItems: boolean) => {
     try {
       await idb.appstate.update(1, { settings: { darkMode, hideDoneItems } });
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError]);
 
   // IndexedデータベースにItemsを保存 ------------------------------------------------
-  const saveItemsIdb = async (newItems: TreeItems, targetTree: UniqueIdentifier) => {
-    if (!uid || !targetTree || !newItems) {
+  const saveItemsIdb = useCallback(async (newItems: TreeItems, targetTree: UniqueIdentifier) => {
+    if (!useAppStateStore.getState().uid || !targetTree || !newItems) {
       return;
     }
     try {
@@ -242,20 +244,20 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError, showDialog]);
 
   // Indexedデータベースにツリーリストを保存 ------------------------------------------------
-  const saveTreesListIdb = async (newTreesList: TreesList) => {
+  const saveTreesListIdb = useCallback(async (newTreesList: TreesList) => {
     try {
       await idb.appstate.update(1, { treesList: newTreesList });
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError]);
 
   // Indexedデータベースに現在のツリー名を保存 ------------------------------------------------
-  const saveCurrentTreeNameIdb = async (editedTreeName: string, targetTree: UniqueIdentifier | null) => {
-    if (!uid || !targetTree || !editedTreeName) {
+  const saveCurrentTreeNameIdb = useCallback(async (editedTreeName: string, targetTree: UniqueIdentifier | null) => {
+    if (!useAppStateStore.getState().uid || !targetTree || !editedTreeName) {
       return;
     }
     try {
@@ -271,20 +273,20 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError, showDialog]);
 
   // Indexedデータベースにクイックメモを保存 ------------------------------------------------
-  const saveQuickMemoIdb = async (quickMemoText: string) => {
+  const saveQuickMemoIdb = useCallback(async (quickMemoText: string) => {
     try {
       await idb.appstate.update(1, { quickMemo: quickMemoText });
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError]);
 
   // Indexedデータベースにメンバーを追加 ------------------------------------------------
-  const updateMembersIdb = async (targetTree: UniqueIdentifier, newMembers: { uid: string; email: string }[]) => {
-    if (!uid || !targetTree || !newMembers) {
+  const updateMembersIdb = useCallback(async (targetTree: UniqueIdentifier, newMembers: { uid: string; email: string }[]) => {
+    if (!useAppStateStore.getState().uid || !targetTree || !newMembers) {
       return;
     }
     try {
@@ -307,11 +309,11 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError, showDialog]);
 
   // Indexedデータベースからユーザーを削除 ------------------------------------------------
-  const deleteMemberIdb = async (targetTree: UniqueIdentifier, targetUid: string) => {
-    if (!uid || !targetTree || !targetUid) {
+  const deleteMemberIdb = useCallback(async (targetTree: UniqueIdentifier, targetUid: string) => {
+    if (!useAppStateStore.getState().uid || !targetTree || !targetUid) {
       return;
     }
     try {
@@ -331,11 +333,11 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError, showDialog]);
 
   // Indexedデータベースから指定されたツリーを削除 ------------------------------------------------
-  const deleteTreeIdb = async (targetTree: UniqueIdentifier) => {
-    if (!uid || !targetTree) {
+  const deleteTreeIdb = useCallback(async (targetTree: UniqueIdentifier) => {
+    if (!useAppStateStore.getState().uid || !targetTree) {
       return;
     }
     try {
@@ -343,11 +345,11 @@ export const useIndexedDb = () => {
     } catch (error) {
       handleError(error);
     }
-  };
+  }, [handleError]);
 
   // 指定されたツリーのデータをIndexedデータベースに保存 ------------------------------------------------
-  const copyTreeDataToIdbFromDb = async (targetTree: UniqueIdentifier) => {
-    if (!uid || !targetTree) {
+  const copyTreeDataToIdbFromDb = useCallback(async (targetTree: UniqueIdentifier) => {
+    if (!useAppStateStore.getState().uid || !targetTree) {
       return;
     }
     const treeData: TreesListItemIncludingItems = {
@@ -446,7 +448,7 @@ export const useIndexedDb = () => {
     } catch (error) {
       await showDialog('Indexedデータベースへの保存に失敗しました。\n\n' + error, 'Error');
     }
-  };
+  }, [showDialog, loadItemsFromDb, loadTreeNameFromDb, loadMembersFromDb, loadTreeTimestampFromDb]);
 
   return {
     syncDb,

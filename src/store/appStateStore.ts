@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 type AppState = {
   isOffline: boolean;
+  isConnectedDb: boolean;
   localTimestamp: number;
   darkMode: boolean;
   hideDoneItems: boolean;
@@ -20,6 +21,7 @@ type AppState = {
   quickMemoText: string;
   isLoadedMemoFromDb: boolean;
   setIsOffline: (isOffline: boolean) => void;
+  setIsConnectedDb: (isConnectedDb: boolean) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
   setDarkMode: (darkMode: boolean) => void;
   setHideDoneItems: (hideDoneItems: boolean) => void;
@@ -41,6 +43,7 @@ type AppState = {
 
 export const useAppStateStore = create<AppState>((set) => ({
   isOffline: false,
+  isConnectedDb: false,
   localTimestamp: 0,
   darkMode: false,
   hideDoneItems: false,
@@ -59,6 +62,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   quickMemoText: '',
   isLoadedMemoFromDb: false,
   setIsOffline: (isOffline) => set({ isOffline }),
+  setIsConnectedDb: (isConnectedDb) => set({ isConnectedDb }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
   setDarkMode: (darkMode) => set({ darkMode }),
   setHideDoneItems: (hideDoneItems) => set({ hideDoneItems }),

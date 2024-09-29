@@ -1,26 +1,27 @@
 import { useCallback } from 'react';
 import { getAuth, signOut } from 'firebase/auth';
-import { useAppStateStore } from '../store/appStateStore';
-import { useTreeStateStore } from '../store/treeStateStore';
+import { useAppStateStore } from '@/store/appStateStore';
+import { useTreeStateStore } from '@/store/treeStateStore';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 // エラーハンドリングに関連するカスタムフック
 // ログインページに戻るクリティカルなエラーが発生した場合に使用
 
 export const useError = () => {
-  const setSystemMessage = useAppStateStore((state) => state.setSystemMessage);
-  const setItems = useTreeStateStore((state) => state.setItems);
-  const setIsLoggedIn = useAppStateStore((state) => state.setIsLoggedIn);
-  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
-  const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
-  const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
-  const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
-  const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
-  const isLoading = useAppStateStore((state) => state.isLoading);
 
   // エラーハンドリング ---------------------------------------------------------------------------
   const handleError = useCallback(
     (error: unknown) => {
+      console.log('error', error);
+      const isLoading = useAppStateStore.getState().isLoading;
+      const setSystemMessage = useAppStateStore.getState().setSystemMessage;
+      const setItems = useTreeStateStore.getState().setItems;
+      const setIsLoggedIn = useAppStateStore.getState().setIsLoggedIn;
+      const setIsLoading = useAppStateStore.getState().setIsLoading;
+      const setCurrentTree = useTreeStateStore.getState().setCurrentTree;
+      const setCurrentTreeName = useTreeStateStore.getState().setCurrentTreeName;
+      const setCurrentTreeMembers = useTreeStateStore.getState().setCurrentTreeMembers;
+      const setIsAccordionExpanded = useAppStateStore.getState().setIsAccordionExpanded;
       if (!isLoading) return;
       if (error instanceof Error) {
         setSystemMessage('ログアウトしました。 : \n\n' + error.message);
@@ -36,19 +37,7 @@ export const useError = () => {
       FirebaseAuthentication.signOut();
       setIsLoggedIn(false);
       setIsLoading(false);
-    },
-    [
-      setSystemMessage,
-      setItems,
-      setIsLoggedIn,
-      setIsLoading,
-      setCurrentTree,
-      setCurrentTreeName,
-      setCurrentTreeMembers,
-      setIsAccordionExpanded,
-      isLoading,
-    ]
-  );
+    }, []);
 
   return { handleError };
 };
