@@ -77,14 +77,12 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   const [activeQuickMemoId, setActiveQuickMemoId] = useState<UniqueIdentifier>('-10000');
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [offsetLeft, setOffsetLeft] = useState(0);
-  const [importButtonSpacer, setImportButtonSpacer] = useState(176);
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const searchKey = useAppStateStore((state) => state.searchKey);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
-  const isEditingText = useAppStateStore((state) => state.isEditingText);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
@@ -110,22 +108,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
     indentationWidth = 22;
   }
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerHeight < 600 || isMobile) {
-        setImportButtonSpacer(176);
-      } else {
-        setImportButtonSpacer(367);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const measuring = {
     droppable: {
       strategy: MeasuringStrategy.Always,
@@ -137,7 +119,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
           if (isMobile && activeId === activeNewTaskId) {
             rect.y = window.innerHeight - 50;
           } else if (activeId === activeQuickMemoId) {
-            rect.y = window.innerHeight - importButtonSpacer;
+            rect.y = window.innerHeight - 367;
           } else {
             rect.y += window.scrollY - 30;
           }
@@ -196,8 +178,8 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      {currentTree && !(isEditingText && isMobile) && <AddTask id={activeNewTaskId} />}
-      {isQuickMemoExpanded && !(isEditingText && isMobile) && quickMemoText !== '' && <ImportQuickMemo id={activeQuickMemoId} />}
+      {currentTree && <AddTask id={activeNewTaskId} />}
+      {isQuickMemoExpanded && <ImportQuickMemo id={activeQuickMemoId} />}
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {flattenedItems
           .filter(({ done }) => (hideDoneItems ? !done : true))
@@ -342,13 +324,16 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
       // 新規タスクの場合、新規タスクを先頭に移動し、IDを最大ID+1に更新
       if (active.id === activeNewTaskId || active.id === activeQuickMemoId) {
         const newId = (findMaxId(items) + 1).toString();
-        const updatedItems = items.map((item) => (item.id === active.id ? { ...item, id: newId, value: '' } : item));
+        const newValue = active.id === activeQuickMemoId ? quickMemoText : '';
+        const updatedItems = items.map((item) => (item.id === active.id ? { ...item, id: newId, value: newValue } : item));
         setItems([updatedItems.find((item) => item.id === newId)!, ...items.filter((item) => item.id !== active.id)]);
         const newActiveId = (parseInt(active.id.toString()) - 1).toString();
         if (active.id === activeNewTaskId) {
           setActiveNewTaskId(newActiveId);
         } else {
           setActiveQuickMemoId(newActiveId);
+          setIsQuickMemoExpanded(false);
+          setQuickMemoText('');
         }
       }
     }

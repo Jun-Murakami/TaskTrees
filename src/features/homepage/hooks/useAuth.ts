@@ -22,6 +22,7 @@ import { useObserve } from '@/hooks/useObserve';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useInputDialogStore } from '@/store/dialogStore';
+import { useDialogStore } from '@/store/dialogStore';
 
 // Firebaseの設定
 const firebaseConfig = {
@@ -74,18 +75,23 @@ export const useAuth = () => {
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
 
+  const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
 
   const { observeTimeStamp } = useObserve();
 
   const loginAction = useCallback(async (user: UserComact | null) => {
-    setIsLoggedIn(!!user);
-    setIsLoading(!!user);
-    if (user) {
-      setUid(user.uid);
-      setEmail(user.email);
-      setIsOffline(false);
-      await observeTimeStamp();
+    try {
+      setIsLoggedIn(!!user);
+      setIsLoading(!!user);
+      if (user) {
+        setUid(user.uid);
+        setEmail(user.email);
+        setIsOffline(false);
+        await observeTimeStamp();
+      }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message + error.stack : 'ログイン監視エラー');
     }
   },
     [setIsLoggedIn, setIsLoading, setUid, setEmail, setIsOffline, observeTimeStamp]
@@ -95,16 +101,20 @@ export const useAuth = () => {
   useEffect(() => {
     let unsubscribe: Unsubscribe | null = null;
     const asyncFunc = async () => {
-      if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
-        FirebaseAuthentication.addListener('authStateChange', async (result) => {
-          console.log('authStateChange in 1:', result);
-          await loginAction(result.user);
-        });
-      } else {
-        unsubscribe = auth.onAuthStateChanged(async (user) => {
-          console.log('authStateChange in 2:', user);
-          await loginAction(user);
-        });
+      try {
+        if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+          FirebaseAuthentication.addListener('authStateChange', async (result) => {
+            console.log('authStateChange in 1:', result);
+            await loginAction(result.user);
+          });
+        } else {
+          unsubscribe = auth.onAuthStateChanged(async (user) => {
+            console.log('authStateChange in 2:', user);
+            await loginAction(user);
+          });
+        }
+      } catch (error) {
+        await showDialog('ログイン状態の監視でエラーが発生しました\n\n' + error, 'Error');
       }
     };
     asyncFunc();

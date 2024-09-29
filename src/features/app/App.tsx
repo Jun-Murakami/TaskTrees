@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { theme, darkTheme } from '@/theme/mui_theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';
-import { useIndexedDb } from '@/hooks/useIndexedDb';
 import { useAppStateStore } from '@/store/appStateStore';
+import { loadAppStateFromIdb } from '@/services/indexedDbService';
 import { useDialogStore, useInputDialogStore } from '@/store/dialogStore';
 import { HomePage } from '@/features/homepage/HomePage';
 import { PrivacyPolicy } from '@/features/app/PrivacyPolicy';
@@ -17,15 +17,19 @@ export default function App() {
   const isDialogVisible = useDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
   const isInputDialogVisible = useInputDialogStore((state: { isDialogVisible: boolean }) => state.isDialogVisible);
 
-  const { loadDarkModeFromIdb } = useIndexedDb();
-
   useEffect(() => {
     const asyncFunc = async () => {
-      const isDarkMode = await loadDarkModeFromIdb();
-      setDarkMode(isDarkMode);
+      try {
+        const appState = await loadAppStateFromIdb();
+        if (appState) {
+          setDarkMode(appState.settings.darkMode);
+        }
+      } catch (error) {
+        console.error('アプリの状態を読み込めませんでした', error);
+      }
     };
     asyncFunc();
-  }, [loadDarkModeFromIdb, setDarkMode]);
+  }, [setDarkMode]);
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : theme}>

@@ -93,9 +93,14 @@ const TreeItemContent = memo(
     isItemDescendantOfTrash,
   }: TreeItemContentProps) => {
     const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
-    const setIsEditingText = useAppStateStore((state) => state.setIsEditingText);
+    const [localText, setLocalText] = useState(value);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setLocalText(e.target.value);
+      setTimeout(() => onChange?.(e.target.value), 50);
+    };
 
     // ボタンの共通スタイルを定義
     const buttonStyle = {
@@ -152,30 +157,28 @@ const TreeItemContent = memo(
             <TextField
               inputRef={inputRef}
               variant='standard'
-              value={value}
-              onChange={(e) => {
-                onChange?.(e.target.value);
-              }}
+              value={localText}
+              onChange={handleChange}
               multiline
               fullWidth
               sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.75, sm: 1 } }}
-              InputProps={{
-                disableUnderline: !isFocusedOrHovered,
-                style: {
-                  padding: 0,
-                  margin: 0,
-                  paddingTop: '3px',
-                  paddingBottom: '3px',
-                  fontSize: '0.9rem',
+              slotProps={{
+                input: {
+                  disableUnderline: !isFocusedOrHovered,
+                  style: {
+                    padding: 0,
+                    margin: 0,
+                    paddingTop: '3px',
+                    paddingBottom: '3px',
+                    fontSize: '0.9rem',
+                  },
                 },
               }}
               onFocus={() => {
-                setIsEditingText(true);
                 setIsEditingTextLocal(true);
                 setIsFocusedOrHovered(true);
               }}
               onBlur={() => {
-                setIsEditingText(false);
                 setIsEditingTextLocal(false);
                 setTimeout(() => setIsFocusedOrHovered(false), 300);
               }}

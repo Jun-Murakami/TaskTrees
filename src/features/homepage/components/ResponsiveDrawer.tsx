@@ -24,7 +24,6 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ClearIcon from '@mui/icons-material/Clear';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
-import { useIndexedDb } from '@/hooks/useIndexedDb';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
@@ -50,9 +49,8 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
   const treesList = useTreeStateStore((state) => state.treesList);
 
-  const { saveAppSettingsDb } = useAppStateManagement();
-  const { saveSettingsIdb } = useIndexedDb();
-  const { loadCurrentTreeData, handleCreateNewTree } = useTreeManagement();
+  const { saveAppSettings } = useAppStateManagement();
+  const { loadAndSetCurrentTreeDataFromIdb, handleCreateNewTree } = useTreeManagement();
   const { handlePrevButtonClick, handleNextButtonClick } = useSearch();
 
   const theme = useTheme();
@@ -80,7 +78,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       return;
     }
     setCurrentTree(treeId);
-    await loadCurrentTreeData(treeId);
+    await loadAndSetCurrentTreeDataFromIdb(treeId);
     if (isAccordionExpanded) {
       // 0.5秒後にフォーカスをセット
       setTimeout(() => {
@@ -149,12 +147,14 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
               size='small'
               fullWidth
               onChange={handleSearchKeyChange}
-              InputProps={{
-                endAdornment: searchKey ? (
-                  <IconButton size='small' onClick={() => setSearchKey('')} sx={{ mr: -1, color: theme.palette.action.active }}>
-                    <ClearIcon />
-                  </IconButton>
-                ) : undefined,
+              slotProps={{
+                input: {
+                  endAdornment: searchKey ? (
+                    <IconButton size='small' onClick={() => setSearchKey('')} sx={{ mr: -1, color: theme.palette.action.active }}>
+                      <ClearIcon />
+                    </IconButton>
+                  ) : undefined,
+                },
               }}
             />
             {!isMobile && (
@@ -178,8 +178,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
                   checked={hideDoneItems}
                   onChange={async (event: React.ChangeEvent<HTMLInputElement>) => {
                     setHideDoneItems(event.target.checked);
-                    await saveSettingsIdb(darkMode, event.target.checked);
-                    await saveAppSettingsDb(darkMode, event.target.checked);
+                    await saveAppSettings(darkMode, event.target.checked);
                   }}
                 />
               }
@@ -206,7 +205,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
     </>
   );
 
-  const quickMemoSpacer = isQuickMemoExpanded ? 176 : 0;
+  const quickMemoSpacer = isQuickMemoExpanded ? 360 : 0;
 
   return (
     <>

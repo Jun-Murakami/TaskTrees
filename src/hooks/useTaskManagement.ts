@@ -14,8 +14,7 @@ import {
 } from '@/features/sortableTree/utilities';
 import { ref, getDatabase, get, set } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { useDatabase } from '@/hooks/useDatabase';
-import { useIndexedDb } from '@/hooks/useIndexedDb';
+import { useSync } from '@/hooks/useSync';
 import { useAttachedFile } from '@/features/sortableTree/hooks/useAttachedFile';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useAppStateStore } from '@/store/appStateStore';
@@ -33,8 +32,7 @@ export const useTaskManagement = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
 
   const { deleteFile } = useAttachedFile();
-  const { saveTimeStampDb } = useDatabase();
-  const { copyTreeDataToIdbFromDb } = useIndexedDb();
+  const { updateTimeStamp, copyTreeDataToIdbFromDb } = useSync();
 
   // タスクを追加する ------------------------------
   // ※ SortableTreeコンポーネントに移動した
@@ -291,8 +289,8 @@ export const useTaskManagement = () => {
                   await set(treeItemsRef, newItems).catch((error) => {
                     throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error);
                   });
-                  await saveTimeStampDb(targetTreeId);
                   await copyTreeDataToIdbFromDb(targetTreeId);
+                  await updateTimeStamp(targetTreeId);
                 }
                 return true;
               } else {
@@ -314,7 +312,7 @@ export const useTaskManagement = () => {
       return false;
     }
     return false;
-  }, [items, currentTree, showDialog, setItems, saveTimeStampDb, copyTreeDataToIdbFromDb]);
+  }, [items, currentTree, showDialog, setItems, updateTimeStamp, copyTreeDataToIdbFromDb]);
 
   // タスクの移動 ------------------------------
   const handleMove = useCallback(async (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
@@ -389,7 +387,7 @@ export const useTaskManagement = () => {
                 await set(treeItemsRef, newItems).catch((error) => {
                   throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error);
                 });
-                await saveTimeStampDb(targetTreeId);
+                await updateTimeStamp(targetTreeId);
                 await copyTreeDataToIdbFromDb(targetTreeId);
                 setItems(removeItem(items, targetTaskId));
               } else {
@@ -409,7 +407,7 @@ export const useTaskManagement = () => {
       console.error('エラーが発生しました。\n\n' + error);
       await showDialog('エラーが発生しました。\n\n' + error, 'Error');
     }
-  }, [items, currentTree, showDialog, setItems, saveTimeStampDb, copyTreeDataToIdbFromDb, deleteFile]);
+  }, [items, currentTree, showDialog, setItems, updateTimeStamp, copyTreeDataToIdbFromDb, deleteFile]);
 
   // アイテムのdone状態を変更する ------------------------------
   // 子孫のdone状態を更新する

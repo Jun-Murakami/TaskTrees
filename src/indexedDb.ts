@@ -2,7 +2,7 @@ import Dexie, { Table } from 'dexie';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import type { TreesListItemIncludingItems, TreesList } from './types/types';
 
-interface AppStateItem {
+export interface AppStateItem {
   id: number;
   timestamp: number;
   quickMemo: string;

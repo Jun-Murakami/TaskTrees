@@ -16,37 +16,38 @@ import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutli
 import SaveAsIcon from '@mui/icons-material/SaveAs';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useAppStateStore } from '@/store/appStateStore';
+import { useDialogStore } from '@/store/dialogStore';
 
 export const QuickMemo = () => {
-  const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
-  const [textFieldRows, setTextFieldRows] = useState(6);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
-  const setIsEditingText = useAppStateStore((state) => state.setIsEditingText);
 
+  const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
+  const [quickMemoLocalText, setQuickMemoLocalText] = useState(quickMemoText);
+
+  const showDialog = useDialogStore((state) => state.showDialog);
   const darkMode = useAppStateStore((state) => state.darkMode);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuickMemoLocalText(e.target.value);
+    setTimeout(() => setQuickMemoText(e.target.value), 50);
+  };
+
+  const handleClear = async () => {
+    const result = await showDialog('クイックメモを削除しますか？', 'Confirm', true);
+    if (result) {
+      setQuickMemoText('');
+    }
+  };
+
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerHeight < 600 || isMobile) {
-        setTextFieldRows(6);
-      } else {
-        setTextFieldRows(14);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    // コンポーネントのアンマウント時にイベントリスナーを削除
-    return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setQuickMemoLocalText(quickMemoText);
+  }, [quickMemoText]);
 
   return (
     <>
@@ -77,9 +78,7 @@ export const QuickMemo = () => {
           sx={{
             p: 0,
             height: isQuickMemoExpanded
-              ? window.innerHeight < 600 || isMobile
-                ? 'calc(215px + env(safe-area-inset-bottom))'
-                : 'calc(405px + env(safe-area-inset-bottom))'
+              ? 'calc(405px + env(safe-area-inset-bottom))'
               : 'calc(40px + env(safe-area-inset-bottom))',
             paddingBottom: 'env(safe-area-inset-bottom)',
             backgroundColor: darkMode
@@ -139,15 +138,13 @@ export const QuickMemo = () => {
               multiline
               fullWidth
               autoFocus
-              rows={textFieldRows}
-              value={quickMemoText}
-              onChange={(e) => setQuickMemoText(e.target.value)}
+              rows={14}
+              value={quickMemoLocalText}
+              onChange={handleChange}
               onFocus={() => {
-                setIsEditingText(true);
                 setIsEditingTextLocal(true);
               }}
               onBlur={() => {
-                setIsEditingText(false);
                 setIsEditingTextLocal(false);
               }}
               sx={{ backgroundColor: theme.palette.background.paper }}
@@ -157,7 +154,7 @@ export const QuickMemo = () => {
                 sx={{
                   position: 'absolute',
                   color: theme.palette.grey[500],
-                  bottom: 'calc(env(safe-area-inset-bottom) + 10px)',
+                  bottom: 'calc(env(safe-area-inset-bottom) + 15px)',
                   right: 15,
                 }}
               >
@@ -169,13 +166,10 @@ export const QuickMemo = () => {
                 sx={{
                   position: 'absolute',
                   color: theme.palette.grey[500],
-                  bottom:
-                    window.innerHeight < 600 || isMobile
-                      ? 'calc(env(safe-area-inset-bottom) + 125px)'
-                      : 'calc(env(safe-area-inset-bottom) + 318px)',
-                  right: 15,
+                  bottom: 'calc(env(safe-area-inset-bottom) + 360px)',
+                  right: 40,
                 }}
-                onClick={() => setQuickMemoText('')}
+                onClick={handleClear}
               >
                 <ClearIcon />
               </IconButton>

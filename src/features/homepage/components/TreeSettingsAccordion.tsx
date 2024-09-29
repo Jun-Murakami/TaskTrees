@@ -136,9 +136,6 @@ export function TreeSettingsAccordion() {
             {isAccordionExpanded ? (
               <TextField
                 id='outlined-basic'
-                InputLabelProps={{
-                  shrink: editedTreeName !== '',
-                }}
                 sx={{ zIndex: 1200, marginTop: 0, marginX: 2 }}
                 label='Tree Name'
                 fullWidth
@@ -157,8 +154,8 @@ export function TreeSettingsAccordion() {
                     setIsAccordionExpanded(false);
                   }
                 }}
-                InputProps={{
-                  inputProps: {
+                slotProps={{
+                  input: {
                     style: { textAlign: 'center' },
                   },
                 }}

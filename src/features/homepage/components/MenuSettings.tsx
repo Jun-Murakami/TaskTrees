@@ -16,7 +16,6 @@ import { Settings, Logout, Upload, Download, DeleteForever } from '@mui/icons-ma
 import { ListItemIcon } from '@mui/material';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
-import { useIndexedDb } from '@/hooks/useIndexedDb';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { Capacitor } from '@capacitor/core';
@@ -31,8 +30,7 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
-  const { saveAppSettingsDb } = useAppStateManagement();
-  const { saveSettingsIdb } = useIndexedDb();
+  const { saveAppSettings } = useAppStateManagement();
   const { handleDownloadAllTrees, handleFileUpload, handleDownloadTreeState } = useTreeManagement();
 
   const open = Boolean(anchorEl);
@@ -236,8 +234,7 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
                 <MaterialUISwitch
                   checked={darkMode}
                   onChange={async () => {
-                    await saveSettingsIdb(!darkMode, hideDoneItems);
-                    await saveAppSettingsDb(!darkMode, hideDoneItems);
+                    await saveAppSettings(!darkMode, hideDoneItems);
                     setDarkMode(!darkMode);
                   }}
                 />

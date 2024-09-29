@@ -1,32 +1,27 @@
 import { getDatabase, ref, set, get } from 'firebase/database';
 import { httpsCallable, getFunctions } from 'firebase/functions';
-import { indexedDb as idb } from '@/indexedDb';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { TreeItems, TreesList, TreesListItem, TreesListItemIncludingItems } from '@/types/types';
+import { isValidAppSettingsState } from '@/utils/appStateUtils';
+import { TreeItems, TreesList, TreesListItem, TreesListItemIncludingItems, AppState } from '@/types/types';
 
 type currentTreeMembers = { uid: string; email: string }[] | null;
 
 // タイムスタンプをデータベースに保存する関数
 export const saveTimeStampDb = async (uid: string, targetTree: UniqueIdentifier | null, currentTreeMembers: currentTreeMembers, newTimestamp: number) => {
-  const db = getDatabase();
-  if (!uid) {
-    return;
-  }
+
   try {
-    // indexDBのタイムスタンプを更新
-    await idb.appstate.update(1, { timestamp: newTimestamp });
 
     // ユーザーのタイムスタンプV2を更新
-    const timestampV2Ref = ref(db, `users/${uid}/timestampV2`);
+    const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
     await set(timestampV2Ref, newTimestamp);
 
     // ユーザーのタイムスタンプを更新
-    const timestampRef = ref(db, `users/${uid}/timestamp`);
+    const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
     await set(timestampRef, newTimestamp);
 
     // ツリーのタイムスタンプを更新
     if (targetTree) {
-      const treeRef = ref(db, `trees/${targetTree}/timestamp`);
+      const treeRef = ref(getDatabase(), `trees/${targetTree}/timestamp`);
       await set(treeRef, newTimestamp).catch(async (error) => {
         if (error.code === 'PERMISSION_DENIED') {
           const updateTreeTimestamp = httpsCallable(getFunctions(), 'updateTreeTimestamp');
@@ -43,15 +38,12 @@ export const saveTimeStampDb = async (uid: string, targetTree: UniqueIdentifier 
     }
     return;
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースへのタイムスタンプの保存に失敗しました。\n\n' + error);
   }
 };
 
 // ツリーのタイムスタンプを取得する関数
-export const loadTreeTimestampFromDb = async (uid: string, targetTree: UniqueIdentifier): Promise<number | null> => {
-  if (!uid || !targetTree) {
-    return null;
-  }
+export const loadTreeTimestampFromDb = async (targetTree: UniqueIdentifier): Promise<number | null> => {
   try {
     const treeRef = ref(getDatabase(), `trees/${targetTree}/timestamp`);
     return await get(treeRef)
@@ -65,15 +57,12 @@ export const loadTreeTimestampFromDb = async (uid: string, targetTree: UniqueIde
         return null;
       });
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースからのタイムスタンプの取得に失敗しました。\n\n' + error);
   }
 };
 
 // itemsをデータベースに保存する関数
-export const saveItemsDb = async (uid: string, targetTree: UniqueIdentifier, newItems: TreeItems) => {
-  if (!uid || !targetTree || !newItems) {
-    return;
-  }
+export const saveItemsDb = async (targetTree: UniqueIdentifier, newItems: TreeItems) => {
   try {
     // undefinedのプロパティを削除
     const removeUndefined = (obj: Record<string, unknown>): Record<string, unknown> => {
@@ -99,33 +88,27 @@ export const saveItemsDb = async (uid: string, targetTree: UniqueIdentifier, new
       throw new Error('更新対象のsnapshotが存在しません。ツリー内容の変更は破棄されました。code:4');
     }
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースへのitemsの保存に失敗しました。\n\n' + error);
   }
 };
 
 // treesListをデータベースに保存する関数
 export const saveTreesListDb = async (uid: string, newTreesList: TreesList) => {
-  if (!uid || !newTreesList) {
-    return;
-  }
   try {
     const treeListRef = ref(getDatabase(), `users/${uid}/treeList`);
     await set(treeListRef, newTreesList);
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースへのtreesListの保存に失敗しました。\n\n' + error);
   }
 };
 
 // currentTreeNameをデータベースに保存する関数
-export const saveCurrentTreeNameDb = async (uid: string, targetTree: UniqueIdentifier, newTreeName: string) => {
-  if (!uid || !targetTree || !newTreeName) {
-    return;
-  }
+export const saveCurrentTreeNameDb = async (targetTree: UniqueIdentifier, newTreeName: string) => {
   try {
     const treeNameRef = ref(getDatabase(), `trees/${targetTree}/name`);
     await set(treeNameRef, newTreeName);
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースへのツリー名の保存に失敗しました。\n\n' + error);
   }
 };
 
@@ -135,15 +118,12 @@ export const deleteTreeFromDb = async (targetTree: UniqueIdentifier) => {
     const treeRef = ref(getDatabase(), `trees/${targetTree}`);
     await set(treeRef, null);
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースからのツリーの削除に失敗しました。\n\n' + error);
   }
 };
 
 // データベースからツリーの名前のみを取得する関数
 export const loadTreeNameFromDb = async (targetTree: UniqueIdentifier): Promise<string | null> => {
-  if (!targetTree) {
-    return null;
-  }
   try {
     const treeNameRef = ref(getDatabase(), `trees/${targetTree}/name`);
     const snapshot = await get(treeNameRef);
@@ -153,15 +133,12 @@ export const loadTreeNameFromDb = async (targetTree: UniqueIdentifier): Promise<
       return null;
     }
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースからのツリー名の取得に失敗しました。\n\n' + error);
   }
 };
 
 // データベースからツリーリストを取得する関数
 export const loadTreesListFromDb = async (uid: string): Promise<{ orderedTreesList: TreesList, missingTrees: UniqueIdentifier[] }> => {
-  if (!uid) {
-    return { orderedTreesList: [], missingTrees: [] };
-  }
   try {
     const userTreeListRef = ref(getDatabase(), `users/${uid}/treeList`);
     const snapshot = await get(userTreeListRef);
@@ -190,7 +167,7 @@ export const loadTreesListFromDb = async (uid: string): Promise<{ orderedTreesLi
       return { orderedTreesList: [], missingTrees: [] };
     }
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースからのtreesListの取得に失敗しました。\n\n' + error);
   }
 };
 
@@ -205,7 +182,7 @@ export const loadItemsFromDb = async (targetTree: UniqueIdentifier): Promise<Tre
       return null;
     }
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースからのitemsの取得に失敗しました。\n\n' + error);
   }
 };
 
@@ -220,7 +197,7 @@ export const loadMembersFromDb = async (targetTree: UniqueIdentifier): Promise<s
       return null;
     }
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースからのツリーメンバーの取得に失敗しました。\n\n' + error);
   }
 };
 
@@ -268,6 +245,62 @@ export const loadAllTreesDataFromDb = async (treesList: TreesList) => {
     const treeData = await Promise.all(promises);
     return treeData.filter((item) => item !== null);
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message + '\n\n' + error.stack : 'unknown error');
+    throw new Error('データベースからのツリーデータの取得に失敗しました。\n\n' + error);
+  }
+}
+
+// データベースからAppStateを取得する関数
+export const loadAppStateFromDb = async (uid: string): Promise<AppState | null> => {
+  try {
+    const appStateRef = ref(getDatabase(), `users/${uid}/settings`);
+    const snapshot = await get(appStateRef);
+    if (snapshot.exists()) {
+      const data: AppState = snapshot.val();
+      if (isValidAppSettingsState(data)) {
+        return data;
+      }
+      throw new Error('データベースのアプリ設定が不正です。');
+    } else {
+      throw new Error('データベースのアプリ設定が見つかりません。');
+    }
+  } catch (error) {
+    console.log(error)
+    return null;
+  }
+}
+
+// データベースからクイックメモを取得する関数
+export const loadQuickMemoFromDb = async (uid: string): Promise<string> => {
+  try {
+    const quickMemoRef = ref(getDatabase(), `users/${uid}/quickMemo`);
+    const snapshot = await get(quickMemoRef);
+    if (snapshot.exists()) {
+      const data: string = snapshot.val();
+      return data;
+    } else {
+      throw new Error('データベースのクイックメモが見つかりません。');
+    }
+  } catch (error) {
+    throw new Error('データベースからのクイックメモの取得に失敗しました。\n\n' + error);
+  }
+}
+
+// データベースにAppStateを保存する関数
+export const saveAppStateToDb = async (uid: string, darkModeNew: boolean, hideDoneItemsNew: boolean) => {
+  try {
+    const appStateRef = ref(getDatabase(), `users/${uid}/settings`);
+    await set(appStateRef, { darkMode: darkModeNew, hideDoneItems: hideDoneItemsNew });
+  } catch (error) {
+    throw new Error('データベースへのAppStateの保存に失敗しました。\n\n' + error);
+  }
+}
+
+// データベースにクイックメモを保存する関数
+export const saveQuickMemoToDb = async (uid: string, quickMemoText: string) => {
+  try {
+    const quickMemoRef = ref(getDatabase(), `users/${uid}/quickMemo`);
+    await set(quickMemoRef, quickMemoText);
+  } catch (error) {
+    throw new Error('データベースへのクイックメモの保存に失敗しました。\n\n' + error);
   }
 }

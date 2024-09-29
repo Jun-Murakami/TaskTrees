@@ -5,8 +5,7 @@ import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useOfflineTree } from '@/hooks/useOfflineTree';
 import { useError } from '@/hooks/useError';
-import { useDatabase } from '@/hooks/useDatabase';
-import { useIndexedDb } from '@/hooks/useIndexedDb';
+import { useSync } from '@/hooks/useSync';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import * as timerService from '@/services/timerService';
 import { useAppStateStore } from '@/store/appStateStore';
@@ -14,41 +13,23 @@ import { useTreeStateStore } from '@/store/treeStateStore';
 import { useDialogStore } from '@/store/dialogStore';
 import { Preferences } from '@capacitor/preferences';
 
+
 export const useObserve = () => {
-  const isOffline = useAppStateStore((state) => state.isOffline);
-  const uid = useAppStateStore((state) => state.uid);
+  const items = useTreeStateStore((state) => state.items);
+  const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setLocalTimestamp = useAppStateStore((state) => state.setLocalTimestamp);
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
-  const quickMemoText = useAppStateStore((state) => state.quickMemoText);
-  const isLoadedMemoFromDb = useAppStateStore((state) => state.isLoadedMemoFromDb);
   const setIsLoadedMemoFromDb = useAppStateStore((state) => state.setIsLoadedMemoFromDb);
-  const setTreesList = useTreeStateStore((state) => state.setTreesList);
-  const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
-  const currentTree = useTreeStateStore((state) => state.currentTree);
-  const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
-  const prevItems = useTreeStateStore((state) => state.prevItems);
   const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
-  const prevCurrentTree = useTreeStateStore((state) => state.prevCurrentTree);
   const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
 
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const { loadCurrentTreeData } = useTreeManagement();
+  const { loadAndSetCurrentTreeDataFromIdb, saveItems, loadAndSaveTreesList, loadAndSetTreesListFromIdb } = useTreeManagement();
   const { loadAndSyncOfflineTree } = useOfflineTree();
-  const { loadTreesListFromDb, saveItemsDb } = useDatabase();
-  const {
-    syncDb,
-    checkAndSyncDb,
-    loadSettingsFromIdb,
-    loadTreesListFromIdb,
-    saveSettingsIdb,
-    saveItemsIdb,
-    saveTreesListIdb,
-    saveQuickMemoIdb,
-    copyTreeDataToIdbFromDb,
-  } = useIndexedDb();
-  const { loadSettingsFromDb, loadQuickMemoFromDb, saveQuickMemoDb } = useAppStateManagement();
+  const { syncDb, checkAndSyncDb, copyTreeDataToIdbFromDb, } = useSync();
+  const { loadAndSaveSettings, loadAndSaveQuickMemo, saveQuickMemo, loadAppSettingsFromIdb } = useAppStateManagement();
   const { handleError } = useError();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
@@ -59,9 +40,9 @@ export const useObserve = () => {
     }
     setIsLoading(true);
     await checkAndSyncDb();
-    await loadSettingsFromIdb();
-    await loadTreesListFromIdb();
-    await loadQuickMemoFromDb();
+    await loadAppSettingsFromIdb();
+    await loadAndSetTreesListFromIdb();
+    await loadAndSaveQuickMemo({ saveToIdb: false });
     setIsLoading(false);
     await loadAndSyncOfflineTree();
 
@@ -73,15 +54,13 @@ export const useObserve = () => {
       const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
       if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
         setLocalTimestamp(serverTimestamp);
-        const newTreesList = await loadTreesListFromDb(uid);
-        setTreesList(newTreesList);
-        await saveTreesListIdb(newTreesList);
-        await loadSettingsFromDb();
-        const darkMode = useAppStateStore.getState().darkMode;
-        const hideDoneItems = useAppStateStore.getState().hideDoneItems;
-        await saveSettingsIdb(darkMode, hideDoneItems);
-        await loadQuickMemoFromDb();
-        // treesListを反復して、タイムスタンプをチェックし、最新のツリーをコピー
+        await loadAndSaveSettings({ saveToIdb: true });
+        await loadAndSaveQuickMemo({ saveToIdb: true });
+        const newTreesList = await loadAndSaveTreesList({ saveToIdb: true });
+        if (!newTreesList) {
+          return;
+        }
+        // 各ツリーのタイムスタンプをチェックし、最新のツリーをコピー
         const treeIds = newTreesList.map((tree) => tree.id);
         let treeUpdateCount = 0;
         for (const treeId of treeIds) {
@@ -97,6 +76,7 @@ export const useObserve = () => {
             }
           });
         }
+        // サーバータイムスタンプのV1とV2に差異がある場合、同期し直す
         if (treeUpdateCount == 0) {
           setIsLoading(true);
           const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
@@ -104,6 +84,7 @@ export const useObserve = () => {
             if (snapshot.exists()) {
               const data = snapshot.val();
               if (data !== serverTimestamp) {
+                console.log('サーバータイムスタンプのV1とV2に差異があるため、同期し直します。');
                 await syncDb();
               }
             }
@@ -113,12 +94,11 @@ export const useObserve = () => {
         if (currentTree) {
           setIsLoading(true);
           setPrevCurrentTree(null);
-          await loadCurrentTreeData(currentTree);
+          await loadAndSetCurrentTreeDataFromIdb(currentTree);
         }
       }
       setIsLoading(false);
     });
-
 
     // Firebaseの接続状態を監視
     const connectedRef = ref(getDatabase(), '.info/connected');
@@ -140,17 +120,14 @@ export const useObserve = () => {
   }, [
     checkAndSyncDb,
     syncDb,
-    loadSettingsFromIdb,
-    loadTreesListFromIdb,
-    loadQuickMemoFromDb,
+    loadAndSaveSettings,
+    loadAndSaveQuickMemo,
+    loadAndSaveTreesList,
+    loadAndSetTreesListFromIdb,
     copyTreeDataToIdbFromDb,
-    loadCurrentTreeData,
+    loadAppSettingsFromIdb,
+    loadAndSetCurrentTreeDataFromIdb,
     loadAndSyncOfflineTree,
-    loadTreesListFromDb,
-    setTreesList,
-    saveTreesListIdb,
-    loadSettingsFromDb,
-    saveSettingsIdb,
     setIsLoading,
     setLocalTimestamp,
     setPrevCurrentTree,
@@ -159,6 +136,12 @@ export const useObserve = () => {
   // ローカルitemsの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
     const isConnectedDb = useAppStateStore.getState().isConnectedDb;
+    const currentTree = useTreeStateStore.getState().currentTree;
+    const currentTreeName = useTreeStateStore.getState().currentTreeName;
+    const isOffline = useAppStateStore.getState().isOffline;
+    const uid = useAppStateStore.getState().uid;
+    const prevItems = useTreeStateStore.getState().prevItems;
+    const prevCurrentTree = useTreeStateStore.getState().prevCurrentTree;
     if ((!uid && !isOffline) || !currentTree || (!isConnectedDb && !isOffline)) {
       return;
     }
@@ -181,8 +164,7 @@ export const useObserve = () => {
         if (prevItems.length > 0) {
           const asyncFunc = async () => {
             if (prevCurrentTree) {
-              await saveItemsIdb(prevItems, prevCurrentTree);
-              await saveItemsDb(prevItems, prevCurrentTree);
+              await saveItems(prevItems, prevCurrentTree);
             }
           };
           asyncFunc();
@@ -207,8 +189,7 @@ export const useObserve = () => {
               }
             } else {
               const asyncFunc = async () => {
-                await saveItemsIdb(items, targetTree);
-                await saveItemsDb(items, targetTree);
+                await saveItems(items, targetTree);
               };
               asyncFunc();
             }
@@ -223,12 +204,15 @@ export const useObserve = () => {
     }
 
     return () => clearInterval(intervalId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items]);
+  }, [items, handleError, saveItems, setItems, setPrevCurrentTree, setPrevItems, setIsLoading, setLocalTimestamp, showDialog]);
 
   // ローカルのクイックメモの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
     const isConnectedDb = useAppStateStore.getState().isConnectedDb;
+    const isOffline = useAppStateStore.getState().isOffline;
+    const uid = useAppStateStore.getState().uid;
+    const quickMemoText = useAppStateStore.getState().quickMemoText;
+    const isLoadedMemoFromDb = useAppStateStore.getState().isLoadedMemoFromDb;
     if ((!uid && !isOffline) || (!isConnectedDb && !isOffline) || !quickMemoText) {
       return;
     }
@@ -246,8 +230,7 @@ export const useObserve = () => {
           });
         } else {
           const asyncFunc = async () => {
-            await saveQuickMemoIdb(quickMemoText);
-            await saveQuickMemoDb(quickMemoText);
+            await saveQuickMemo(quickMemoText);
           };
           asyncFunc();
         }
@@ -258,8 +241,7 @@ export const useObserve = () => {
 
     // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
     return () => clearTimeout(debounceSave);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quickMemoText]);
+  }, [quickMemoText, handleError, saveQuickMemo, setIsLoadedMemoFromDb, setIsLoading, showDialog]);
 
   return {
     observeTimeStamp,

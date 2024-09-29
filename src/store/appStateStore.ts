@@ -17,7 +17,6 @@ type AppState = {
   isFocusedTreeName: boolean;
   containerWidth: number;
   searchKey: string;
-  isEditingText: boolean;
   quickMemoText: string;
   isLoadedMemoFromDb: boolean;
   setIsOffline: (isOffline: boolean) => void;
@@ -36,7 +35,6 @@ type AppState = {
   setIsFocusedTreeName: (isFocusedTreeName: boolean) => void;
   setContainerWidth: (containerWidth: number) => void;
   setSearchKey: (searchKey: string) => void;
-  setIsEditingText: (isEditingText: boolean) => void;
   setQuickMemoText: (quickMemoText: string) => void;
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb: boolean) => void;
 };
@@ -58,7 +56,6 @@ export const useAppStateStore = create<AppState>((set) => ({
   isFocusedTreeName: false,
   containerWidth: 0,
   searchKey: '',
-  isEditingText: false,
   quickMemoText: '',
   isLoadedMemoFromDb: false,
   setIsOffline: (isOffline) => set({ isOffline }),
@@ -77,7 +74,6 @@ export const useAppStateStore = create<AppState>((set) => ({
   setIsFocusedTreeName: (isFocusedTreeName) => set({ isFocusedTreeName }),
   setContainerWidth: (containerWidth) => set({ containerWidth }),
   setSearchKey: (searchKey) => set({ searchKey }),
-  setIsEditingText: (isEditingText) => set({ isEditingText }),
   setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb) => set({ isLoadedMemoFromDb }),
 }));

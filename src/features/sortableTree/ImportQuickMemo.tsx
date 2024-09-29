@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useDraggable } from '@dnd-kit/core';
 import { Box, Button } from '@mui/material';
@@ -14,27 +13,10 @@ interface Props {
 
 export function ImportQuickMemo({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
-  const [importButtonSpacer, setImportButtonSpacer] = useState(176);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerHeight < 600 || isMobile) {
-        setImportButtonSpacer(176);
-      } else {
-        setImportButtonSpacer(367);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    // コンポーネントのアンマウント時にイベントリスナーを削除
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isMobile]);
 
   return (
     <>
@@ -53,7 +35,7 @@ export function ImportQuickMemo({ id, ...Props }: Props) {
             left: { xs: '50%', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px)' },
           },
           transform: 'translateX(-50%)',
-          bottom: `calc(env(safe-area-inset-bottom) + ${importButtonSpacer}px)`,
+          bottom: `calc(env(safe-area-inset-bottom) + 367px)`,
           zIndex: 900,
           height: '30px',
           width: '50%',
