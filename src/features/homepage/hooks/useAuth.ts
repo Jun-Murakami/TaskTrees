@@ -37,7 +37,7 @@ const firebaseConfig = {
 
 initializeApp(firebaseConfig);
 
-const getFirebaseAuth = async () => {
+const getFirebaseAuth = () => {
   if (Capacitor.isNativePlatform()) {
     return initializeAuth(getApp(), {
       persistence: indexedDBLocalPersistence,
@@ -47,7 +47,7 @@ const getFirebaseAuth = async () => {
   }
 };
 
-const auth = await getFirebaseAuth();
+const auth = getFirebaseAuth();
 
 type UserComact = {
   uid: string | null;
@@ -126,7 +126,7 @@ export const useAuth = () => {
       const result = await FirebaseAuthentication.signInWithGoogle();
       // 2. Sign in on the web layer using the id token
       const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-      await signInWithCredential(await auth, credential)
+      await signInWithCredential(auth, credential)
         .then(async () => {
           setIsLoggedIn(true);
           setSystemMessage(null);
@@ -158,7 +158,7 @@ export const useAuth = () => {
           return;
         }
         const credential = provider.credential({ idToken: result.credential.idToken, rawNonce: result.credential.nonce });
-        await signInWithCredential(await auth, credential)
+        await signInWithCredential(auth, credential)
           .then(async () => {
             setIsLoggedIn(true);
             setSystemMessage(null);
@@ -194,7 +194,7 @@ export const useAuth = () => {
     }
     setSystemMessage('ログイン中...');
     setIsLoading(true);
-    signInWithEmailAndPassword(await auth, email, password)
+    signInWithEmailAndPassword(auth, email, password)
       .then(() => {
         setIsLoggedIn(true);
         setSystemMessage(null);
@@ -237,7 +237,7 @@ export const useAuth = () => {
           }
         });
     } else {
-      createUserWithEmailAndPassword(await auth, email, password)
+      createUserWithEmailAndPassword(auth, email, password)
         .then(() => {
           setIsLoggedIn(true);
           setSystemMessage(null);
@@ -268,7 +268,7 @@ export const useAuth = () => {
     if (result === '') {
       return;
     }
-    sendPasswordResetEmail(await auth, result)
+    sendPasswordResetEmail(auth, result)
       .then(() => {
         setSystemMessage('パスワードリセットメールを送信しました。メールボックスを確認してください。');
       })
@@ -313,8 +313,7 @@ export const useAuth = () => {
 
   // アカウント削除
   const handleDeleteAccount = async () => {
-    const authObject = await getFirebaseAuth();
-    const user = authObject.currentUser;
+    const user = auth.currentUser;
     if (user) {
       setIsLoading(true);
 

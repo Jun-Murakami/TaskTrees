@@ -44,7 +44,6 @@ export const useIndexedDb = () => {
       return;
     }
     try {
-      console.log('syncDb');
       setLocalTimestamp(localTimestamp);
       await loadSettingsFromDb();
       await loadQuickMemoFromDb();
