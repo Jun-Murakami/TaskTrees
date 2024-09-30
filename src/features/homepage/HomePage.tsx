@@ -8,6 +8,7 @@ import { SortableTree } from '@/features/sortableTree/SortableTree';
 import { QuickMemo } from '@/features/homepage/components/QuickMemo';
 import { useAuth } from '@/features/homepage/hooks/useAuth';
 import { Login } from '@/features/homepage/components/Login';
+import { ArchiveList } from '@/features/homepage/components/ArchiveList';
 
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
@@ -21,6 +22,7 @@ export function HomePage() {
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete); // アカウント削除の確認状態を変更
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded); // クイックメモの展開状態
   const currentTree = useTreeStateStore((state) => state.currentTree);
+  const isShowArchive = useAppStateStore((state) => state.isShowArchive);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
   const {
@@ -55,26 +57,32 @@ export function HomePage() {
                 },
               }}
             >
-              {currentTree ? (
-                // ツリーがある場合
-                <>
-                  <TreeSettingsAccordion />
-                  <Box
-                    sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 50 : 8 }}
-                    id='tree-container'
-                  >
-                    <Box sx={{ height: { xs: '90px', sm: '138px' } }} />
-                    <SortableTree collapsible indicator removable />
-                  </Box>
-                </>
+              {isShowArchive ? (
+                <ArchiveList />
               ) : (
-                // ツリーがない場合
-                <Box sx={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <Box>
-                    <TaskTreesLogo />
-                    <MessagePaper />
-                  </Box>
-                </Box>
+                <>
+                  {currentTree ? (
+                    // ツリーがある場合
+                    <>
+                      <TreeSettingsAccordion />
+                      <Box
+                        sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 50 : 8 }}
+                        id='tree-container'
+                      >
+                        <Box sx={{ height: { xs: '90px', sm: '138px' } }} />
+                        <SortableTree collapsible indicator removable />
+                      </Box>
+                    </>
+                  ) : (
+                    // ツリーがない場合
+                    <Box sx={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                      <Box>
+                        <TaskTreesLogo />
+                        <MessagePaper />
+                      </Box>
+                    </Box>
+                  )}
+                </>
               )}
               {isLoading && (
                 // ローディング中

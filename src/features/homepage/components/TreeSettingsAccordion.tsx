@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTheme } from '@mui/material';
 import {
   Accordion,
   AccordionDetails,
@@ -15,13 +14,10 @@ import {
   Button,
   Box,
   Stack,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import SaveAsIcon from '@mui/icons-material/SaveAs';
+import { Settings, ExpandMore, HighlightOff, Add, DeleteForever, SaveAs, Archive, Unarchive } from '@mui/icons-material';
 import { TaskTreeLogoIcon } from '@/features/common/TaskTreesLogo';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
@@ -39,13 +35,16 @@ export function TreeSettingsAccordion() {
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const currentTreeName = useTreeStateStore((state) => state.currentTreeName);
   const currentTreeMembers = useTreeStateStore((state) => state.currentTreeMembers);
+  const currentTreeIsArchived = useTreeStateStore((state) => state.currentTreeIsArchived);
 
   const [editedTreeName, setEditedTreeName] = useState<string | null>(currentTreeName || '');
   const [isComposing, setIsComposing] = useState(false);
 
-  const { handleTreeNameSubmit, handleAddUserToTree, handleDeleteUserFromTree, handleDeleteTree } = useTreeManagement();
+  const { handleTreeNameSubmit, handleAddUserToTree, handleDeleteUserFromTree, handleDeleteTree, handleChangeIsArchived } =
+    useTreeManagement();
 
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // TextFieldの値をセット
   const handleTreeNameChange = (e: string) => {
@@ -123,7 +122,7 @@ export function TreeSettingsAccordion() {
         <AccordionSummary
           aria-controls='panel1a-content'
           id='panel1a-header'
-          expandIcon={<ExpandMoreIcon />}
+          expandIcon={<ExpandMore />}
           sx={{
             height: 40,
             paddingY: isAccordionExpanded ? '60px' : '30px',
@@ -162,12 +161,24 @@ export function TreeSettingsAccordion() {
                 inputRef={inputRef}
               />
             ) : (
-              <Typography sx={{ width: '100%', marginTop: '6px', textAlign: 'center' }}>{currentTreeName}</Typography>
+              <Typography
+                sx={{
+                  width: '100%',
+                  marginTop: '6px',
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {currentTreeIsArchived && <Archive fontSize='small' sx={{ mr: 0.5, mb: 0.5 }} />}
+                {currentTreeName}
+              </Typography>
             )}
             {isAccordionExpanded ? (
-              <SaveAsIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
+              <SaveAs sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
             ) : (
-              <SettingsIcon sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
+              <Settings sx={{ color: theme.palette.text.secondary, right: 1, marginTop: 1 }} />
             )}
           </Stack>
         </AccordionSummary>
@@ -193,7 +204,7 @@ export function TreeSettingsAccordion() {
                         }}
                       >
                         <ListItemIcon>
-                          <HighlightOffIcon onClick={async () => await handleDeleteUserFromTree(member.uid, member.email)} />
+                          <HighlightOff onClick={async () => await handleDeleteUserFromTree(member.uid, member.email)} />
                         </ListItemIcon>
                       </ListItemButton>
                     )}
@@ -215,20 +226,32 @@ export function TreeSettingsAccordion() {
             >
               <Button
                 variant={'outlined'}
+                size={isMobile ? 'small' : 'medium'}
                 sx={{ mr: 2 }}
-                startIcon={<AddIcon />}
+                startIcon={<Add />}
                 color='inherit'
                 onClick={async () => await handleAddUserToTree()}
               >
-                メンバーの追加
+                メンバー追加
               </Button>
               <Button
                 variant={'outlined'}
-                startIcon={<DeleteForeverIcon />}
+                size={isMobile ? 'small' : 'medium'}
+                startIcon={currentTreeIsArchived ? <Unarchive /> : <Archive />}
+                sx={{ mr: 2 }}
+                color='inherit'
+                onClick={async () => await handleChangeIsArchived(currentTree, !currentTreeIsArchived)}
+              >
+                {currentTreeIsArchived ? '戻す' : 'アーカイブ'}
+              </Button>
+              <Button
+                variant={'outlined'}
+                size={isMobile ? 'small' : 'medium'}
+                startIcon={<DeleteForever />}
                 color='error'
                 onClick={async () => await handleDeleteTree()}
               >
-                ツリーを削除
+                削除
               </Button>
             </Box>
           )}

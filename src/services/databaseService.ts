@@ -10,7 +10,6 @@ type currentTreeMembers = { uid: string; email: string }[] | null;
 export const saveTimeStampDb = async (uid: string, targetTree: UniqueIdentifier | null, currentTreeMembers: currentTreeMembers, newTimestamp: number) => {
 
   try {
-
     // ユーザーのタイムスタンプV2を更新
     const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
     await set(timestampV2Ref, newTimestamp);
@@ -109,6 +108,26 @@ export const saveCurrentTreeNameDb = async (targetTree: UniqueIdentifier, newTre
     await set(treeNameRef, newTreeName);
   } catch (error) {
     throw new Error('データベースへのツリー名の保存に失敗しました。\n\n' + error);
+  }
+};
+
+// ツリーのアーカイブ属性をデータベースに保存する関数
+export const saveIsArchivedDb = async (uid: string, targetTree: UniqueIdentifier, isArchived: boolean | null) => {
+  try {
+    const treeRef = ref(getDatabase(), `trees/${targetTree}/isArchived`);
+    await set(treeRef, isArchived);
+    const treeListRef = ref(getDatabase(), `users/${uid}/treeList`);
+    const snapshot = await get(treeListRef);
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const treeIndex = data.findIndex((tree: TreesListItem) => tree.id === targetTree);
+      if (treeIndex !== -1) {
+        data[treeIndex].isArchived = isArchived;
+        await set(treeListRef, data);
+      }
+    }
+  } catch (error) {
+    throw new Error('データベースへのツリーのアーカイブ属性の保存に失敗しました。\n\n' + error);
   }
 };
 

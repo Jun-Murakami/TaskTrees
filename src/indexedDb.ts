@@ -23,6 +23,10 @@ class MyDexieDB extends Dexie {
       appstate: 'id, timestamp, quickMemo, settings, treeList',
       treestate: 'id, name, members, membersV2, timestamp, items'
     });
+    this.version(2).stores({
+      appstate: 'id, timestamp, quickMemo, settings, treeList',
+      treestate: 'id, name, members, membersV2, timestamp, isArchived, items'
+    });
   }
 }
 

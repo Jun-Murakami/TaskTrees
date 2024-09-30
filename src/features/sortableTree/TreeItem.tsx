@@ -35,7 +35,6 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
     [key: string]: unknown;
   };
   indicator?: boolean;
-  indentationWidth: number;
   onCollapse?(): void;
   wrapperRef?(node: HTMLLIElement): void;
   isNewTask?: boolean;
@@ -49,6 +48,7 @@ export interface TreeItemContentProps extends TreeItemProps {
   setIsDragOver: (isDragOver: boolean) => void;
   isFocusedOrHovered: boolean;
   setIsFocusedOrHovered: (isFocusedOrHovered: boolean) => void;
+  indentationWidth: number;
 }
 
 const TreeItemContent = memo(
@@ -65,13 +65,13 @@ const TreeItemContent = memo(
     collapsed,
     darkMode,
     handleProps,
-    indentationWidth,
     inputRef,
     isDragOver,
     isFocusedOrHovered,
     setIsFocusedOrHovered,
     onCollapse,
     isItemDescendantOfTrash,
+    indentationWidth,
   }: TreeItemContentProps) => {
     const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
     const [localText, setLocalText] = useState(value);
@@ -248,7 +248,6 @@ const TreeItemContent = memo(
       prevProps.ghost === nextProps.ghost &&
       prevProps.handleProps === nextProps.handleProps &&
       prevProps.indicator === nextProps.indicator &&
-      prevProps.indentationWidth === nextProps.indentationWidth &&
       prevProps.isNewTask === nextProps.isNewTask &&
       prevProps.isItemDescendantOfTrash === nextProps.isItemDescendantOfTrash
     );
@@ -273,7 +272,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       disableInteraction,
       ghost,
       handleProps,
-      indentationWidth,
       indicator,
       onCollapse,
       style,
@@ -286,6 +284,15 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
   ) => {
     const [isDragOver, setIsDragOver] = useState(false);
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+    let indentationWidth;
+    if (isMobile) {
+      indentationWidth = 22;
+    } else {
+      indentationWidth = 30;
+    }
 
     const darkMode = useAppStateStore((state) => state.darkMode);
 

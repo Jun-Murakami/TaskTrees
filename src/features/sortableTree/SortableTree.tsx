@@ -182,7 +182,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
               isUpLift={isUpLift}
               upLiftMinute={upLiftMinute}
               depth={id === activeId && projected ? projected.depth : depth}
-              indentationWidth={indentationWidth}
               indicator={indicator}
               collapsed={Boolean(collapsed && children.length)}
               onCollapse={collapsible && children.length ? () => handleCollapse(id) : undefined}
@@ -198,7 +197,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
                 clone
                 childCount={getChildCount(items, activeId) + 1}
                 value={activeItem.value.toString()}
-                indentationWidth={indentationWidth}
                 done={activeItem.done}
                 isNewTask={activeId === activeNewTaskId || activeId === activeQuickMemoId}
                 isItemDescendantOfTrash={isDescendantOfTrash(items, activeId)}

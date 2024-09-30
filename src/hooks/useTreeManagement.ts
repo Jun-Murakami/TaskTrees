@@ -29,6 +29,7 @@ export const useTreeManagement = () => {
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
+  const setCurrentTreeIsArchived = useTreeStateStore((state) => state.setCurrentTreeIsArchived);
 
   const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
@@ -128,13 +129,18 @@ export const useTreeManagement = () => {
           members.push({ uid: member, email: treeData.membersV2[member] });
         }
         setCurrentTreeMembers(members);
+        if (treeData.isArchived) {
+          setCurrentTreeIsArchived(true);
+        } else {
+          setCurrentTreeIsArchived(false);
+        }
         setItems(treeData.items);
       }
 
     } catch (error) {
       await showDialog('ツリーのデータの取得に失敗しました。\n\n' + error, 'Error');
     }
-  }, [showDialog, setCurrentTreeName, setCurrentTreeMembers, setItems]);
+  }, [showDialog, setCurrentTreeName, setCurrentTreeMembers, setItems, setCurrentTreeIsArchived]);
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = useCallback(async (targetTree: UniqueIdentifier) => {
@@ -810,6 +816,25 @@ export const useTreeManagement = () => {
     showDialog,
   ]);
 
+  // ツリーのアーカイブ属性を変更 ---------------------------------------------------------------------------
+  const handleChangeIsArchived = useCallback(async (targetTree: UniqueIdentifier | null, isArchived: boolean | null) => {
+    const uid = useAppStateStore.getState().uid;
+    const isOffline = useAppStateStore.getState().isOffline;
+    const isConnectedDb = useAppStateStore.getState().isConnectedDb;
+    if (!targetTree || !uid || (!isConnectedDb && !isOffline)) return Promise.resolve();
+    await idbService.saveIsArchivedToIdb(targetTree, isArchived);
+    await dbService.saveIsArchivedDb(uid, targetTree, isArchived);
+    setCurrentTreeIsArchived(isArchived);
+    const newList = useTreeStateStore.getState().treesList.map((tree) => {
+      if (tree.id === targetTree) {
+        return { ...tree, isArchived: isArchived ?? undefined };
+      }
+      return tree;
+    });
+    setTreesList(newList);
+    await updateTimeStamp(targetTree);
+  }, [updateTimeStamp, setCurrentTreeIsArchived, setTreesList]);
+
   return {
     deleteTree,
     saveItems,
@@ -824,6 +849,7 @@ export const useTreeManagement = () => {
     handleAddUserToTree,
     handleDeleteUserFromTree,
     handleDeleteTree,
+    handleChangeIsArchived,
     loadAndSaveTreesList,
     loadAndSetTreesListFromIdb,
     loadAndSetCurrentTreeDataFromIdb,

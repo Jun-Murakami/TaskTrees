@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
   Box,
+  Button,
   Drawer,
   IconButton,
   List,
@@ -17,11 +18,7 @@ import {
   TextField,
   useMediaQuery,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import MenuIcon from '@mui/icons-material/Menu';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import ClearIcon from '@mui/icons-material/Clear';
+import { Add, Menu, KeyboardArrowUp, KeyboardArrowDown, Clear, Archive } from '@mui/icons-material';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useAppStateStore } from '@/store/appStateStore';
@@ -44,9 +41,12 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
   const searchKey = useAppStateStore((state) => state.searchKey);
   const setSearchKey = useAppStateStore((state) => state.setSearchKey);
   const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
+  const setIsShowArchive = useAppStateStore((state) => state.setIsShowArchive);
 
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
+  const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
+  const setItems = useTreeStateStore((state) => state.setItems);
   const treesList = useTreeStateStore((state) => state.treesList);
 
   const { saveAppSettings } = useAppStateManagement();
@@ -77,6 +77,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
     if (currentTree === treeId) {
       return;
     }
+    setIsShowArchive(false);
     setCurrentTree(treeId);
     await loadAndSetCurrentTreeDataFromIdb(treeId);
     if (isAccordionExpanded) {
@@ -109,12 +110,13 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
                 },
               }}
               onClick={async () => {
+                setIsShowArchive(false);
                 await handleCreateNewTree();
                 setDrawerState(false);
               }}
             >
               <ListItemIcon>
-                <AddIcon />
+                <Add />
               </ListItemIcon>
               <ListItemText secondary='新しいツリーを作成' />
             </ListItemButton>
@@ -124,7 +126,25 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
       </Box>
 
       <Box sx={{ height: 'calc(100% - (166px + env(safe-area-inset-bottom)))', overflowY: 'auto' }}>
-        <List>{treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}</List>
+        <List>
+          {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}
+          <ListItem disablePadding>
+            <ListItemButton
+              sx={{ opacity: 1, height: 50 }}
+              onClick={() => {
+                setCurrentTree(null);
+                setCurrentTreeName(null);
+                setItems([]);
+                setIsShowArchive(true);
+              }}
+            >
+              <Button sx={{ width: '20px', minWidth: '20px', height: '20px', mr: '10px', color: theme.palette.grey[500] }}>
+                <Archive />
+              </Button>
+              <ListItemText secondary='アーカイブ済み' />
+            </ListItemButton>
+          </ListItem>
+        </List>
       </Box>
 
       <Box
@@ -151,7 +171,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
                 input: {
                   endAdornment: searchKey ? (
                     <IconButton size='small' onClick={() => setSearchKey('')} sx={{ mr: -1, color: theme.palette.action.active }}>
-                      <ClearIcon />
+                      <Clear />
                     </IconButton>
                   ) : undefined,
                 },
@@ -160,10 +180,10 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
             {!isMobile && (
               <>
                 <IconButton size='small' sx={{ width: 22, ml: 0.5 }} disabled={searchKey === ''} onClick={handlePrevButtonClick}>
-                  <KeyboardArrowUpIcon />
+                  <KeyboardArrowUp />
                 </IconButton>
                 <IconButton size='small' sx={{ width: 22, mr: 1 }} disabled={searchKey === ''} onClick={handleNextButtonClick}>
-                  <KeyboardArrowDownIcon />
+                  <KeyboardArrowDown />
                 </IconButton>
               </>
             )}
@@ -240,7 +260,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
           opacity: 1,
         }}
       >
-        <MenuIcon />
+        <Menu />
       </IconButton>
 
       <Box

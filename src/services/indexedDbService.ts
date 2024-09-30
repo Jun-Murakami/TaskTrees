@@ -82,7 +82,6 @@ export const saveItemsToIdb = async (targetTree: UniqueIdentifier, newItems: Tre
     const treeData = await idb.treestate.get(targetTree);
     if (treeData) {
       treeData.items = newItems;
-      treeData.timestamp = Date.now();
       await idb.treestate.put(treeData);
     } else {
       throw new Error('IndexedDBのツリーデータが取得できませんでした。');
@@ -98,11 +97,35 @@ export const saveCurrentTreeNameToIdb = async (targetTree: UniqueIdentifier, edi
     const treeData = await idb.treestate.get(targetTree);
     if (treeData) {
       treeData.name = editedTreeName;
-      treeData.timestamp = Date.now();
       await idb.treestate.put(treeData);
+    } else {
+      throw new Error('IndexedDBのツリーデータが取得できませんでした。');
     }
   } catch (error) {
     throw new Error('IndexedDBへのツリー名の保存に失敗しました。' + error);
+  }
+};
+
+// ツリーのアーカイブ属性を保存
+export const saveIsArchivedToIdb = async (targetTree: UniqueIdentifier, isArchived: boolean | null) => {
+  try {
+    const treeData = await idb.treestate.get(targetTree);
+    if (treeData) {
+      treeData.isArchived = isArchived ?? undefined;
+      await idb.treestate.put(treeData);
+      const treeList = await idb.appstate.get(1);
+      if (treeList) {
+        const treeIndex = treeList.treesList.findIndex((tree) => tree.id === targetTree);
+        if (treeIndex !== -1) {
+          treeList.treesList[treeIndex].isArchived = isArchived ?? undefined;
+          await idb.appstate.put(treeList);
+        }
+      }
+    } else {
+      throw new Error('IndexedDBのツリーデータが取得できませんでした。');
+    }
+  } catch (error) {
+    throw new Error('IndexedDBへのツリーのアーカイブ属性の保存に失敗しました。' + error);
   }
 };
 

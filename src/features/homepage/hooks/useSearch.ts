@@ -26,7 +26,7 @@ export const useSearch = () => {
           .filter(tree => tree.items.some(item => containsSearchKey(item, searchKey)))
           .toArray();
         if (result) {
-          const ensuredResult = result.map(tree => ({ id: tree.id!, name: tree.name! }));
+          const ensuredResult = result.map(tree => ({ id: tree.id!, name: tree.name!, isArchived: tree.isArchived }));
           setSearchResults(ensuredResult);
         }
       }

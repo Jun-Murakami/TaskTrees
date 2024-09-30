@@ -4,6 +4,7 @@ import { DndContext, DragOverlay, UniqueIdentifier, closestCenter } from '@dnd-k
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useTheme } from '@mui/material/styles';
+import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { SortableSource } from '@/features/sortableList/SortableSource';
@@ -15,6 +16,8 @@ interface SortableListProps {
 }
 
 export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState }) => {
+  const searchKey = useAppStateStore((state) => state.searchKey);
+
   const treesList = useTreeStateStore((state) => state.treesList);
   const setTreesList = useTreeStateStore((state) => state.setTreesList);
   const searchResults = useTreeStateStore((state) => state.searchResults);
@@ -50,15 +53,17 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
         }}
       >
         <SortableContext items={searchResults}>
-          {searchResults.map((item) => (
-            <SortableItem
-              key={item.id}
-              isPreviewMode={isPreviewMode}
-              item={item}
-              handleListClick={handleListClick}
-              setDrawerState={setDrawerState}
-            />
-          ))}
+          {searchResults.map((item) =>
+            searchKey.length > 0 || !item.isArchived ? (
+              <SortableItem
+                key={item.id}
+                isPreviewMode={isPreviewMode}
+                item={item}
+                handleListClick={handleListClick}
+                setDrawerState={setDrawerState}
+              />
+            ) : null
+          )}
         </SortableContext>
         {createPortal(
           <DragOverlay

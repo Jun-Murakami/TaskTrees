@@ -19,6 +19,7 @@ type AppState = {
   searchKey: string;
   quickMemoText: string;
   isLoadedMemoFromDb: boolean;
+  isShowArchive: boolean;
   setIsOffline: (isOffline: boolean) => void;
   setIsConnectedDb: (isConnectedDb: boolean) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
@@ -37,6 +38,7 @@ type AppState = {
   setSearchKey: (searchKey: string) => void;
   setQuickMemoText: (quickMemoText: string) => void;
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb: boolean) => void;
+  setIsShowArchive: (isShowArchive: boolean) => void;
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
@@ -58,6 +60,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   searchKey: '',
   quickMemoText: '',
   isLoadedMemoFromDb: false,
+  isShowArchive: false,
   setIsOffline: (isOffline) => set({ isOffline }),
   setIsConnectedDb: (isConnectedDb) => set({ isConnectedDb }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
@@ -76,4 +79,5 @@ export const useAppStateStore = create<AppState>((set) => ({
   setSearchKey: (searchKey) => set({ searchKey }),
   setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb) => set({ isLoadedMemoFromDb }),
+  setIsShowArchive: (isShowArchive) => set({ isShowArchive }),
 }));

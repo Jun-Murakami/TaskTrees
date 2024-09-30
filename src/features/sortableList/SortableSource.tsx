@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { DraggableAttributes, DraggableSyntheticListeners, UniqueIdentifier } from '@dnd-kit/core';
 import { ListItemText, ListItemButton, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import DragHandleIcon from '@mui/icons-material/DragHandle';
+import { DragHandle, Archive } from '@mui/icons-material';
 import { TreesListItem } from '@/types/types';
 import { useTreeStateStore } from '@/store/treeStateStore';
 
@@ -49,9 +49,10 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
         {...handlerProps?.attributes}
         {...handlerProps?.listeners}
       >
-        <DragHandleIcon />
+        <DragHandle />
       </Button>
       <ListItemText secondary={item.name} />
+      {item.isArchived && <Archive sx={{ color: theme.palette.grey[500], fontSize: 18 }} />}
     </ListItemButton>
   );
 };
