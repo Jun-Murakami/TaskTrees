@@ -1,32 +1,33 @@
 import { indexedDb as idb, type AppStateItem } from '@/indexedDb';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { ensureChildrenProperty } from '@/features/sortableTree/utilities';
-import type { TreesList, TreeItems } from '@/types/types';
+import type { TreesList, TreeItems, TreesListItemIncludingItems } from '@/types/types';
 
 // AppStateの読み込み
-export const loadAppStateFromIdb = async (): Promise<AppStateItem | undefined> => {
+export const loadAppStateFromIdb = async (): Promise<AppStateItem | null> => {
   try {
-    return await idb.appstate.get(1);
+    const appState = await idb.appstate.get(1);
+    return appState ?? null;
   } catch (error) {
     throw new Error('IndexedDBからのAppStateの読み込みに失敗しました。' + error);
   }
 };
 
 // クイックメモの読み込み
-export const loadQuickMemoFromIdb = async (): Promise<string | undefined> => {
+export const loadQuickMemoFromIdb = async (): Promise<string | null> => {
   try {
     const appState = await idb.appstate.get(1);
-    return appState?.quickMemo;
+    return appState?.quickMemo ?? null;
   } catch (error) {
     throw new Error('IndexedDBからのクイックメモの読み込みに失敗しました。' + error);
   }
 };
 
 // ツリーリストの読み込み
-export const loadTreesListFromIdb = async (): Promise<TreesList | undefined> => {
+export const loadTreesListFromIdb = async (): Promise<TreesList | null> => {
   try {
     const appState = await idb.appstate.get(1);
-    return appState?.treesList;
+    return appState?.treesList ?? null;
   } catch (error) {
     throw new Error('IndexedDBからのツリーリストの読み込みに失敗しました。' + error);
   }
@@ -60,15 +61,15 @@ export const saveTreesListToIdb = async (treesList: TreesList) => {
 };
 
 // ターゲットIDのitems、name、membersをDBからロードする
-export const loadCurrentTreeDataFromIdb = async (targetTree: UniqueIdentifier) => {
+export const loadCurrentTreeDataFromIdb = async (targetTree: UniqueIdentifier): Promise<TreesListItemIncludingItems | null> => {
   try {
     const treeData = await idb.treestate.get(targetTree);
     if (treeData) {
       const ensuredItems = ensureChildrenProperty(treeData.items);
-      const ensuredTreeData = { ...treeData, items: ensuredItems };
+      const ensuredTreeData = { ...treeData, items: ensuredItems } as TreesListItemIncludingItems;
       return ensuredTreeData;
     } else {
-      throw new Error('IndexedDBのツリーデータが取得できませんでした。');
+      return null;
     }
   } catch (error) {
     throw new Error('IndexedDBからのツリーデータの読み込みに失敗しました。' + error);
@@ -111,6 +112,20 @@ export const deleteTreeFromIdb = async (targetTree: UniqueIdentifier) => {
     await idb.treestate.delete(targetTree);
   } catch (error) {
     throw new Error('IndexedDBからのツリーの削除に失敗しました。' + error);
+  }
+};
+
+// タイムスタンプの読み込み
+export const loadTimeStampFromIdb = async (): Promise<number | null> => {
+  try {
+    const appState = await idb.appstate.get(1);
+    if (appState) {
+      return appState.timestamp;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    throw new Error('IndexedDBからのタイムスタンプの読み込みに失敗しました。' + error);
   }
 };
 

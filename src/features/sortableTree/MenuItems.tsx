@@ -47,23 +47,11 @@ interface MenuItemsProps {
   timerDef?: string;
   isUpLiftDef?: boolean;
   upLiftMinuteDef?: number;
-  currenTreeId: UniqueIdentifier | null;
-  handleAttachFile?(id: UniqueIdentifier, fileName: string): void;
-  onRemove?: () => void;
-  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): Promise<boolean>;
-  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): Promise<void>;
 }
 
 interface MenuItemsTrashProps {
   id: UniqueIdentifier;
   attachedFile?: string;
-  onRemove?: () => void;
-  onRestoreItems?(id: UniqueIdentifier): void;
-}
-
-interface MenuItemsTrashRootProps {
-  removeTrashDescendants: () => Promise<void>;
-  removeTrashDescendantsWithDone?: () => Promise<void>;
 }
 
 interface MenuItemsAttachedFileProps {
@@ -92,18 +80,7 @@ const iconButtonStyle = {
   },
 };
 
-export function MenuItems({
-  id,
-  attachedFile,
-  timerDef,
-  isUpLiftDef,
-  upLiftMinuteDef,
-  currenTreeId,
-  handleAttachFile,
-  onRemove,
-  onCopyItems,
-  onMoveItems,
-}: MenuItemsProps) {
+export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinuteDef }: MenuItemsProps) {
   const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
   const [openCopyMenu, setOpenCopyMenu] = useState<boolean>(false);
   const [openMoveMenu, setOpenMoveMenu] = useState<boolean>(false);
@@ -113,6 +90,8 @@ export function MenuItems({
   const [isUpLift, setIsUpLift] = useState<boolean>(false);
   const [upLiftHour, setUpLiftHour] = useState<number | undefined>(undefined);
   const [upLiftMinute, setUpLiftMinute] = useState<number | undefined>(undefined);
+
+  const { handleRemove, handleCopy, handleMove, handleAttachFile } = useTaskManagement();
 
   // const [isNotify, setIsNotify] = useState<boolean>(false);
   // const [notifyHour, setNotifyHour] = useState<number | undefined>(undefined);
@@ -127,7 +106,7 @@ export function MenuItems({
   const isOffline = useAppStateStore((state) => state.isOffline);
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const treesList = useTreeStateStore((state) => state.treesList);
-  const treesListWithoutId = treesList.filter((tree) => tree.id !== currenTreeId);
+  const treesListWithoutId = treesList.filter((tree) => tree.id !== currentTree);
 
   const theme = useTheme();
 
@@ -287,10 +266,8 @@ export function MenuItems({
         }}
       >
         <MenuItem
-          onClick={() => {
-            if (onRemove) {
-              onRemove();
-            }
+          onClick={async () => {
+            await handleRemove(id);
             handleParentClose();
           }}
         >
@@ -557,9 +534,7 @@ export function MenuItems({
                     <MenuItem
                       key={tree.id}
                       onClick={async () => {
-                        if (onCopyItems) {
-                          await onCopyItems(tree.id, id);
-                        }
+                        await handleCopy(tree.id, id);
                         handleCopyClose();
                         handleParentClose();
                       }}
@@ -599,9 +574,7 @@ export function MenuItems({
                     <MenuItem
                       key={tree.id}
                       onClick={async () => {
-                        if (onMoveItems) {
-                          await onMoveItems(tree.id, id);
-                        }
+                        await handleMove(tree.id, id);
                         handleMoveClose();
                         handleParentClose();
                       }}
@@ -622,8 +595,10 @@ export function MenuItems({
   );
 }
 
-export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashProps) {
+export function MenuItemsTrash({ id }: MenuItemsTrashProps) {
   const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
+
+  const { handleRemove, handleRestore } = useTaskManagement();
 
   const anchorElParent = useRef<HTMLButtonElement>(null);
 
@@ -652,10 +627,8 @@ export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashP
         }}
       >
         <MenuItem
-          onClick={() => {
-            if (onRemove) {
-              onRemove();
-            }
+          onClick={async () => {
+            await handleRemove(id);
             handleParentClose();
           }}
         >
@@ -666,10 +639,8 @@ export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashP
         </MenuItem>
         <Divider />
         <MenuItem
-          onClick={() => {
-            if (onRestoreItems) {
-              onRestoreItems(id);
-            }
+          onClick={async () => {
+            await handleRestore(id);
             handleParentClose();
           }}
         >
@@ -683,8 +654,10 @@ export function MenuItemsTrash({ id, onRemove, onRestoreItems }: MenuItemsTrashP
   );
 }
 
-export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescendantsWithDone }: MenuItemsTrashRootProps) {
+export function MenuItemsTrashRoot() {
   const [openParentMenu, setOpenParentMenu] = useState<boolean>(false);
+
+  const { removeTrashDescendants, removeTrashDescendantsWithDone } = useTaskManagement();
 
   const anchorElParent = useRef<HTMLButtonElement>(null);
 
@@ -714,9 +687,7 @@ export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescenda
       >
         <MenuItem
           onClick={async () => {
-            if (removeTrashDescendants) {
-              await removeTrashDescendants();
-            }
+            await removeTrashDescendants();
             handleParentClose();
           }}
         >
@@ -728,9 +699,7 @@ export function MenuItemsTrashRoot({ removeTrashDescendants, removeTrashDescenda
         <Divider />
         <MenuItem
           onClick={async () => {
-            if (removeTrashDescendantsWithDone) {
-              await removeTrashDescendantsWithDone();
-            }
+            await removeTrashDescendantsWithDone();
             handleParentClose();
           }}
         >

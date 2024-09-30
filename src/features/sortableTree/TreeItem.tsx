@@ -7,6 +7,7 @@ import { useTreeStackStyles } from '@/features/sortableTree/hooks/useTreeStackSt
 import { useAttachedFile } from '@/features/sortableTree/hooks/useAttachedFile';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useTaskManagement } from '@/hooks/useTaskManagement';
 import {
   MenuItems,
   MenuItemsTrash,
@@ -36,22 +37,12 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
   indicator?: boolean;
   indentationWidth: number;
   onCollapse?(): void;
-  onRemove?(): void;
   wrapperRef?(node: HTMLLIElement): void;
-  onChange?(value: string): void;
-  onChangeDone?(done: boolean): void;
-  onCopyItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): Promise<boolean>;
-  onMoveItems?(targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier): Promise<void>;
-  onRestoreItems?(id: UniqueIdentifier): void;
-  handleAttachFile(id: UniqueIdentifier, fileName: string): void;
-  removeTrashDescendants?: () => Promise<void>;
-  removeTrashDescendantsWithDone?: () => Promise<void>;
   isNewTask?: boolean;
   isItemDescendantOfTrash?: boolean;
 }
 
 export interface TreeItemContentProps extends TreeItemProps {
-  currentTree: UniqueIdentifier | null;
   darkMode: boolean;
   inputRef: React.RefObject<HTMLInputElement>;
   isDragOver: boolean;
@@ -72,7 +63,6 @@ const TreeItemContent = memo(
     childCount,
     clone,
     collapsed,
-    currentTree,
     darkMode,
     handleProps,
     indentationWidth,
@@ -81,15 +71,6 @@ const TreeItemContent = memo(
     isFocusedOrHovered,
     setIsFocusedOrHovered,
     onCollapse,
-    onRemove,
-    onChange,
-    onChangeDone,
-    onCopyItems,
-    onMoveItems,
-    onRestoreItems,
-    handleAttachFile,
-    removeTrashDescendants,
-    removeTrashDescendantsWithDone,
     isItemDescendantOfTrash,
   }: TreeItemContentProps) => {
     const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
@@ -97,9 +78,11 @@ const TreeItemContent = memo(
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+    const { handleValueChange, handleDoneChange } = useTaskManagement();
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setLocalText(e.target.value);
-      setTimeout(() => onChange?.(e.target.value), 50);
+      setTimeout(() => handleValueChange(id, e.target.value), 100);
     };
 
     useEffect(() => {
@@ -156,7 +139,7 @@ const TreeItemContent = memo(
             <Checkbox
               sx={{ ...buttonStyle, color: darkMode ? theme.palette.grey[400] : theme.palette.grey[600] }}
               checked={done}
-              onChange={(e) => onChangeDone?.(e.target.checked)}
+              onChange={(e) => handleDoneChange(id, e.target.checked)}
             />
             <TextField
               inputRef={inputRef}
@@ -217,14 +200,9 @@ const TreeItemContent = memo(
               >
                 <SaveAs />
               </IconButton>
-            ) : !clone && onRemove && !isItemDescendantOfTrash ? (
+            ) : !clone && !isItemDescendantOfTrash ? (
               <MenuItems
                 key={`menu-${id}-${done}-${timer}-${isUpLift}-${upLiftMinute}`}
-                onRemove={onRemove}
-                handleAttachFile={handleAttachFile}
-                onCopyItems={onCopyItems}
-                onMoveItems={onMoveItems}
-                currenTreeId={currentTree}
                 id={id}
                 attachedFile={attachedFile}
                 timerDef={timer}
@@ -232,18 +210,13 @@ const TreeItemContent = memo(
                 upLiftMinuteDef={upLiftMinute}
               />
             ) : (
-              <MenuItemsTrash onRemove={onRemove} onRestoreItems={onRestoreItems} id={id} />
+              <MenuItemsTrash id={id} />
             )}
           </>
         ) : (
           <>
             <Typography sx={{ py: '5px', fontSize: '0.9rem', margin: 'auto 5px', width: '100%' }}> ゴミ箱 </Typography>
-            {!clone && id === 'trash' && removeTrashDescendants && (
-              <MenuItemsTrashRoot
-                removeTrashDescendants={removeTrashDescendants}
-                removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
-              />
-            )}
+            {!clone && id === 'trash' && <MenuItemsTrashRoot />}
           </>
         )}
         {clone && childCount && childCount > 1 ? <Badge badgeContent={childCount} color='primary' /> : null}
@@ -264,21 +237,11 @@ const TreeItemContent = memo(
       prevProps.childCount === nextProps.childCount &&
       prevProps.clone === nextProps.clone &&
       prevProps.collapsed === nextProps.collapsed &&
-      prevProps.currentTree === nextProps.currentTree &&
       prevProps.darkMode === nextProps.darkMode &&
       prevProps.inputRef === nextProps.inputRef &&
       prevProps.isDragOver === nextProps.isDragOver &&
       prevProps.isFocusedOrHovered === nextProps.isFocusedOrHovered &&
       prevProps.onCollapse === nextProps.onCollapse &&
-      prevProps.onRemove === nextProps.onRemove &&
-      prevProps.onChange === nextProps.onChange &&
-      prevProps.onChangeDone === nextProps.onChangeDone &&
-      prevProps.onCopyItems === nextProps.onCopyItems &&
-      prevProps.onMoveItems === nextProps.onMoveItems &&
-      prevProps.onRestoreItems === nextProps.onRestoreItems &&
-      prevProps.handleAttachFile === nextProps.handleAttachFile &&
-      prevProps.removeTrashDescendants === nextProps.removeTrashDescendants &&
-      prevProps.removeTrashDescendantsWithDone === nextProps.removeTrashDescendantsWithDone &&
       prevProps.depth === nextProps.depth &&
       prevProps.disableInteraction === nextProps.disableInteraction &&
       prevProps.disableSelection === nextProps.disableSelection &&
@@ -313,36 +276,28 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       indentationWidth,
       indicator,
       onCollapse,
-      onRemove,
       style,
       wrapperRef,
-      onChange,
-      onChangeDone,
-      onCopyItems,
-      onMoveItems,
-      onRestoreItems,
-      handleAttachFile,
-      removeTrashDescendants,
-      removeTrashDescendantsWithDone,
       isNewTask,
       isItemDescendantOfTrash,
       ...props
     },
     ref
   ) => {
-    const currentTree = useTreeStateStore((state) => state.currentTree);
     const [isDragOver, setIsDragOver] = useState(false);
     const [isFocusedOrHovered, setIsFocusedOrHovered] = useState(false);
 
     const darkMode = useAppStateStore((state) => state.darkMode);
 
     const stackStyles = useTreeStackStyles(clone, ghost, depth, isDragOver, darkMode, isNewTask);
+    const { handleAttachFile } = useTaskManagement();
     const { uploadFile } = useAttachedFile();
 
     const inputRef = useRef<HTMLInputElement>(null);
 
     const onDrop = useCallback(
       async (event: React.DragEvent<HTMLDivElement>) => {
+        const currentTree = useTreeStateStore.getState().currentTree;
         event.preventDefault();
         event.stopPropagation();
         setIsDragOver(false);
@@ -355,7 +310,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           event.dataTransfer.clearData();
         }
       },
-      [uploadFile, handleAttachFile, id, currentTree]
+      [uploadFile, handleAttachFile, id]
     );
 
     const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -420,7 +375,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             childCount={childCount}
             clone={clone}
             collapsed={collapsed}
-            currentTree={currentTree}
             darkMode={darkMode}
             handleProps={handleProps}
             indentationWidth={indentationWidth}
@@ -430,15 +384,6 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             setIsFocusedOrHovered={setIsFocusedOrHovered}
             setIsDragOver={setIsDragOver}
             onCollapse={onCollapse}
-            onRemove={onRemove}
-            onChange={onChange}
-            onChangeDone={onChangeDone}
-            onCopyItems={onCopyItems}
-            onMoveItems={onMoveItems}
-            onRestoreItems={onRestoreItems}
-            handleAttachFile={handleAttachFile}
-            removeTrashDescendants={removeTrashDescendants}
-            removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
             isItemDescendantOfTrash={isItemDescendantOfTrash}
           />
         </Stack>

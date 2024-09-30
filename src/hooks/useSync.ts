@@ -39,6 +39,19 @@ export const useSync = () => {
     }
   }, [handleError]);
 
+  // ローカルタイムスタンプの読み込み
+  const loadAndSetLocalTimeStamp = useCallback(async () => {
+    try {
+      const setLocalTimestamp = useAppStateStore.getState().setLocalTimestamp;
+      const localTimestamp = await idbService.loadTimeStampFromIdb();
+      if (localTimestamp) {
+        setLocalTimestamp(localTimestamp);
+      }
+    } catch (error) {
+      handleError('ローカルタイムスタンプの読み込みに失敗しました。\n\n' + error);
+    }
+  }, [handleError]);
+
   // FirebaseRealtimeDatabaseとIndexedデータベースを同期する ------------------------------------------------
   const syncDb = useCallback(async () => {
     const uid = useAppStateStore.getState().uid;
@@ -225,5 +238,5 @@ export const useSync = () => {
     }
   }, [showDialog]);
 
-  return { updateTimeStamp, checkAndSyncDb, syncDb, copyTreeDataToIdbFromDb };
+  return { updateTimeStamp, checkAndSyncDb, syncDb, copyTreeDataToIdbFromDb, loadAndSetLocalTimeStamp };
 }

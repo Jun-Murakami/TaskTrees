@@ -38,7 +38,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useAppStateStore } from '@/store/appStateStore';
-import { useTaskManagement } from '@/hooks/useTaskManagement';
 
 const dropAnimationConfig: DropAnimation = {
   keyframes({ transform }) {
@@ -71,7 +70,7 @@ interface SortableTreeProps {
   removable?: boolean;
 }
 
-export function SortableTree({ collapsible, indicator = false, indentationWidth = 30, removable }: SortableTreeProps) {
+export function SortableTree({ collapsible, indicator = false, indentationWidth = 30 }: SortableTreeProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeNewTaskId, setActiveNewTaskId] = useState<UniqueIdentifier>('-1');
   const [activeQuickMemoId, setActiveQuickMemoId] = useState<UniqueIdentifier>('-10000');
@@ -87,19 +86,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
   const setQuickMemoText = useAppStateStore((state) => state.setQuickMemoText);
-
-  // タスクを管理するカスタムフック
-  const {
-    handleRemove,
-    handleValueChange,
-    handleDoneChange,
-    handleCopy,
-    handleMove,
-    handleRestore,
-    handleAttachFile,
-    removeTrashDescendants,
-    removeTrashDescendantsWithDone,
-  } = useTaskManagement();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -200,15 +186,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
               indicator={indicator}
               collapsed={Boolean(collapsed && children.length)}
               onCollapse={collapsible && children.length ? () => handleCollapse(id) : undefined}
-              onRemove={removable ? () => (handleRemove ? handleRemove(id) : undefined) : undefined}
-              onChange={(newValue) => handleValueChange(id, newValue)}
-              onChangeDone={(done) => handleDoneChange(id, done)}
-              onCopyItems={handleCopy}
-              onMoveItems={handleMove}
-              onRestoreItems={handleRestore}
-              handleAttachFile={handleAttachFile}
-              removeTrashDescendants={removeTrashDescendants}
-              removeTrashDescendantsWithDone={removeTrashDescendantsWithDone}
               isItemDescendantOfTrash={isDescendantOfTrash(items, id)}
             />
           ))}
@@ -222,7 +199,6 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
                 childCount={getChildCount(items, activeId) + 1}
                 value={activeItem.value.toString()}
                 indentationWidth={indentationWidth}
-                handleAttachFile={handleAttachFile}
                 done={activeItem.done}
                 isNewTask={activeId === activeNewTaskId || activeId === activeQuickMemoId}
                 isItemDescendantOfTrash={isDescendantOfTrash(items, activeId)}

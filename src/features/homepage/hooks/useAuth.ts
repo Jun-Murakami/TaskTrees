@@ -85,11 +85,11 @@ export const useAuth = () => {
     try {
       setIsLoggedIn(!!user);
       setIsLoading(!!user);
-      if (user) {
+      if (user && user.uid) {
         setUid(user.uid);
         setEmail(user.email);
         setIsOffline(false);
-        await observeTimeStamp();
+        await observeTimeStamp(user.uid);
       }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message + error.stack : 'ログイン監視エラー');

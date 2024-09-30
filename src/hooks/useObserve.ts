@@ -28,17 +28,14 @@ export const useObserve = () => {
 
   const { loadAndSetCurrentTreeDataFromIdb, saveItems, loadAndSaveTreesList, loadAndSetTreesListFromIdb } = useTreeManagement();
   const { loadAndSyncOfflineTree } = useOfflineTree();
-  const { syncDb, checkAndSyncDb, copyTreeDataToIdbFromDb, } = useSync();
+  const { syncDb, checkAndSyncDb, copyTreeDataToIdbFromDb, loadAndSetLocalTimeStamp } = useSync();
   const { loadAndSaveSettings, loadAndSaveQuickMemo, saveQuickMemo, loadAppSettingsFromIdb } = useAppStateManagement();
   const { handleError } = useError();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
-  const observeTimeStamp = useCallback(async () => {
-    const uid = useAppStateStore.getState().uid;
-    if (!uid) {
-      return;
-    }
+  const observeTimeStamp = useCallback(async (uid: string) => {
     setIsLoading(true);
+    await loadAndSetLocalTimeStamp();
     await checkAndSyncDb();
     await loadAppSettingsFromIdb();
     await loadAndSetTreesListFromIdb();
@@ -118,6 +115,7 @@ export const useObserve = () => {
       unsubscribeDbConnectionChecker();
     };
   }, [
+    loadAndSetLocalTimeStamp,
     checkAndSyncDb,
     syncDb,
     loadAndSaveSettings,
@@ -164,7 +162,6 @@ export const useObserve = () => {
         if (prevItems.length > 0) {
           const asyncFunc = async () => {
             if (prevCurrentTree) {
-              console.log('saveItems', prevItems, prevCurrentTree);
               await saveItems(prevItems, prevCurrentTree);
             }
           };
@@ -190,7 +187,6 @@ export const useObserve = () => {
               }
             } else {
               const asyncFunc = async () => {
-                console.log('saveItems', items, targetTree);
                 await saveItems(items, targetTree);
               };
               asyncFunc();
