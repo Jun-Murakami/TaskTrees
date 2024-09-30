@@ -184,3 +184,13 @@ export const checkDbEmpty = async () => {
     throw new Error('IndexedDBのデータベースが空かどうかのチェックに失敗しました。' + error);
   }
 };
+
+// 全てのデータを削除
+export const deleteAllDataFromIdb = async () => {
+  try {
+    await idb.appstate.clear();
+    await idb.treestate.clear();
+  } catch (error) {
+    throw new Error('IndexedDBの全てのデータの削除に失敗しました。' + error);
+  }
+};

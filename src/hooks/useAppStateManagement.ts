@@ -46,6 +46,9 @@ export const useAppStateManagement = () => {
     }
     try {
       const quickMemo = await dbService.loadQuickMemoFromDb(uid);
+      if (!quickMemo) {
+        return;
+      }
       if (saveToIdb) {
         await idbService.saveQuickMemoToIdb(quickMemo);
       }

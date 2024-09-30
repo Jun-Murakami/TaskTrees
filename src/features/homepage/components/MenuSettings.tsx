@@ -184,11 +184,7 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
         />
         {!isOffline && !Capacitor.isNativePlatform() && (
           <Tooltip title='バックアップしたデータを復元' placement='right'>
-            <MenuItem
-              onClick={() => {
-                handleUploadClick();
-              }}
-            >
+            <MenuItem onClick={handleUploadClick}>
               <ListItemIcon>
                 <Upload fontSize='small' />
               </ListItemIcon>

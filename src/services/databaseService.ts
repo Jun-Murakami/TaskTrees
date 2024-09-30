@@ -240,7 +240,7 @@ export const loadAllTreesDataFromDb = async (treesList: TreesList) => {
         }
         throw new Error('ツリーデータが不正です。');
       }
-      throw new Error('ツリーデータが見つかりません。');
+      return null;
     });
     const treeData = await Promise.all(promises);
     return treeData.filter((item) => item !== null);
@@ -261,7 +261,7 @@ export const loadAppStateFromDb = async (uid: string): Promise<AppState | null> 
       }
       throw new Error('データベースのアプリ設定が不正です。');
     } else {
-      throw new Error('データベースのアプリ設定が見つかりません。');
+      return null;
     }
   } catch (error) {
     console.log(error)
@@ -270,7 +270,7 @@ export const loadAppStateFromDb = async (uid: string): Promise<AppState | null> 
 }
 
 // データベースからクイックメモを取得する関数
-export const loadQuickMemoFromDb = async (uid: string): Promise<string> => {
+export const loadQuickMemoFromDb = async (uid: string): Promise<string | null> => {
   try {
     const quickMemoRef = ref(getDatabase(), `users/${uid}/quickMemo`);
     const snapshot = await get(quickMemoRef);
@@ -278,7 +278,7 @@ export const loadQuickMemoFromDb = async (uid: string): Promise<string> => {
       const data: string = snapshot.val();
       return data;
     } else {
-      throw new Error('データベースのクイックメモが見つかりません。');
+      return null;
     }
   } catch (error) {
     throw new Error('データベースからのクイックメモの取得に失敗しました。\n\n' + error);

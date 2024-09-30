@@ -164,6 +164,7 @@ export const useObserve = () => {
         if (prevItems.length > 0) {
           const asyncFunc = async () => {
             if (prevCurrentTree) {
+              console.log('saveItems', prevItems, prevCurrentTree);
               await saveItems(prevItems, prevCurrentTree);
             }
           };
@@ -189,6 +190,7 @@ export const useObserve = () => {
               }
             } else {
               const asyncFunc = async () => {
+                console.log('saveItems', items, targetTree);
                 await saveItems(items, targetTree);
               };
               asyncFunc();

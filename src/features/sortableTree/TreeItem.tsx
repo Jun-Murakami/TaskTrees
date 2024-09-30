@@ -1,4 +1,4 @@
-import { forwardRef, HTMLAttributes, useState, useRef, useCallback, memo } from 'react';
+import { forwardRef, HTMLAttributes, useState, useRef, useCallback, memo, useEffect } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery, ListItem, Stack, Badge, TextField, Checkbox, Button, Typography, IconButton } from '@mui/material';
@@ -101,6 +101,10 @@ const TreeItemContent = memo(
       setLocalText(e.target.value);
       setTimeout(() => onChange?.(e.target.value), 50);
     };
+
+    useEffect(() => {
+      setLocalText(value);
+    }, [value]);
 
     // ボタンの共通スタイルを定義
     const buttonStyle = {

@@ -21,6 +21,7 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { useObserve } from '@/hooks/useObserve';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import * as idbService from '@/services/indexedDbService';
 import { useInputDialogStore } from '@/store/dialogStore';
 import { useDialogStore } from '@/store/dialogStore';
 
@@ -104,12 +105,10 @@ export const useAuth = () => {
       try {
         if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
           FirebaseAuthentication.addListener('authStateChange', async (result) => {
-            console.log('authStateChange in 1:', result);
             await loginAction(result.user);
           });
         } else {
           unsubscribe = auth.onAuthStateChanged(async (user) => {
-            console.log('authStateChange in 2:', user);
             await loginAction(user);
           });
         }
@@ -125,7 +124,7 @@ export const useAuth = () => {
       }
       FirebaseAuthentication.removeAllListeners();
     };
-  }, [loginAction]);
+  }, [loginAction, showDialog]);
 
   // Googleログイン
   const handleGoogleLogin = async () => {
@@ -403,11 +402,13 @@ export const useAuth = () => {
           return;
         });
 
+      //IndexedDBのデータを削除
+      await idbService.deleteAllDataFromIdb();
+
       // ユーザーを削除
       user
         .delete()
         .then(() => {
-          handleLogout();
           setSystemMessage('アカウントが削除されました。');
           if (isLoading) setIsLoading(false);
         })
@@ -418,7 +419,6 @@ export const useAuth = () => {
             setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : 不明なエラー');
           }
           if (isLoading) setIsLoading(false);
-          handleLogout();
           return;
         });
     } else {
