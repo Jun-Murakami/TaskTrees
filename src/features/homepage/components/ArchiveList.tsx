@@ -68,13 +68,23 @@ export const ArchiveList = () => {
                       width: '100%',
                     }}
                   />
-                  <Button startIcon={<Unarchive />} onClick={() => handleUnArchiveClick(tree.id)} sx={{ width: 90 }}>
+                  <Button
+                    startIcon={<Unarchive />}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleUnArchiveClick(tree.id);
+                    }}
+                    sx={{ width: 90 }}
+                  >
                     戻す
                   </Button>
                 </ListItemButton>
                 {index !== treesList.filter((tree) => tree.isArchived).length - 1 && <Divider sx={{ width: '100%' }} />}
               </>
             ))}
+          {treesList.filter((tree) => tree.isArchived).length === 0 && (
+            <Typography sx={{ textAlign: 'center', my: 2, width: '100%' }}>アーカイブ済みのツリーはありません</Typography>
+          )}
         </List>
       </Box>
     </Box>
