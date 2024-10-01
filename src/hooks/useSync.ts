@@ -60,7 +60,6 @@ export const useSync = () => {
     const quickMemoText = useAppStateStore.getState().quickMemoText;
     const treesList = useTreeStateStore.getState().treesList;
     const setLocalTimestamp = useAppStateStore.getState().setLocalTimestamp;
-    const setTreesList = useTreeStateStore.getState().setTreesList;
     const localTimestamp = Date.now();
     if (!uid) {
       return;
@@ -112,7 +111,6 @@ export const useSync = () => {
       await set(timestaampRef, localTimestamp);
       const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
       await set(timestampV2Ref, localTimestamp);
-      setTreesList(treesListFromDb);
     } catch (error) {
       handleError(error);
     }
@@ -146,6 +144,7 @@ export const useSync = () => {
       members: [],
       membersV2: {},
       timestamp: -1,
+      isArchived: undefined,
       items: [],
     };
     // ツリーアイテムを取得
@@ -219,6 +218,17 @@ export const useSync = () => {
       return;
     }
 
+    // ツリーのアーカイブ属性を取得
+    try {
+      const isArchived = await dbService.loadIsArchivedFromDb(targetTree);
+      if (isArchived) {
+        treeData.isArchived = isArchived;
+      }
+    } catch (error) {
+      await showDialog('ツリーのアーカイブ属性の取得に失敗しました。\n\n' + error, 'Error');
+      return;
+    }
+
     // タイムスタンプを取得
     try {
       const treeTimestamp = await dbService.loadTreeTimestampFromDb(targetTree);
@@ -232,7 +242,7 @@ export const useSync = () => {
 
     // Indexedデータベースに保存
     try {
-      await idbService.saveTreeToIdb(targetTree, treeData.name, treeData.members ?? [], treeData.membersV2, treeData.timestamp ?? -1, treeData.items);
+      await idbService.saveTreeToIdb(targetTree, treeData.name, treeData.members ?? [], treeData.membersV2, treeData.timestamp ?? -1, treeData.items, treeData.isArchived);
     } catch (error) {
       await showDialog('Indexedデータベースへの保存に失敗しました。\n\n' + error, 'Error');
     }

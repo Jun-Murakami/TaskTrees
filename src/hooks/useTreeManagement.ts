@@ -66,7 +66,7 @@ export const useTreeManagement = () => {
   }, [showDialog, updateTimeStamp]);
 
   // ツリーリストをFirebaseから読み込む---------------------------------------------------------------------------
-  const loadAndSaveTreesList = useCallback(async ({ saveToIdb }: { saveToIdb: boolean }) => {
+  const loadAndSetTreesListFromDb = useCallback(async ({ saveToIdb }: { saveToIdb: boolean }) => {
     const uid = useAppStateStore.getState().uid;
     if (!uid) {
       return;
@@ -79,11 +79,12 @@ export const useTreeManagement = () => {
       if (saveToIdb) {
         await idbService.saveTreesListToIdb(orderedTreesList);
       }
+      setTreesList(orderedTreesList);
       return orderedTreesList;
     } catch (error) {
       await showDialog('ツリーリストの取得に失敗しました。\n\n' + error, 'Error');
     }
-  }, [showDialog]);
+  }, [showDialog, setTreesList]);
 
   // ツリーリストをIndexedDBから読み込む---------------------------------------------------------------------------
   const loadAndSetTreesListFromIdb = useCallback(async () => {
@@ -823,7 +824,7 @@ export const useTreeManagement = () => {
     const isConnectedDb = useAppStateStore.getState().isConnectedDb;
     if (!targetTree || !uid || (!isConnectedDb && !isOffline)) return Promise.resolve();
     await idbService.saveIsArchivedToIdb(targetTree, isArchived);
-    await dbService.saveIsArchivedDb(uid, targetTree, isArchived);
+    await dbService.saveIsArchivedDb(targetTree, isArchived);
     setCurrentTreeIsArchived(isArchived);
     const newList = useTreeStateStore.getState().treesList.map((tree) => {
       if (tree.id === targetTree) {
@@ -850,7 +851,7 @@ export const useTreeManagement = () => {
     handleDeleteUserFromTree,
     handleDeleteTree,
     handleChangeIsArchived,
-    loadAndSaveTreesList,
+    loadAndSetTreesListFromDb,
     loadAndSetTreesListFromIdb,
     loadAndSetCurrentTreeDataFromIdb,
   };

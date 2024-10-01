@@ -17,7 +17,7 @@ export const useAppStateManagement = () => {
   const { handleError } = useError();
 
   // Firebaseからダークモード、完了済みアイテムの非表示設定を取得してIndexedDBに保存 ------------------------------------------------
-  const loadAndSaveSettings = useCallback(async ({ saveToIdb }: { saveToIdb: boolean }) => {
+  const loadAndSetSettingsFromDb = useCallback(async ({ saveToIdb }: { saveToIdb: boolean }) => {
     const uid = useAppStateStore.getState().uid;
     if (!uid) {
       return;
@@ -39,7 +39,7 @@ export const useAppStateManagement = () => {
   }, [handleError, setDarkMode, setHideDoneItems]);
 
   // Firebaseからクイックメモを取得してIndexedDBに保存 ------------------------------------------------
-  const loadAndSaveQuickMemo = useCallback(async ({ saveToIdb }: { saveToIdb: boolean }) => {
+  const loadAndSetQuickMemoFromDb = useCallback(async ({ saveToIdb }: { saveToIdb: boolean }) => {
     const uid = useAppStateStore.getState().uid;
     if (!uid) {
       return;
@@ -54,6 +54,19 @@ export const useAppStateManagement = () => {
       }
       setIsLoadedMemoFromDb(true);
       setQuickMemoText(quickMemo);
+    } catch (error) {
+      handleError(error);
+    }
+  }, [handleError, setIsLoadedMemoFromDb, setQuickMemoText]);
+
+  // IndexedDBからクイックメモを取得 ------------------------------------------------
+  const loadAndSetQuickMemoFromIdb = useCallback(async () => {
+    try {
+      const quickMemo = await idbService.loadQuickMemoFromIdb();
+      if (quickMemo) {
+        setIsLoadedMemoFromDb(true);
+        setQuickMemoText(quickMemo);
+      }
     } catch (error) {
       handleError(error);
     }
@@ -102,5 +115,5 @@ export const useAppStateManagement = () => {
     }
   }, [handleError, updateTimeStamp]);
 
-  return { loadAndSaveSettings, loadAndSaveQuickMemo, saveAppSettings, saveQuickMemo, loadAppSettingsFromIdb };
+  return { loadAndSetSettingsFromDb, loadAndSetQuickMemoFromDb, loadAndSetQuickMemoFromIdb, saveAppSettings, saveQuickMemo, loadAppSettingsFromIdb };
 };

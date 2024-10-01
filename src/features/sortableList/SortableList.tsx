@@ -31,6 +31,10 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
 
   const theme = useTheme();
 
+  const searchResultsAvoidArchived = searchResults.filter((item) => !item.isArchived);
+
+  const bindingList = searchKey.length > 0 ? searchResults : searchResultsAvoidArchived;
+
   return (
     <>
       <DndContext
@@ -52,18 +56,16 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
           await handleSaveTreesList(newItems);
         }}
       >
-        <SortableContext items={searchResults}>
-          {searchResults.map((item) =>
-            searchKey.length > 0 || !item.isArchived ? (
-              <SortableItem
-                key={item.id}
-                isPreviewMode={isPreviewMode}
-                item={item}
-                handleListClick={handleListClick}
-                setDrawerState={setDrawerState}
-              />
-            ) : null
-          )}
+        <SortableContext items={bindingList}>
+          {bindingList.map((item) => (
+            <SortableItem
+              key={item.id}
+              isPreviewMode={isPreviewMode}
+              item={item}
+              handleListClick={handleListClick}
+              setDrawerState={setDrawerState}
+            />
+          ))}
         </SortableContext>
         {createPortal(
           <DragOverlay

@@ -135,7 +135,7 @@ export function TreeSettingsAccordion() {
             {isAccordionExpanded ? (
               <TextField
                 id='outlined-basic'
-                sx={{ zIndex: 1200, marginTop: 0, marginX: 2 }}
+                sx={{ zIndex: 1200, marginTop: 0, marginX: 2, '& .MuiInputBase-input': { textAlign: 'center' } }}
                 label='Tree Name'
                 fullWidth
                 size='small'
@@ -153,11 +153,6 @@ export function TreeSettingsAccordion() {
                     setIsAccordionExpanded(false);
                   }
                 }}
-                slotProps={{
-                  input: {
-                    style: { textAlign: 'center' },
-                  },
-                }}
                 inputRef={inputRef}
               />
             ) : (
@@ -171,7 +166,7 @@ export function TreeSettingsAccordion() {
                   justifyContent: 'center',
                 }}
               >
-                {currentTreeIsArchived && <Archive fontSize='small' sx={{ mr: 0.5, mb: 0.5 }} />}
+                {currentTreeIsArchived && <Archive fontSize='small' sx={{ mr: 0.5 }} />}
                 {currentTreeName}
               </Typography>
             )}

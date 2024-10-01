@@ -198,7 +198,7 @@ export const initializeTreeDataIdb = async () => {
 };
 
 // ツリーの保存
-export const saveTreeToIdb = async (id: UniqueIdentifier, name: string, members: string[], membersV2: { [key: string]: string }, timestamp: number, items: TreeItems) => {
+export const saveTreeToIdb = async (id: UniqueIdentifier, name: string, members: string[], membersV2: { [key: string]: string }, timestamp: number, items: TreeItems, isArchived?: boolean,) => {
   try {
     await idb.treestate.put({
       id: id,
@@ -207,6 +207,7 @@ export const saveTreeToIdb = async (id: UniqueIdentifier, name: string, members:
       membersV2: membersV2,
       timestamp: timestamp,
       items: items,
+      isArchived: isArchived,
     });
   } catch (error) {
     throw new Error('IndexedDBへのツリーの保存に失敗しました。' + error);

@@ -9,6 +9,7 @@ import { QuickMemo } from '@/features/homepage/components/QuickMemo';
 import { useAuth } from '@/features/homepage/hooks/useAuth';
 import { Login } from '@/features/homepage/components/Login';
 import { ArchiveList } from '@/features/homepage/components/ArchiveList';
+import { Capacitor } from '@capacitor/core';
 
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
@@ -55,6 +56,7 @@ export function HomePage() {
                 '@media (max-width: 1546px)': {
                   ml: { xs: 'auto', sm: `${drawerWidth}px` },
                 },
+                paddingTop: Capacitor.isNativePlatform() ? 'env(safe-area-inset-top)' : 0,
               }}
             >
               {isShowArchive ? (
@@ -66,7 +68,12 @@ export function HomePage() {
                     <>
                       <TreeSettingsAccordion />
                       <Box
-                        sx={{ maxWidth: '900px', width: '100%', marginX: 'auto', mb: isQuickMemoExpanded ? 50 : 8 }}
+                        sx={{
+                          maxWidth: '900px',
+                          width: '100%',
+                          marginX: 'auto',
+                          mb: isQuickMemoExpanded ? 50 : 8,
+                        }}
                         id='tree-container'
                       >
                         <Box sx={{ height: { xs: '90px', sm: '138px' } }} />

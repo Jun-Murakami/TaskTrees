@@ -60,7 +60,7 @@ export const loadTreeTimestampFromDb = async (targetTree: UniqueIdentifier): Pro
         return null;
       });
   } catch (error) {
-    console.log('データベースからのタイムスタンプの取得に失敗しました。\n\n' + error);
+    console.log('データベースからのタイムスタンプの取得に失敗しました。\n\n' + error + '\n\n' + targetTree);
     return null;
   }
 };
@@ -100,7 +100,7 @@ export const saveItemsDb = async (targetTree: UniqueIdentifier, newItems: TreeIt
 export const saveTreesListDb = async (uid: string, newTreesList: TreesList) => {
   try {
     const treeListRef = ref(getDatabase(), `users/${uid}/treeList`);
-    await set(treeListRef, newTreesList);
+    await set(treeListRef, newTreesList.map((tree) => tree.id));
   } catch (error) {
     throw new Error('データベースへのtreesListの保存に失敗しました。\n\n' + error);
   }
@@ -112,27 +112,17 @@ export const saveCurrentTreeNameDb = async (targetTree: UniqueIdentifier, newTre
     const treeNameRef = ref(getDatabase(), `trees/${targetTree}/name`);
     await set(treeNameRef, newTreeName);
   } catch (error) {
-    throw new Error('データベースへのツリー名の保存に失敗しました。\n\n' + error);
+    throw new Error('データベースへのツリー名の保存に失敗しました。\n\n' + error + '\n\n' + targetTree);
   }
 };
 
 // ツリーのアーカイブ属性をデータベースに保存する関数
-export const saveIsArchivedDb = async (uid: string, targetTree: UniqueIdentifier, isArchived: boolean | null) => {
+export const saveIsArchivedDb = async (targetTree: UniqueIdentifier, isArchived: boolean | null) => {
   try {
     const treeRef = ref(getDatabase(), `trees/${targetTree}/isArchived`);
     await set(treeRef, isArchived);
-    const treeListRef = ref(getDatabase(), `users/${uid}/treeList`);
-    const snapshot = await get(treeListRef);
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      const treeIndex = data.findIndex((tree: TreesListItem) => tree.id === targetTree);
-      if (treeIndex !== -1) {
-        data[treeIndex].isArchived = isArchived;
-        await set(treeListRef, data);
-      }
-    }
   } catch (error) {
-    throw new Error('データベースへのツリーのアーカイブ属性の保存に失敗しました。\n\n' + error);
+    throw new Error('データベースへのツリーのアーカイブ属性の保存に失敗しました。\n\n' + error + '\n\n' + targetTree);
   }
 };
 
@@ -142,7 +132,7 @@ export const deleteTreeFromDb = async (targetTree: UniqueIdentifier) => {
     const treeRef = ref(getDatabase(), `trees/${targetTree}`);
     await set(treeRef, null);
   } catch (error) {
-    throw new Error('データベースからのツリーの削除に失敗しました。\n\n' + error);
+    throw new Error('データベースからのツリーの削除に失敗しました。\n\n' + error + '\n\n' + targetTree);
   }
 };
 
@@ -157,8 +147,24 @@ export const loadTreeNameFromDb = async (targetTree: UniqueIdentifier): Promise<
       return null;
     }
   } catch (error) {
-    console.log('データベースからのツリー名の取得に失敗しました。\n\n' + error);
+    console.log('データベースからのツリー名の取得に失敗しました。\n\n' + error + '\n\n' + targetTree);
     return null;
+  }
+};
+
+// データベースからツリーのアーカイブ属性を取得する関数
+export const loadIsArchivedFromDb = async (targetTree: UniqueIdentifier): Promise<boolean | undefined> => {
+  try {
+    const treeIsArchivedRef = ref(getDatabase(), `trees/${targetTree}/isArchived`);
+    const snapshot = await get(treeIsArchivedRef);
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      return undefined;
+    }
+  } catch (error) {
+    console.log('データベースからのツリーのアーカイブ属性の取得に失敗しました。\n\n' + error + '\n\n' + targetTree);
+    return undefined;
   }
 };
 
@@ -171,22 +177,23 @@ export const loadTreesListFromDb = async (
     const snapshot = await get(userTreeListRef);
     if (snapshot.exists()) {
       let missingTrees: UniqueIdentifier[] = [];
-      const data: TreesList = snapshot.val();
+      const data: string[] = snapshot.val();
       let treesListAccumulator: TreesList = [];
-      // 反復してツリー名をDBから取得
-      const promises = data.map(async (tree) => {
-        const treeTitle = await loadTreeNameFromDb(tree.id);
+      // 反復してツリー名とアーカイブ属性をDBから取得
+      const promises = data.map(async (treeId) => {
+        const treeTitle = await loadTreeNameFromDb(treeId);
+        const isArchived = await loadIsArchivedFromDb(treeId);
         if (treeTitle) {
-          treesListAccumulator = [...treesListAccumulator, { id: tree.id, name: treeTitle, isArchived: tree.isArchived }];
+          treesListAccumulator = [...treesListAccumulator, { id: treeId, name: treeTitle, isArchived: isArchived }];
         } else {
-          missingTrees = missingTrees ? [...missingTrees, tree.id] : [tree.id];
+          missingTrees = missingTrees ? [...missingTrees, treeId] : [treeId];
         }
       });
       await Promise.all(promises);
 
       // DBの順序に基づいてtreesListAccumulatorを並び替え
       const orderedTreesList = data
-        .map((tree) => treesListAccumulator.find((t) => t.id === tree.id))
+        .map((treeId) => treesListAccumulator.find((t) => t.id === treeId))
         .filter((t): t is TreesListItem => t !== undefined);
 
       return { orderedTreesList, missingTrees };
@@ -263,6 +270,7 @@ export const loadAllTreesDataFromDb = async (treesList: TreesList) => {
             members: treeData.members,
             membersV2: treeData.membersV2,
             timestamp: treeData.timestamp,
+            isArchived: treeData.isArchived,
             items: treeData.items,
           };
           return treeItemsIncludingItems;

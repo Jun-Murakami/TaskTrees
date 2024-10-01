@@ -37,20 +37,24 @@ export const ArchiveList = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: '900px', width: '100%', marginX: 'auto' }}>
-      <Typography variant='h6' sx={{ textAlign: 'center', my: 4 }}>
-        アーカイブ済みツリー
-      </Typography>
-      <Box sx={{ width: '100%', height: '100%', border: '1px solid #e0e0e0', borderRadius: 2, p: 0 }}>
+    <Box
+      sx={{
+        maxWidth: '900px',
+        width: '100%',
+        marginX: 'auto',
+      }}
+    >
+      <Box sx={{ py: 4 }}>
+        <Typography variant='h6' sx={{ textAlign: 'center' }}>
+          アーカイブ済みツリー
+        </Typography>
+      </Box>
+      <Box sx={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 2, p: 0 }}>
         <List
           sx={{
             m: 0,
             p: 0,
-            justifyContent: 'left',
             textAlign: 'left',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
           }}
         >
           {treesList
@@ -61,11 +65,6 @@ export const ArchiveList = () => {
                   <ListItemText
                     primary={tree.name}
                     sx={{
-                      justifyContent: 'left',
-                      textAlign: 'left',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
                       width: '100%',
                     }}
                   />

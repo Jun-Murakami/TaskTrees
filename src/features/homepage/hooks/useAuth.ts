@@ -106,7 +106,6 @@ export const useAuth = () => {
     const asyncFunc = async () => {
       try {
         unsubscribe = auth.onAuthStateChanged(async (user) => {
-          console.log('authStateChanged', user);
           await loginAction(user);
         });
       } catch (error) {

@@ -22,49 +22,38 @@ export const useObserve = () => {
   const setItems = useTreeStateStore((state) => state.setItems);
   const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
   const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
-  const setTreesList = useTreeStateStore((state) => state.setTreesList);
 
   const showDialog = useDialogStore((state) => state.showDialog);
 
-  const { loadAndSetCurrentTreeDataFromIdb, saveItems, loadAndSaveTreesList, loadAndSetTreesListFromIdb } = useTreeManagement();
+  const { loadAndSetCurrentTreeDataFromIdb, saveItems, loadAndSetTreesListFromDb, loadAndSetTreesListFromIdb } = useTreeManagement();
   const { loadAndSyncOfflineTree } = useOfflineTree();
   const { syncDb, checkAndSyncDb, copyTreeDataToIdbFromDb, loadAndSetLocalTimeStamp } = useSync();
-  const { loadAndSaveSettings, loadAndSaveQuickMemo, saveQuickMemo, loadAppSettingsFromIdb } = useAppStateManagement();
+  const { loadAndSetSettingsFromDb, loadAndSetQuickMemoFromDb, loadAndSetQuickMemoFromIdb, saveQuickMemo, loadAppSettingsFromIdb } = useAppStateManagement();
   const { handleError } = useError();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
   const observeTimeStamp = useCallback(
     async (uid: string) => {
       setIsLoading(true);
-      console.log('observeTimeStamp', uid);
       await loadAndSetLocalTimeStamp();
-      console.log('loadAndSetLocalTimeStamp', uid);
       await checkAndSyncDb();
-      console.log('checkAndSyncDb', uid);
       await loadAppSettingsFromIdb();
-      console.log('loadAppSettingsFromIdb', uid);
       await loadAndSetTreesListFromIdb();
-      console.log('loadAndSetTreesListFromIdb', uid);
-      await loadAndSaveQuickMemo({ saveToIdb: false });
+      await loadAndSetQuickMemoFromIdb();
       setIsLoading(false);
-      console.log('loadAndSaveQuickMemo', uid);
       await loadAndSyncOfflineTree();
-      console.log('loadAndSyncOfflineTree', uid);
 
       // Firebaseのタイムスタンプを監視
       const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
       const unsubscribeDbObserver = onValue(timestampRef, async (snapshot) => {
-        console.log('onValue', uid);
         setIsLoading(true);
         const serverTimestamp = snapshot.val();
         const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
         if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
           setLocalTimestamp(serverTimestamp);
-          console.log('setLocalTimestamp', uid);
-          await loadAndSaveSettings({ saveToIdb: true });
-          console.log('loadAndSaveSettings', uid);
-          await loadAndSaveQuickMemo({ saveToIdb: true });
-          const newTreesList = await loadAndSaveTreesList({ saveToIdb: true });
+          await loadAndSetSettingsFromDb({ saveToIdb: true });
+          await loadAndSetQuickMemoFromDb({ saveToIdb: true });
+          const newTreesList = await loadAndSetTreesListFromDb({ saveToIdb: true });
           if (!newTreesList) {
             return;
           }
@@ -73,18 +62,17 @@ export const useObserve = () => {
           let treeUpdateCount = 0;
           for (const treeId of treeIds) {
             setIsLoading(true);
-            const treeRef = ref(getDatabase(), `trees/${treeId}`);
-            await get(treeRef).then(async (snapshot) => {
+            const treeTimestampRef = ref(getDatabase(), `trees/${treeId}/timestamp`);
+            await get(treeTimestampRef).then(async (snapshot) => {
               if (snapshot.exists()) {
                 const data = snapshot.val();
-                if (data.timestamp > currentLocalTimestamp) {
+                if (data > currentLocalTimestamp) {
                   await copyTreeDataToIdbFromDb(treeId);
                   treeUpdateCount++;
                 }
               }
             });
           }
-          setTreesList(newTreesList);
           // サーバータイムスタンプのV1とV2に差異がある場合、同期し直す
           if (treeUpdateCount == 0) {
             setIsLoading(true);
@@ -131,9 +119,10 @@ export const useObserve = () => {
       loadAndSetLocalTimeStamp,
       checkAndSyncDb,
       syncDb,
-      loadAndSaveSettings,
-      loadAndSaveQuickMemo,
-      loadAndSaveTreesList,
+      loadAndSetSettingsFromDb,
+      loadAndSetQuickMemoFromDb,
+      loadAndSetQuickMemoFromIdb,
+      loadAndSetTreesListFromDb,
       loadAndSetTreesListFromIdb,
       copyTreeDataToIdbFromDb,
       loadAppSettingsFromIdb,
@@ -142,7 +131,6 @@ export const useObserve = () => {
       setIsLoading,
       setLocalTimestamp,
       setPrevCurrentTree,
-      setTreesList,
     ]
   );
 
