@@ -2,7 +2,7 @@ import { createTheme } from '@mui/material/styles';
 import '@fontsource/m-plus-1p/400.css';
 
 const fontFamilySet = [
-  'M PLUS 1p',
+  '"M PLUS 1p"',
   '-apple-system',
   'BlinkMacSystemFont',
   '"Segoe UI"',
