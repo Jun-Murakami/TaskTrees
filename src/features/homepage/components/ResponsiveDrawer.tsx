@@ -77,6 +77,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
     if (currentTree === treeId) {
       return;
     }
+    setDrawerState(false);
     setIsShowArchive(false);
     setCurrentTree(treeId);
     await loadAndSetCurrentTreeDataFromIdb(treeId);
