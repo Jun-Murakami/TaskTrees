@@ -7,8 +7,12 @@ import { TreeItems, TreesList, TreesListItem, TreesListItemIncludingItems, AppSt
 type currentTreeMembers = { uid: string; email: string }[] | null;
 
 // タイムスタンプをデータベースに保存する関数
-export const saveTimeStampDb = async (uid: string, targetTree: UniqueIdentifier | null, currentTreeMembers: currentTreeMembers, newTimestamp: number) => {
-
+export const saveTimeStampDb = async (
+  uid: string,
+  targetTree: UniqueIdentifier | null,
+  currentTreeMembers: currentTreeMembers,
+  newTimestamp: number
+) => {
   try {
     // ユーザーのタイムスタンプV2を更新
     const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
@@ -66,7 +70,7 @@ export const saveItemsDb = async (targetTree: UniqueIdentifier, newItems: TreeIt
   try {
     // undefinedのプロパティを削除
     const removeUndefined = (obj: Record<string, unknown>): Record<string, unknown> => {
-      Object.keys(obj).forEach(key => {
+      Object.keys(obj).forEach((key) => {
         if (obj[key] && typeof obj[key] === 'object') {
           removeUndefined(obj[key] as Record<string, unknown>);
         } else if (obj[key] === undefined) {
@@ -82,7 +86,7 @@ export const saveItemsDb = async (targetTree: UniqueIdentifier, newItems: TreeIt
     const snapshot = await get(treeStateRef);
     if (snapshot.exists()) {
       // 存在する場合、更新を実行
-      await set(treeStateRef, cleanedItems)
+      await set(treeStateRef, cleanedItems);
     } else {
       // 存在しない場合、エラーハンドリング
       throw new Error('更新対象のsnapshotが存在しません。ツリー内容の変更は破棄されました。code:4');
@@ -159,7 +163,9 @@ export const loadTreeNameFromDb = async (targetTree: UniqueIdentifier): Promise<
 };
 
 // データベースからツリーリストを取得する関数
-export const loadTreesListFromDb = async (uid: string): Promise<{ orderedTreesList: TreesList, missingTrees: UniqueIdentifier[] }> => {
+export const loadTreesListFromDb = async (
+  uid: string
+): Promise<{ orderedTreesList: TreesList; missingTrees: UniqueIdentifier[] }> => {
   try {
     const userTreeListRef = ref(getDatabase(), `users/${uid}/treeList`);
     const snapshot = await get(userTreeListRef);
@@ -171,7 +177,7 @@ export const loadTreesListFromDb = async (uid: string): Promise<{ orderedTreesLi
       const promises = data.map(async (tree) => {
         const treeTitle = await loadTreeNameFromDb(tree.id);
         if (treeTitle) {
-          treesListAccumulator = [...treesListAccumulator, { id: tree.id, name: treeTitle }];
+          treesListAccumulator = [...treesListAccumulator, { id: tree.id, name: treeTitle, isArchived: tree.isArchived }];
         } else {
           missingTrees = missingTrees ? [...missingTrees, tree.id] : [tree.id];
         }
@@ -244,7 +250,6 @@ const isValiedTreesListItemIncludingItems = async (arg: unknown): Promise<boolea
 
 // 本編
 export const loadAllTreesDataFromDb = async (treesList: TreesList) => {
-
   try {
     const promises = treesList.map(async (treesListItem: TreesListItem) => {
       const treeRef = ref(getDatabase(), `trees/${treesListItem.id}`);
@@ -273,7 +278,7 @@ export const loadAllTreesDataFromDb = async (treesList: TreesList) => {
     console.log('データベースからのツリーデータの取得に失敗しました。\n\n' + error);
     return null;
   }
-}
+};
 
 // データベースからAppStateを取得する関数
 export const loadAppStateFromDb = async (uid: string): Promise<AppState | null> => {
@@ -294,7 +299,7 @@ export const loadAppStateFromDb = async (uid: string): Promise<AppState | null> 
     console.log('データベースからのAppStateの取得に失敗しました。\n\n' + error);
     return null;
   }
-}
+};
 
 // データベースからクイックメモを取得する関数
 export const loadQuickMemoFromDb = async (uid: string): Promise<string | null> => {
@@ -311,7 +316,7 @@ export const loadQuickMemoFromDb = async (uid: string): Promise<string | null> =
     console.log('データベースからのクイックメモの取得に失敗しました。\n\n' + error);
     return null;
   }
-}
+};
 
 // データベースにAppStateを保存する関数
 export const saveAppStateToDb = async (uid: string, darkModeNew: boolean, hideDoneItemsNew: boolean) => {
@@ -321,7 +326,7 @@ export const saveAppStateToDb = async (uid: string, darkModeNew: boolean, hideDo
   } catch (error) {
     throw new Error('データベースへのAppStateの保存に失敗しました。\n\n' + error);
   }
-}
+};
 
 // データベースにクイックメモを保存する関数
 export const saveQuickMemoToDb = async (uid: string, quickMemoText: string) => {
@@ -331,4 +336,4 @@ export const saveQuickMemoToDb = async (uid: string, quickMemoText: string) => {
   } catch (error) {
     throw new Error('データベースへのクイックメモの保存に失敗しました。\n\n' + error);
   }
-}
+};
