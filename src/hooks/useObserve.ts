@@ -13,7 +13,6 @@ import { useTreeStateStore } from '@/store/treeStateStore';
 import { useDialogStore } from '@/store/dialogStore';
 import { Preferences } from '@capacitor/preferences';
 
-
 export const useObserve = () => {
   const items = useTreeStateStore((state) => state.items);
   const quickMemoText = useAppStateStore((state) => state.quickMemoText);
@@ -23,6 +22,7 @@ export const useObserve = () => {
   const setItems = useTreeStateStore((state) => state.setItems);
   const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
   const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
+  const setTreesList = useTreeStateStore((state) => state.setTreesList);
 
   const showDialog = useDialogStore((state) => state.showDialog);
 
@@ -33,113 +33,118 @@ export const useObserve = () => {
   const { handleError } = useError();
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
-  const observeTimeStamp = useCallback(async (uid: string) => {
-    setIsLoading(true);
-    console.log('observeTimeStamp', uid);
-    await loadAndSetLocalTimeStamp();
-    console.log('loadAndSetLocalTimeStamp', uid);
-    await checkAndSyncDb();
-    console.log('checkAndSyncDb', uid);
-    await loadAppSettingsFromIdb();
-    console.log('loadAppSettingsFromIdb', uid);
-    await loadAndSetTreesListFromIdb();
-    console.log('loadAndSetTreesListFromIdb', uid);
-    await loadAndSaveQuickMemo({ saveToIdb: false });
-    setIsLoading(false);
-    console.log('loadAndSaveQuickMemo', uid);
-    await loadAndSyncOfflineTree();
-    console.log('loadAndSyncOfflineTree', uid);
-
-    // Firebaseのタイムスタンプを監視
-    const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
-    const unsubscribeDbObserver = onValue(timestampRef, async (snapshot) => {
-      console.log('onValue', uid);
+  const observeTimeStamp = useCallback(
+    async (uid: string) => {
       setIsLoading(true);
-      const serverTimestamp = snapshot.val();
-      const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
-      if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
-        setLocalTimestamp(serverTimestamp);
-        console.log('setLocalTimestamp', uid);
-        await loadAndSaveSettings({ saveToIdb: true });
-        console.log('loadAndSaveSettings', uid);
-        await loadAndSaveQuickMemo({ saveToIdb: true });
-        const newTreesList = await loadAndSaveTreesList({ saveToIdb: true });
-        if (!newTreesList) {
-          return;
-        }
-        // 各ツリーのタイムスタンプをチェックし、最新のツリーをコピー
-        const treeIds = newTreesList.map((tree) => tree.id);
-        let treeUpdateCount = 0;
-        for (const treeId of treeIds) {
-          setIsLoading(true);
-          const treeRef = ref(getDatabase(), `trees/${treeId}`);
-          await get(treeRef).then(async (snapshot) => {
-            if (snapshot.exists()) {
-              const data = snapshot.val();
-              if (data.timestamp > currentLocalTimestamp) {
-                await copyTreeDataToIdbFromDb(treeId);
-                treeUpdateCount++;
-              }
-            }
-          });
-        }
-        // サーバータイムスタンプのV1とV2に差異がある場合、同期し直す
-        if (treeUpdateCount == 0) {
-          setIsLoading(true);
-          const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
-          await get(timestampV2Ref).then(async (snapshot) => {
-            if (snapshot.exists()) {
-              const data = snapshot.val();
-              if (data !== serverTimestamp) {
-                console.log('サーバータイムスタンプのV1とV2に差異があるため、同期し直します。');
-                await syncDb();
-              }
-            }
-          });
-        }
-        const currentTree = useTreeStateStore.getState().currentTree;
-        if (currentTree) {
-          setIsLoading(true);
-          setPrevCurrentTree(null);
-          await loadAndSetCurrentTreeDataFromIdb(currentTree);
-        }
-      }
+      console.log('observeTimeStamp', uid);
+      await loadAndSetLocalTimeStamp();
+      console.log('loadAndSetLocalTimeStamp', uid);
+      await checkAndSyncDb();
+      console.log('checkAndSyncDb', uid);
+      await loadAppSettingsFromIdb();
+      console.log('loadAppSettingsFromIdb', uid);
+      await loadAndSetTreesListFromIdb();
+      console.log('loadAndSetTreesListFromIdb', uid);
+      await loadAndSaveQuickMemo({ saveToIdb: false });
       setIsLoading(false);
-    });
+      console.log('loadAndSaveQuickMemo', uid);
+      await loadAndSyncOfflineTree();
+      console.log('loadAndSyncOfflineTree', uid);
 
-    // Firebaseの接続状態を監視
-    const connectedRef = ref(getDatabase(), '.info/connected');
-    const unsubscribeDbConnectionChecker = onValue(connectedRef, (snap) => {
-      const isLoading = useAppStateStore.getState().isLoading;
-      const setIsConnectedDb = useAppStateStore.getState().setIsConnectedDb;
-      setIsConnectedDb(snap.val() === true);
-      if (snap.val() === true && isLoading) {
-        setIsLoading(false);
-      } else if (snap.val() === false && !isLoading) {
+      // Firebaseのタイムスタンプを監視
+      const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
+      const unsubscribeDbObserver = onValue(timestampRef, async (snapshot) => {
+        console.log('onValue', uid);
         setIsLoading(true);
-      }
-    });
+        const serverTimestamp = snapshot.val();
+        const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
+        if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
+          setLocalTimestamp(serverTimestamp);
+          console.log('setLocalTimestamp', uid);
+          await loadAndSaveSettings({ saveToIdb: true });
+          console.log('loadAndSaveSettings', uid);
+          await loadAndSaveQuickMemo({ saveToIdb: true });
+          const newTreesList = await loadAndSaveTreesList({ saveToIdb: true });
+          if (!newTreesList) {
+            return;
+          }
+          // 各ツリーのタイムスタンプをチェックし、最新のツリーをコピー
+          const treeIds = newTreesList.map((tree) => tree.id);
+          let treeUpdateCount = 0;
+          for (const treeId of treeIds) {
+            setIsLoading(true);
+            const treeRef = ref(getDatabase(), `trees/${treeId}`);
+            await get(treeRef).then(async (snapshot) => {
+              if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (data.timestamp > currentLocalTimestamp) {
+                  await copyTreeDataToIdbFromDb(treeId);
+                  treeUpdateCount++;
+                }
+              }
+            });
+          }
+          setTreesList(newTreesList);
+          // サーバータイムスタンプのV1とV2に差異がある場合、同期し直す
+          if (treeUpdateCount == 0) {
+            setIsLoading(true);
+            const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
+            await get(timestampV2Ref).then(async (snapshot) => {
+              if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (data !== serverTimestamp) {
+                  console.log('サーバータイムスタンプのV1とV2に差異があるため、同期し直します。');
+                  await syncDb();
+                }
+              }
+            });
+          }
+          const currentTree = useTreeStateStore.getState().currentTree;
+          if (currentTree) {
+            setIsLoading(true);
+            setPrevCurrentTree(null);
+            await loadAndSetCurrentTreeDataFromIdb(currentTree);
+          }
+        }
+        setIsLoading(false);
+      });
 
-    return () => {
-      unsubscribeDbObserver();
-      unsubscribeDbConnectionChecker();
-    };
-  }, [
-    loadAndSetLocalTimeStamp,
-    checkAndSyncDb,
-    syncDb,
-    loadAndSaveSettings,
-    loadAndSaveQuickMemo,
-    loadAndSaveTreesList,
-    loadAndSetTreesListFromIdb,
-    copyTreeDataToIdbFromDb,
-    loadAppSettingsFromIdb,
-    loadAndSetCurrentTreeDataFromIdb,
-    loadAndSyncOfflineTree,
-    setIsLoading,
-    setLocalTimestamp,
-    setPrevCurrentTree,
-  ]);
+      // Firebaseの接続状態を監視
+      const connectedRef = ref(getDatabase(), '.info/connected');
+      const unsubscribeDbConnectionChecker = onValue(connectedRef, (snap) => {
+        const isLoading = useAppStateStore.getState().isLoading;
+        const setIsConnectedDb = useAppStateStore.getState().setIsConnectedDb;
+        setIsConnectedDb(snap.val() === true);
+        if (snap.val() === true && isLoading) {
+          setIsLoading(false);
+        } else if (snap.val() === false && !isLoading) {
+          setIsLoading(true);
+        }
+      });
+
+      return () => {
+        unsubscribeDbObserver();
+        unsubscribeDbConnectionChecker();
+      };
+    },
+    [
+      loadAndSetLocalTimeStamp,
+      checkAndSyncDb,
+      syncDb,
+      loadAndSaveSettings,
+      loadAndSaveQuickMemo,
+      loadAndSaveTreesList,
+      loadAndSetTreesListFromIdb,
+      copyTreeDataToIdbFromDb,
+      loadAppSettingsFromIdb,
+      loadAndSetCurrentTreeDataFromIdb,
+      loadAndSyncOfflineTree,
+      setIsLoading,
+      setLocalTimestamp,
+      setPrevCurrentTree,
+      setTreesList,
+    ]
+  );
 
   // ローカルitemsの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
   useEffect(() => {
