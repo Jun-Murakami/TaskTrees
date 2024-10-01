@@ -55,7 +55,7 @@ export const QuickMemo = () => {
         sx={{
           position: 'fixed',
           bottom: 0,
-          zIndex: 900,
+          zIndex: 1210,
           width: '100%',
           '@media (min-width: 1546px)': {
             left: '50%',
