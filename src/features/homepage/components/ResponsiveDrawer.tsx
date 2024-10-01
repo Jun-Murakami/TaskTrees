@@ -136,6 +136,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
                 setCurrentTreeName(null);
                 setItems([]);
                 setIsShowArchive(true);
+                setDrawerState(false);
               }}
             >
               <Button sx={{ width: '20px', minWidth: '20px', height: '20px', mr: '10px', color: theme.palette.grey[500] }}>
