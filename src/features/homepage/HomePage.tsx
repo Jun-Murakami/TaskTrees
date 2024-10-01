@@ -51,7 +51,7 @@ export function HomePage() {
                 maxWidth: '930px',
                 px: '15px',
                 mx: 'auto',
-                minHeight: currentTree !== null ? '100vh' : 'auto',
+                height: '100dvh',
                 '@media (max-width: 1546px)': {
                   ml: { xs: 'auto', sm: `${drawerWidth}px` },
                 },
@@ -75,7 +75,7 @@ export function HomePage() {
                     </>
                   ) : (
                     // ツリーがない場合
-                    <Box sx={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <Box sx={{ height: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                       <Box>
                         <TaskTreesLogo />
                         <MessagePaper />
@@ -109,7 +109,7 @@ export function HomePage() {
           <Box
             sx={{
               textAlign: 'center',
-              height: '100vh',
+              height: '100dvh',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
