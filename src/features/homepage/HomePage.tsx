@@ -72,7 +72,7 @@ export function HomePage() {
                           maxWidth: '900px',
                           width: '100%',
                           marginX: 'auto',
-                          mb: isQuickMemoExpanded ? 50 : 8,
+                          pb: isQuickMemoExpanded ? 60 : 15,
                         }}
                         id='tree-container'
                       >
@@ -121,6 +121,7 @@ export function HomePage() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
+              p: 2,
             }}
           >
             <TaskTreesLogo />
