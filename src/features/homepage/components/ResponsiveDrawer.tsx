@@ -291,6 +291,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
               boxSizing: 'border-box',
               width: drawerWidth,
             },
+            zIndex: 1250,
           }}
         >
           {drawerItems}
