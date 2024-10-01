@@ -37,21 +37,22 @@ export const Login = ({
       sx={{
         textAlign: 'center',
         maxWidth: 400,
+        width: '100%',
         marginX: 'auto',
-        height: '100vh',
+        minHeight: '100vh',
         p: 4,
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
       }}
     >
-      <Box>
+      <Box sx={{ width: '100%' }}>
         <TaskTreesLogo />
         {isLoading ? (
           <CircularProgress sx={{ marginY: 4, display: 'block', marginX: 'auto' }} />
         ) : (
           <>
-            <Stack spacing={2} sx={{ width: '100%', maxWidth: 400 }}>
+            <Stack spacing={2} sx={{ width: '100%' }}>
               <TextField
                 label='メールアドレス'
                 variant='outlined'

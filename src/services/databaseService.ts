@@ -56,7 +56,8 @@ export const loadTreeTimestampFromDb = async (targetTree: UniqueIdentifier): Pro
         return null;
       });
   } catch (error) {
-    throw new Error('データベースからのタイムスタンプの取得に失敗しました。\n\n' + error);
+    console.log('データベースからのタイムスタンプの取得に失敗しました。\n\n' + error);
+    return null;
   }
 };
 
@@ -152,7 +153,8 @@ export const loadTreeNameFromDb = async (targetTree: UniqueIdentifier): Promise<
       return null;
     }
   } catch (error) {
-    throw new Error('データベースからのツリー名の取得に失敗しました。\n\n' + error);
+    console.log('データベースからのツリー名の取得に失敗しました。\n\n' + error);
+    return null;
   }
 };
 
@@ -186,7 +188,8 @@ export const loadTreesListFromDb = async (uid: string): Promise<{ orderedTreesLi
       return { orderedTreesList: [], missingTrees: [] };
     }
   } catch (error) {
-    throw new Error('データベースからのtreesListの取得に失敗しました。\n\n' + error);
+    console.log('データベースからのtreesListの取得に失敗しました。\n\n' + error);
+    return { orderedTreesList: [], missingTrees: [] };
   }
 };
 
@@ -201,7 +204,8 @@ export const loadItemsFromDb = async (targetTree: UniqueIdentifier): Promise<Tre
       return null;
     }
   } catch (error) {
-    throw new Error('データベースからのitemsの取得に失敗しました。\n\n' + error);
+    console.log('データベースからのitemsの取得に失敗しました。\n\n' + error);
+    return null;
   }
 };
 
@@ -216,7 +220,8 @@ export const loadMembersFromDb = async (targetTree: UniqueIdentifier): Promise<s
       return null;
     }
   } catch (error) {
-    throw new Error('データベースからのツリーメンバーの取得に失敗しました。\n\n' + error);
+    console.log('データベースからのツリーメンバーの取得に失敗しました。\n\n' + error);
+    return null;
   }
 };
 
@@ -257,14 +262,16 @@ export const loadAllTreesDataFromDb = async (treesList: TreesList) => {
           };
           return treeItemsIncludingItems;
         }
-        throw new Error('ツリーデータが不正です。');
+        console.log('ツリーデータが不正です。');
+        return null;
       }
       return null;
     });
     const treeData = await Promise.all(promises);
     return treeData.filter((item) => item !== null);
   } catch (error) {
-    throw new Error('データベースからのツリーデータの取得に失敗しました。\n\n' + error);
+    console.log('データベースからのツリーデータの取得に失敗しました。\n\n' + error);
+    return null;
   }
 }
 
@@ -278,12 +285,13 @@ export const loadAppStateFromDb = async (uid: string): Promise<AppState | null> 
       if (isValidAppSettingsState(data)) {
         return data;
       }
-      throw new Error('データベースのアプリ設定が不正です。');
+      console.log('データベースのアプリ設定が不正です。');
+      return null;
     } else {
       return null;
     }
   } catch (error) {
-    console.log(error)
+    console.log('データベースからのAppStateの取得に失敗しました。\n\n' + error);
     return null;
   }
 }
@@ -300,7 +308,8 @@ export const loadQuickMemoFromDb = async (uid: string): Promise<string | null> =
       return null;
     }
   } catch (error) {
-    throw new Error('データベースからのクイックメモの取得に失敗しました。\n\n' + error);
+    console.log('データベースからのクイックメモの取得に失敗しました。\n\n' + error);
+    return null;
   }
 }
 

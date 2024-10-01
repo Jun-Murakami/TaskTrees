@@ -49,7 +49,9 @@ const getFirebaseAuth = () => {
   }
 };
 
-const auth = getFirebaseAuth();
+getFirebaseAuth();
+
+const auth = getAuth();
 
 type UserComact = {
   uid: string | null;
@@ -103,15 +105,10 @@ export const useAuth = () => {
     let unsubscribe: Unsubscribe | null = null;
     const asyncFunc = async () => {
       try {
-        if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
-          FirebaseAuthentication.addListener('authStateChange', async (result) => {
-            await loginAction(result.user);
-          });
-        } else {
-          unsubscribe = auth.onAuthStateChanged(async (user) => {
-            await loginAction(user);
-          });
-        }
+        unsubscribe = auth.onAuthStateChanged(async (user) => {
+          console.log('authStateChanged', user);
+          await loginAction(user);
+        });
       } catch (error) {
         await showDialog('ログイン状態の監視でエラーが発生しました\n\n' + error, 'Error');
       }
@@ -122,7 +119,6 @@ export const useAuth = () => {
       if (unsubscribe) {
         unsubscribe();
       }
-      FirebaseAuthentication.removeAllListeners();
     };
   }, [loginAction, showDialog]);
 

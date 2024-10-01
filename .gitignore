@@ -15,6 +15,9 @@ dist-ssr
 .firebaserc
 firebase.json
 *.local
+.env
+.env.production
+.env.development
 GoogleService-Info.plist
 google-services.json
 

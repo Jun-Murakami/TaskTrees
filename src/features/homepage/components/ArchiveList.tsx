@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { List, ListItemText, ListItemButton, Box, Button, Typography, Divider } from '@mui/material';
@@ -55,8 +56,8 @@ export const ArchiveList = () => {
           {treesList
             .filter((tree) => tree.isArchived)
             .map((tree, index) => (
-              <>
-                <ListItemButton key={tree.id} onClick={async () => await handleListClick(tree.id)} sx={{ width: '100%' }}>
+              <React.Fragment key={tree.id}>
+                <ListItemButton onClick={async () => await handleListClick(tree.id)} sx={{ width: '100%' }}>
                   <ListItemText
                     primary={tree.name}
                     sx={{
@@ -80,7 +81,7 @@ export const ArchiveList = () => {
                   </Button>
                 </ListItemButton>
                 {index !== treesList.filter((tree) => tree.isArchived).length - 1 && <Divider sx={{ width: '100%' }} />}
-              </>
+              </React.Fragment>
             ))}
           {treesList.filter((tree) => tree.isArchived).length === 0 && (
             <Typography sx={{ textAlign: 'center', my: 2, width: '100%' }}>アーカイブ済みのツリーはありません</Typography>
