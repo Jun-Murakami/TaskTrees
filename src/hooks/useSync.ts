@@ -100,7 +100,7 @@ export const useSync = () => {
             await set(treeMembersV2Ref, membersV2);
             const ensuredItems = ensureChildrenProperty(treeData.items);
             if (ensuredItems && isTreeItemArray(ensuredItems)) {
-              await idbService.saveTreeToIdb(treeData.id, treeData.name, treeData.members, membersV2, treeData.timestamp ?? localTimestamp, ensuredItems);
+              await idbService.saveTreeToIdb(treeData.id, treeData.name, treeData.members, membersV2, treeData.timestamp ?? localTimestamp, ensuredItems, treeData.isArchived);
             } else {
               await showDialog('データベースのツリーが正しくありません。 ' + treeData.name, 'Error');
             }
