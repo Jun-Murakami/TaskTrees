@@ -1,8 +1,18 @@
 import { createTheme } from '@mui/material/styles';
-import '@fontsource/m-plus-1p/400.css';
+import '@fontsource-variable/noto-sans-jp';
+import '@fontsource/m-plus-1p';
 
+// ユーザーのデバイスのDPIを検出
+const dpi = window.devicePixelRatio;
+
+let mainFont = '"Noto Sans JP Variable"';
+
+if (dpi >= 1.5) {
+  // 1.5倍以上のDPIの場合、M PLIUS 1Pにする
+  mainFont = '"M PLUS 1p"';
+}
 const fontFamilySet = [
-  '"M PLUS 1p"',
+  `${mainFont}`,
   '-apple-system',
   'BlinkMacSystemFont',
   '"Segoe UI"',
@@ -14,6 +24,23 @@ const fontFamilySet = [
   '"Segoe UI Emoji"',
   '"Segoe UI Symbol"',
 ].join(',');
+
+let typographyStyles = {};
+if (dpi >= 1.5) {
+  typographyStyles = {
+    fontFamily: fontFamilySet,
+  };
+} else {
+  typographyStyles = {
+    fontFamily: fontFamilySet,
+    h3: {
+      fontSize: '35px',
+    },
+    caption: {
+      fontSize: '11px',
+    },
+  };
+}
 
 const breakpointsValues = {
   xs: 0,
@@ -70,15 +97,7 @@ export const theme = createTheme({
       main: '#ffcc02',
     },
   },
-  typography: {
-    fontFamily: fontFamilySet,
-    h3: {
-      fontSize: '38px',
-    },
-    caption: {
-      fontSize: '11px',
-    },
-  },
+  typography: typographyStyles,
   components: {
     MuiCssBaseline: {
       styleOverrides: {
@@ -105,6 +124,7 @@ export const theme = createTheme({
       defaultProps: {
         inputProps: {
           spellCheck: 'false',
+          transform: 'rotate(0.05deg)',
         },
       },
     },
@@ -129,15 +149,7 @@ export const darkTheme = createTheme({
     },
     divider: 'rgba(255, 255, 255, 0.18)',
   },
-  typography: {
-    fontFamily: fontFamilySet,
-    h3: {
-      fontSize: '38px',
-    },
-    caption: {
-      fontSize: '11px',
-    },
-  },
+  typography: typographyStyles,
   components: {
     MuiCssBaseline: {
       styleOverrides: {
@@ -166,6 +178,7 @@ export const darkTheme = createTheme({
       defaultProps: {
         inputProps: {
           spellCheck: 'false',
+          transform: 'rotate(0.05deg)',
         },
       },
     },
