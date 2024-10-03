@@ -148,15 +148,11 @@ const TreeItemContent = memo(
               onChange={handleChange}
               multiline
               fullWidth
-              sx={{ padding: 0, margin: 'auto 0', marginX: { xs: 0.75, sm: 1 } }}
+              sx={{ my: 0, mx: { xs: 0.75, sm: 1 } }}
               slotProps={{
                 input: {
                   disableUnderline: !isFocusedOrHovered,
                   style: {
-                    padding: 0,
-                    margin: 0,
-                    paddingTop: '3px',
-                    paddingBottom: '3px',
                     fontSize: '0.9rem',
                   },
                 },

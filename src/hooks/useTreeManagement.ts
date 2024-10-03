@@ -576,7 +576,7 @@ export const useTreeManagement = () => {
         const result = await Filesystem.writeFile({
           path: link.download,
           data: treeStateJSON,
-          directory: Directory.Documents,
+          directory: Directory.Cache,
           encoding: Encoding.UTF8,
         });
         await Share.share({
@@ -585,13 +585,12 @@ export const useTreeManagement = () => {
           url: result.uri,
           dialogTitle: 'TaskTrees Backup dialog title',
         });
-        await Filesystem.deleteFile({
-          path: result.uri,
-          directory: Directory.Documents,
-        });
         return result.uri;
-      } catch (e) {
-        await showDialog('ファイルの保存に失敗しました。\n\n' + e, 'Error');
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('cancel')) {
+          return '';
+        }
+        await showDialog('ファイルの保存に失敗しました。\n\n' + error, 'Error');
         return '';
       }
     } else {
@@ -636,7 +635,7 @@ export const useTreeManagement = () => {
         const result = await Filesystem.writeFile({
           path: link.download,
           data: treeStateJSON,
-          directory: Directory.Documents,
+          directory: Directory.Cache,
           encoding: Encoding.UTF8,
         });
         await Share.share({
@@ -644,10 +643,6 @@ export const useTreeManagement = () => {
           text: 'TaskTrees Backup text',
           url: result.uri,
           dialogTitle: 'TaskTrees Backup dialog title',
-        });
-        await Filesystem.deleteFile({
-          path: result.uri,
-          directory: Directory.Documents,
         });
         return Promise.resolve(result.uri);
       } else {
@@ -658,6 +653,9 @@ export const useTreeManagement = () => {
         return Promise.resolve('');
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes('cancel')) {
+        return Promise.resolve('');
+      }
       await showDialog('ツリーのバックアップに失敗しました。\n\n' + error, 'Error');
       return Promise.reject('');
     }

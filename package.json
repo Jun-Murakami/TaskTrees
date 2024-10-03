@@ -32,7 +32,6 @@
     "dayjs": "^1.11.13",
     "dexie": "^4.0.8",
     "firebase": "^10.13.2",
-    "lodash": "^4.17.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^9.0.1",

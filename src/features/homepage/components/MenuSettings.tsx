@@ -18,6 +18,8 @@ import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useDialogStore } from '@/store/dialogStore';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { Capacitor } from '@capacitor/core';
 
 export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
@@ -33,6 +35,8 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
   const { saveAppSettings } = useAppStateManagement();
   const { handleDownloadAllTrees, handleFileUpload, handleDownloadTreeState } = useTreeManagement();
 
+  const showDialog = useDialogStore((state) => state.showDialog);
+
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -45,8 +49,37 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
 
   const hiddenFileInput = useRef<HTMLInputElement>(null);
 
-  const handleUploadClick = () => {
-    hiddenFileInput.current?.click();
+  const handleUploadClick = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const result = await FilePicker.pickFiles({
+          types: ['application/json'],
+          limit: 1,
+          readData: true,
+        });
+        const base64Data = result.files[0].data;
+        const fileName = result.files[0].name;
+        const pickedFile = result.files[0];
+        if (base64Data && fileName) {
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: pickedFile.mimeType });
+          const file = new File([blob], fileName);
+          await handleFileUpload(file);
+        }
+      } else {
+        hiddenFileInput.current?.click();
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('cancel')) {
+        return;
+      }
+      await showDialog('ファイルの読み込みに失敗しました。\n' + error, 'Error');
+    }
   };
 
   const MaterialUISwitch = styled(Switch)(({ theme }) => ({
@@ -182,7 +215,7 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
           style={{ display: 'none' }}
           accept='.json'
         />
-        {!isOffline && !Capacitor.isNativePlatform() && (
+        {!isOffline && (
           <Tooltip title='バックアップしたデータを復元' placement='right'>
             <MenuItem onClick={handleUploadClick}>
               <ListItemIcon>

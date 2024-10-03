@@ -56,7 +56,8 @@ export function HomePage() {
                 '@media (max-width: 1546px)': {
                   ml: { xs: 'auto', sm: `${drawerWidth}px` },
                 },
-                paddingTop: Capacitor.isNativePlatform() ? 'env(safe-area-inset-top)' : 0,
+                pt: Capacitor.isNativePlatform() ? 'env(safe-area-inset-top)' : 0,
+                pb: Capacitor.isNativePlatform() ? 'env(safe-area-inset-bottom)' : 0,
               }}
             >
               {isShowArchive ? (
@@ -72,17 +73,17 @@ export function HomePage() {
                           maxWidth: '900px',
                           width: '100%',
                           marginX: 'auto',
-                          pb: isQuickMemoExpanded ? 60 : 15,
+                          pt: { xs: '90px', sm: '138px' },
+                          pb: isQuickMemoExpanded ? 65 : 20,
                         }}
                         id='tree-container'
                       >
-                        <Box sx={{ height: { xs: '90px', sm: '138px' } }} />
                         <SortableTree collapsible indicator removable />
                       </Box>
                     </>
                   ) : (
                     // ツリーがない場合
-                    <Box sx={{ height: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <Box sx={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                       <Box>
                         <TaskTreesLogo />
                         <MessagePaper />

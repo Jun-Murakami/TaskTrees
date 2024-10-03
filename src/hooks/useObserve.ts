@@ -1,5 +1,4 @@
 import { useEffect, useCallback } from 'react';
-import isEqual from 'lodash/isEqual';
 import { get } from 'firebase/database';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
@@ -160,48 +159,46 @@ export const useObserve = () => {
       }
     }, 60000); // 1分ごとにチェック
 
-    if (!isEqual(items, prevItems)) {
-      if (currentTree !== prevCurrentTree) {
-        if (prevItems.length > 0) {
-          const asyncFunc = async () => {
-            if (prevCurrentTree) {
-              await saveItems(prevItems, prevCurrentTree);
-            }
-          };
-          asyncFunc();
-        }
-        setPrevCurrentTree(currentTree);
-        setPrevItems([]);
-      } else {
-        setPrevItems(items);
-        const targetTree = currentTree;
-        const debounceSave = setTimeout(() => {
-          try {
-            if (isOffline) {
-              Preferences.set({
-                key: `items_offline`,
-                value: JSON.stringify(items),
-              });
-              if (currentTreeName) {
-                Preferences.set({
-                  key: `treeName_offline`,
-                  value: currentTreeName,
-                });
-              }
-            } else {
-              const asyncFunc = async () => {
-                await saveItems(items, targetTree);
-              };
-              asyncFunc();
-            }
-            setPrevItems([]);
-          } catch (error) {
-            handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error);
+    if (currentTree !== prevCurrentTree) {
+      if (prevItems.length > 0) {
+        const asyncFunc = async () => {
+          if (prevCurrentTree) {
+            await saveItems(prevItems, prevCurrentTree);
           }
-        }, 5000);
-
-        return () => clearTimeout(debounceSave);
+        };
+        asyncFunc();
       }
+      setPrevCurrentTree(currentTree);
+      setPrevItems([]);
+    } else {
+      setPrevItems(items);
+      const targetTree = currentTree;
+      const debounceSave = setTimeout(() => {
+        try {
+          if (isOffline) {
+            Preferences.set({
+              key: `items_offline`,
+              value: JSON.stringify(items),
+            });
+            if (currentTreeName) {
+              Preferences.set({
+                key: `treeName_offline`,
+                value: currentTreeName,
+              });
+            }
+          } else {
+            const asyncFunc = async () => {
+              await saveItems(items, targetTree);
+            };
+            asyncFunc();
+          }
+          setPrevItems([]);
+        } catch (error) {
+          handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error);
+        }
+      }, 5000);
+
+      return () => clearTimeout(debounceSave);
     }
 
     return () => clearInterval(intervalId);
