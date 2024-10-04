@@ -6,13 +6,14 @@ import {
   initializeAuth,
   GoogleAuthProvider,
   OAuthProvider,
-  signInWithPopup,
   signInWithCredential,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
   Unsubscribe,
+  signInWithRedirect,
+  getRedirectResult
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
@@ -119,30 +120,52 @@ export const useAuth = () => {
         unsubscribe();
       }
     };
-  }, [loginAction, showDialog]);
+  }, [loginAction, showDialog, setIsLoggedIn, setIsLoading]);
+
+  //リダイレクト状態の監視
+  useEffect(() => {
+    getRedirectResult(getAuth()).then(async (userCredential) => {
+      console.log(userCredential);
+    }).catch((error) => {
+      console.error(error);
+    });
+  }, [setIsLoggedIn, setIsLoading]);
 
   // Googleログイン
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setSystemMessage('ログイン中...');
-    // 1. Create credentials on the native layer
-    try {
-      const result = await FirebaseAuthentication.signInWithGoogle();
-      // 2. Sign in on the web layer using the id token
-      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-      await signInWithCredential(auth, credential)
-        .then(async () => {
+    if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+      // 1. Create credentials on the native layer
+      try {
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        // 2. Sign in on the web layer using the id token
+        const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+        await signInWithCredential(auth, credential)
+          .then(async () => {
+            setIsLoggedIn(true);
+            setSystemMessage(null);
+          })
+          .catch((error) => {
+            setSystemMessage('Googleログインに失敗しました。Code:100\n\n' + error.code);
+            setIsLoading(false);
+          });
+      } catch (error) {
+        setSystemMessage('Googleログインに失敗しました。Code:101\n\n' + error);
+        setIsLoading(false);
+        return;
+      }
+    } else {
+      const provider = new OAuthProvider('google.com');
+      signInWithRedirect(getAuth(), provider)
+        .then(() => {
           setIsLoggedIn(true);
           setSystemMessage(null);
         })
         .catch((error) => {
-          setSystemMessage('Googleログインに失敗しました。Code:100\n\n' + error.code);
+          setSystemMessage('Googleログインに失敗しました。Code:102\n\n' + error.code);
           setIsLoading(false);
         });
-    } catch (error) {
-      setSystemMessage('Googleログインに失敗しました。Code:101\n\n' + error);
-      setIsLoading(false);
-      return;
     }
   };
 
@@ -178,7 +201,7 @@ export const useAuth = () => {
       }
     } else {
       const provider = new OAuthProvider('apple.com');
-      signInWithPopup(getAuth(), provider)
+      signInWithRedirect(getAuth(), provider)
         .then(() => {
           setIsLoggedIn(true);
           setSystemMessage(null);

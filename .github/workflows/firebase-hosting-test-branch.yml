@@ -18,7 +18,7 @@ jobs:
       - run: npm run build
         env:
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
-          VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
+          VITE_AUTH_DOMAIN: tasktrees-fb.web.app
           VITE_DATABASE_URL: ${{ secrets.VITE_DATABASE_URL }}
           VITE_PROJECT_ID: ${{ secrets.VITE_PROJECT_ID }}
           VITE_STORAGE_BUCKET: ${{ secrets.VITE_STORAGE_BUCKET }}
