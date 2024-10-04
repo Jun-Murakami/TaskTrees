@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { getAuth, signInWithRedirect, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
 
 const authProvider = localStorage.getItem('auth_provider');
 
@@ -9,6 +9,14 @@ export const AuthElectronGoogle = () => {
       localStorage.removeItem('auth_provider');
       return;
     }
+    getRedirectResult(getAuth()).then((result) => {
+      if (result) {
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const url = '/auth/redirect?credential=' + JSON.stringify(credential);
+        window.location.href = url;
+      }
+    });
+
     const provider = new GoogleAuthProvider();
     const auth = getAuth();
     localStorage.setItem('auth_provider', 'google');

@@ -10,6 +10,7 @@ import { PrivacyPolicy } from '@/features/app/PrivacyPolicy';
 import { Download } from '@/features/app/Download';
 import { AuthElectronGoogle } from '@/features/app/AuthElectronGoogle';
 import { AuthElectronApple } from '@/features/app/AuthElectronApple';
+import { AuthElectronRedirect } from '@/features/app/AuthElectronRedirect';
 import { ModalDialog } from '@/features/common/ModalDialog';
 import { InputDialog } from '@/features/common/InputDialog';
 
@@ -42,6 +43,7 @@ export default function App() {
           <Route path='/download' element={<Download />} />
           <Route path='/auth/google' element={<AuthElectronGoogle />} />
           <Route path='/auth/apple' element={<AuthElectronApple />} />
+          <Route path='/auth/redirect' element={<AuthElectronRedirect />} />
           <Route path='/' element={<HomePage />} />
         </Routes>
       </Router>
