@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { getApp, initializeApp } from 'firebase/app';
+import { getApp, initializeApp, FirebaseError } from 'firebase/app';
 import {
   getAuth,
   indexedDBLocalPersistence,
@@ -291,7 +291,6 @@ export const useAuth = () => {
       '',
       false
     );
-    console.log(result);
     if (result === '') {
       return;
     }
@@ -407,6 +406,7 @@ export const useAuth = () => {
             return;
           });
       }
+
       // ユーザーのappStateを削除
       const appStateRef = ref(getDatabase(), `users/${user.uid}`);
       await remove(appStateRef)
@@ -431,7 +431,9 @@ export const useAuth = () => {
           if (isLoading) setIsLoading(false);
         })
         .catch((error) => {
-          if (error instanceof Error) {
+          if (error instanceof FirebaseError && error.code === 'auth/requires-recent-login') {
+            setSystemMessage('セキュリティの制限により、アカウントの削除はユーザー自身のログインから一定時間内に行う必要があります。一度ログアウトしてからログインし、再度アカウント削除を実行してください。');
+          } else if (error instanceof Error) {
             setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : \n\n' + error.message);
           } else {
             setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : 不明なエラー');

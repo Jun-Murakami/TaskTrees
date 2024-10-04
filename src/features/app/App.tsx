@@ -8,6 +8,8 @@ import { useDialogStore, useInputDialogStore } from '@/store/dialogStore';
 import { HomePage } from '@/features/homepage/HomePage';
 import { PrivacyPolicy } from '@/features/app/PrivacyPolicy';
 import { Download } from '@/features/app/Download';
+import { AuthElectronGoogle } from '@/features/app/AuthElectronGoogle';
+import { AuthElectronApple } from '@/features/app/AuthElectronApple';
 import { ModalDialog } from '@/features/common/ModalDialog';
 import { InputDialog } from '@/features/common/InputDialog';
 
@@ -36,9 +38,11 @@ export default function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          <Route path='/privacy-policy' Component={PrivacyPolicy} />
-          <Route path='/download' Component={Download} />
-          <Route path='/' Component={HomePage} />
+          <Route path='/privacy-policy' element={<PrivacyPolicy />} />
+          <Route path='/download' element={<Download />} />
+          <Route path='/auth/google' element={<AuthElectronGoogle />} />
+          <Route path='/auth/apple' element={<AuthElectronApple />} />
+          <Route path='/' element={<HomePage />} />
         </Routes>
       </Router>
       {isDialogVisible && <ModalDialog />}
