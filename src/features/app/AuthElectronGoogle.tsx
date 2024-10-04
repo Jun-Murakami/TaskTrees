@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { getAuth, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
+import { Box, CircularProgress } from '@mui/material';
 
 const authProvider = localStorage.getItem('auth_provider');
 
@@ -24,5 +25,9 @@ export const AuthElectronGoogle = () => {
     signInWithRedirect(auth, provider);
   }, []);
 
-  return <></>;
+  return (
+    <Box display='flex' justifyContent='center' alignItems='center' height='100dvh' width='100dvw'>
+      <CircularProgress />
+    </Box>
+  );
 };
