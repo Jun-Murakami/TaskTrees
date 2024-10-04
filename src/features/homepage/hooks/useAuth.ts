@@ -13,7 +13,9 @@ import {
   signOut,
   Unsubscribe,
   signInWithRedirect,
-  getRedirectResult
+  getRedirectResult,
+  updateEmail,
+  OAuthCredential,
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
@@ -58,6 +60,8 @@ type UserComact = {
   uid: string | null;
   email: string | null;
 };
+
+const isElectron = navigator.userAgent.indexOf('Electron') >= 0;
 
 export const useAuth = () => {
   const isOffline = useAppStateStore((state) => state.isOffline);
@@ -122,11 +126,26 @@ export const useAuth = () => {
     };
   }, [loginAction, showDialog, setIsLoggedIn, setIsLoading]);
 
+  // クレデンシャルを監視してログイン
+  const handleCredentialLogin = useCallback((recievedCredential: OAuthCredential) => {
+    if (recievedCredential) {
+      setIsLoading(true);
+      setSystemMessage('ログイン中...');
+      signInWithCredential(auth, recievedCredential)
+        .then(() => {
+          setIsLoggedIn(true);
+          setSystemMessage(null);
+        })
+        .catch((error) => {
+          setSystemMessage('ログインに失敗しました。Code:100\n\n' + error.code);
+          setIsLoading(false);
+        });
+    }
+  }, [setIsLoggedIn, setIsLoading, setSystemMessage]);
+
   //リダイレクト状態の監視
   useEffect(() => {
-    getRedirectResult(getAuth()).then(async (userCredential) => {
-      console.log(userCredential);
-    }).catch((error) => {
+    getRedirectResult(getAuth()).catch((error) => {
       console.error(error);
     });
   }, [setIsLoggedIn, setIsLoading]);
@@ -151,10 +170,18 @@ export const useAuth = () => {
             setIsLoading(false);
           });
       } catch (error) {
-        setSystemMessage('Googleログインに失敗しました。Code:101\n\n' + error);
+        setSystemMessage('Googleログインに失敗しました。Code:101\n\n' + (error instanceof Error ? error.message : 'Unknown error'));
         setIsLoading(false);
         return;
       }
+    } else if (isElectron) {
+      // @ts-expect-error ElectronAPI
+      await window.electron.openOAuthURL(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/google`).then((credential) => {
+        handleCredentialLogin(credential);
+      }).catch((error: FirebaseError) => {
+        setSystemMessage('Googleログインに失敗しました。Code:102\n\n' + error.code);
+        setIsLoading(false);
+      });
     } else {
       const provider = new OAuthProvider('google.com');
       signInWithRedirect(getAuth(), provider)
@@ -163,7 +190,7 @@ export const useAuth = () => {
           setSystemMessage(null);
         })
         .catch((error) => {
-          setSystemMessage('Googleログインに失敗しました。Code:102\n\n' + error.code);
+          setSystemMessage('Googleログインに失敗しました。Code:103\n\n' + error.code);
           setIsLoading(false);
         });
     }
@@ -180,7 +207,7 @@ export const useAuth = () => {
         // 2. Sign in on the web layer using the id token
         const provider = new OAuthProvider('apple.com');
         if (!result.credential) {
-          setSystemMessage('Appleログインに失敗しました。Code:103\n\ncredentialが取得できませんでした。');
+          setSystemMessage('Appleログインに失敗しました。Code:104\n\ncredentialが取得できませんでした。');
           setIsLoading(false);
           return;
         }
@@ -191,14 +218,22 @@ export const useAuth = () => {
             setSystemMessage(null);
           })
           .catch((error) => {
-            setSystemMessage('Appleログインに失敗しました。Code:104\n\n' + error.code);
+            setSystemMessage('Appleログインに失敗しました。Code:105\n\n' + error.code);
             setIsLoading(false);
           });
       } catch (error) {
-        setSystemMessage('Appleログインに失敗しました。Code:105\n\n' + error);
+        setSystemMessage('Appleログインに失敗しました。Code:106\n\n' + (error instanceof Error ? error.message : 'Unknown error'));
         setIsLoading(false);
         return;
       }
+    } else if (isElectron) {
+      // @ts-expect-error ElectronAPI
+      await window.electron.openOAuthURL(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/apple`).then((credential) => {
+        handleCredentialLogin(credential);
+      }).catch((error: FirebaseError) => {
+        setSystemMessage('Appleログインに失敗しました。Code:107\n\n' + error.code);
+        setIsLoading(false);
+      });
     } else {
       const provider = new OAuthProvider('apple.com');
       signInWithRedirect(getAuth(), provider)
@@ -207,7 +242,7 @@ export const useAuth = () => {
           setSystemMessage(null);
         })
         .catch((error) => {
-          setSystemMessage('Appleログインに失敗しました。Code:106\n\n' + error.code);
+          setSystemMessage('Appleログインに失敗しました。Code:108\n\n' + error.code);
           setIsLoading(false);
         });
     }
@@ -236,7 +271,7 @@ export const useAuth = () => {
             'ログインに失敗しました。メールアドレスとパスワードを確認してください。Googleログインで使用したメールアドレスでログインする場合は、パスワードのリセットを行ってください。'
           );
         } else {
-          setSystemMessage('ログインに失敗しました。Code:107\n\n' + error.code);
+          setSystemMessage('ログインに失敗しました。Code:109\n\n' + error.code);
         }
         setIsLoading(false);
       });
@@ -260,7 +295,7 @@ export const useAuth = () => {
           } else if (error.code === 'auth/weak-password') {
             setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
           } else {
-            setSystemMessage('サインアップに失敗しました。Code:108\n\n' + error.code);
+            setSystemMessage('サインアップに失敗しました。Code:110\n\n' + error.code);
           }
         });
     } else {
@@ -276,7 +311,7 @@ export const useAuth = () => {
           } else if (error.code === 'auth/weak-password') {
             setSystemMessage('パスワードが弱すぎます。6文字以上のパスワードを設定してください。');
           } else {
-            setSystemMessage('サインアップに失敗しました。Code:109\n\n' + error.code);
+            setSystemMessage('サインアップに失敗しました。Code:111\n\n' + error.code);
           }
         });
     }
@@ -303,6 +338,30 @@ export const useAuth = () => {
           setSystemMessage('パスワードのリセットに失敗しました。メールアドレスを確認してください。');
         } else {
           setSystemMessage('パスワードのリセットに失敗しました。\n\n' + error.code);
+        }
+      });
+  };
+
+  // メールアドレスの変更
+  const handleChangeEmail = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setSystemMessage('ユーザーがログインしていません。');
+      return;
+    }
+    const emailResult = await showInputDialog('新しいメールアドレスを入力してください', 'Change Email', 'メールアドレス', '', false);
+    if (emailResult === '') {
+      return;
+    }
+    await updateEmail(user, emailResult)
+      .then(() => {
+        showDialog('メールアドレス確認メールを送信しました。新しいアドレスが確認されるまでメールアドレスは変更されません。', 'Confirmation Email Sent');
+      })
+      .catch((error) => {
+        if (error instanceof FirebaseError && error.code === 'auth/requires-recent-login') {
+          showDialog('セキュリティの制限により、メールドレスの変更はユーザー自身のログインから一定時間内に行う必要があります。一度ログアウトしてからログインし、再度アカウント削除を実行してください。', 'Security Restriction');
+        } else {
+          showDialog('メールアドレスの変更に失敗しました。Code:113\n\n' + error.code, 'Change Email Failed');
         }
       });
   };
@@ -426,13 +485,15 @@ export const useAuth = () => {
       // ユーザーを削除
       user
         .delete()
-        .then(() => {
+        .then(async () => {
+          await handleLogout();
           setSystemMessage('アカウントが削除されました。');
           if (isLoading) setIsLoading(false);
         })
-        .catch((error) => {
+        .catch(async (error) => {
+          await handleLogout();
           if (error instanceof FirebaseError && error.code === 'auth/requires-recent-login') {
-            setSystemMessage('セキュリティの制限により、アカウントの削除はユーザー自身のログインから一定時間内に行う必要があります。一度ログアウトしてからログインし、再度アカウント削除を実行してください。');
+            setSystemMessage('セキュリティの制限により、アカウントの削除はユーザー自身のログインから一定時間内に行う必要があります。再度ログインし、アカウント削除を完了してください。');
           } else if (error instanceof Error) {
             setSystemMessage('アカウントの削除中にエラーが発生しました。管理者に連絡してください。 : \n\n' + error.message);
           } else {
@@ -453,6 +514,7 @@ export const useAuth = () => {
     handleEmailLogin,
     handleSignup,
     handleResetPassword,
+    handleChangeEmail,
     handleLogout,
     handleDeleteAccount,
   };

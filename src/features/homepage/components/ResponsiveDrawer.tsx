@@ -30,7 +30,12 @@ import { MenuSettings } from './MenuSettings';
 
 const drawerWidth = 300;
 
-export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void }) {
+interface ResponsiveDrawerProps {
+  handleLogout: () => Promise<void>;
+  handleChangeEmail: () => Promise<void>;
+}
+
+export function ResponsiveDrawer({ handleLogout, handleChangeEmail }: ResponsiveDrawerProps) {
   const [drawerState, setDrawerState] = useState(false);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
@@ -221,7 +226,7 @@ export function ResponsiveDrawer({ handleLogout }: { handleLogout: () => void })
         </List>
         <Divider />
         <List sx={{ py: 0.6 }}>
-          <MenuSettings handleLogout={handleLogout} />
+          <MenuSettings handleLogout={handleLogout} handleChangeEmail={handleChangeEmail} />
         </List>
       </Box>
     </>

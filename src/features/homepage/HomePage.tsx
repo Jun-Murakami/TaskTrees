@@ -32,6 +32,7 @@ export function HomePage() {
     handleEmailLogin,
     handleSignup,
     handleResetPassword,
+    handleChangeEmail,
     handleLogout,
     handleDeleteAccount,
   } = useAuth();
@@ -45,7 +46,7 @@ export function HomePage() {
           // ログイン後のメイン画面
           <>
             <QuickMemo />
-            <ResponsiveDrawer handleLogout={async () => await handleLogout()} />
+            <ResponsiveDrawer handleLogout={handleLogout} handleChangeEmail={handleChangeEmail} />
             <Box
               sx={{
                 flexGrow: 1,

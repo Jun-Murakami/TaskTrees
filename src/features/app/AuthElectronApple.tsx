@@ -11,7 +11,9 @@ export const AuthElectronApple = () => {
         const credential = OAuthProvider.credentialFromResult(result);
         const url = '/auth/redirect?credential=' + JSON.stringify(credential);
         localStorage.removeItem('auth_provider');
-        window.location.href = url;
+        if (window.location.href.startsWith(`https://${import.meta.env.VITE_AUTH_DOMAIN}`)) {
+          window.location.href = url;
+        }
       }
     });
     if (authProvider === 'apple') {

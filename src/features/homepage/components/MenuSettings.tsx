@@ -12,8 +12,9 @@ import {
   ListItemButton,
   ListItemText,
 } from '@mui/material';
-import { Settings, Logout, Upload, Download, DeleteForever } from '@mui/icons-material';
+import { Settings, Logout, Upload, Download, DeleteForever, Email } from '@mui/icons-material';
 import { ListItemIcon } from '@mui/material';
+import { getAuth } from 'firebase/auth';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useAppStateStore } from '@/store/appStateStore';
@@ -22,7 +23,12 @@ import { useDialogStore } from '@/store/dialogStore';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { Capacitor } from '@capacitor/core';
 
-export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
+interface MenuSettingsProps {
+  handleLogout: () => Promise<void>;
+  handleChangeEmail: () => Promise<void>;
+}
+
+export function MenuSettings({ handleLogout, handleChangeEmail }: MenuSettingsProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const isOffline = useAppStateStore((state) => state.isOffline);
@@ -31,6 +37,8 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
   const setDarkMode = useAppStateStore((state) => state.setDarkMode);
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
   const currentTree = useTreeStateStore((state) => state.currentTree);
+
+  const isNotOAuthLogiin = getAuth().currentUser?.providerData.some((provider) => provider.providerId !== 'password');
 
   const { saveAppSettings } = useAppStateManagement();
   const { handleDownloadAllTrees, handleFileUpload, handleDownloadTreeState } = useTreeManagement();
@@ -202,6 +210,16 @@ export function MenuSettings({ handleLogout }: { handleLogout: () => void }) {
                 アカウント削除
               </MenuItem>
             </Tooltip>
+            {isNotOAuthLogiin && (
+              <Tooltip title='メールアドレスの変更' placement='right'>
+                <MenuItem onClick={handleChangeEmail}>
+                  <ListItemIcon>
+                    <Email fontSize='small' />
+                  </ListItemIcon>
+                  メールアドレスの変更
+                </MenuItem>
+              </Tooltip>
+            )}
             <Divider />
           </Box>
         )}

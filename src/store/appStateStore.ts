@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { OAuthCredential } from 'firebase/auth';
 
 type AppState = {
   isOffline: boolean;
@@ -20,6 +21,7 @@ type AppState = {
   quickMemoText: string;
   isLoadedMemoFromDb: boolean;
   isShowArchive: boolean;
+  recievedCredential: OAuthCredential | null;
   setIsOffline: (isOffline: boolean) => void;
   setIsConnectedDb: (isConnectedDb: boolean) => void;
   setLocalTimestamp: (localTimestamp: number) => void;
@@ -39,6 +41,7 @@ type AppState = {
   setQuickMemoText: (quickMemoText: string) => void;
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb: boolean) => void;
   setIsShowArchive: (isShowArchive: boolean) => void;
+  setRecievedCredential: (recievedCredential: OAuthCredential | null) => void;
 };
 
 export const useAppStateStore = create<AppState>((set) => ({
@@ -61,6 +64,7 @@ export const useAppStateStore = create<AppState>((set) => ({
   quickMemoText: '',
   isLoadedMemoFromDb: false,
   isShowArchive: false,
+  recievedCredential: null,
   setIsOffline: (isOffline) => set({ isOffline }),
   setIsConnectedDb: (isConnectedDb) => set({ isConnectedDb }),
   setLocalTimestamp: (localTimestamp) => set({ localTimestamp }),
@@ -80,4 +84,5 @@ export const useAppStateStore = create<AppState>((set) => ({
   setQuickMemoText: (quickMemoText) => set({ quickMemoText }),
   setIsLoadedMemoFromDb: (isLoadedMemoFromDb) => set({ isLoadedMemoFromDb }),
   setIsShowArchive: (isShowArchive) => set({ isShowArchive }),
+  setRecievedCredential: (recievedCredential) => set({ recievedCredential }),
 }));
