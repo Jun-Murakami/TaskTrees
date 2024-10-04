@@ -28,7 +28,7 @@ export const MessagePaper = () => {
             variant='outlined'
             sx={{ width: '100%', maxWidth: '90vw', mt: 2 }}
           >
-            アプリのダウンロード
+            PC/スマホアプリのダウンロード
           </Button>
         </>
       )}
