@@ -117,8 +117,8 @@ export function ResponsiveDrawer({ handleLogout, handleChangeEmail }: Responsive
               }}
               onClick={async () => {
                 setIsShowArchive(false);
-                await handleCreateNewTree();
                 setDrawerState(false);
+                await handleCreateNewTree();
               }}
             >
               <ListItemIcon>
