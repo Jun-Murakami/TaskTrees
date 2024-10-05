@@ -198,7 +198,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
   const handleiOSImagePicker = async () => {
     try {
       const result = await FilePicker.pickImages({
-        multiple: true, // 複数選択を許可するかどうか
+        limit: 1,
         readData: true, // Base64データを読み込む
       });
       if (result.files.length > 0) {
@@ -226,7 +226,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
   const handleiOSFilePicker = async () => {
     try {
       const result = await FilePicker.pickFiles({
-        multiple: true, // 複数選択を許可するかどうか
+        limit: 1,
         readData: true, // Base64データを読み込む
       });
       if (result.files.length > 0) {
