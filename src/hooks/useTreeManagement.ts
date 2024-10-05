@@ -83,6 +83,7 @@ export const useTreeManagement = () => {
       return orderedTreesList;
     } catch (error) {
       await showDialog('ツリーリストの取得に失敗しました。\n\n' + error, 'Error');
+      return [];
     }
   }, [showDialog, setTreesList]);
 
