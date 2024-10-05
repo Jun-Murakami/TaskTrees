@@ -76,13 +76,13 @@ export const MessagePaper = () => {
         <>
           <Paper>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
+              2024.10.5 アーカイブ機能を追加しました。
+              <br />
+              <br />
               2024.7.5 タイマー機能を追加しました。
               <br />
               <br />
               2024.4.15 クイックメモ機能を追加しました。
-              <br />
-              <br />
-              2024.04.11 <a href='https://apps.apple.com/jp/app/tasktrees/id6482979857'>iOS版アプリ</a>を公開しました。
             </Typography>
           </Paper>
           <Button
@@ -91,7 +91,7 @@ export const MessagePaper = () => {
             variant='outlined'
             sx={{ width: '100%', maxWidth: '90vw', mt: 2 }}
           >
-            PC/スマホ版アプリのダウンロード
+            PC/スマートフォン版 アプリのダウンロード
           </Button>
         </>
       )}
