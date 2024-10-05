@@ -4,6 +4,7 @@ import type { TreesListItemIncludingItems, TreesList } from './types/types';
 
 export interface AppStateItem {
   id: number;
+  uid?: string;
   timestamp: number;
   quickMemo: string;
   settings: {
@@ -25,6 +26,10 @@ class MyDexieDB extends Dexie {
     });
     this.version(2).stores({
       appstate: 'id, timestamp, quickMemo, settings, treeList',
+      treestate: 'id, name, members, membersV2, timestamp, isArchived, items'
+    });
+    this.version(3).stores({
+      appstate: 'id, uid, timestamp, quickMemo, settings, treeList',
       treestate: 'id, name, members, membersV2, timestamp, isArchived, items'
     });
   }

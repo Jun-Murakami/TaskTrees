@@ -13,6 +13,16 @@ export const loadAppStateFromIdb = async (): Promise<AppStateItem | null> => {
   }
 };
 
+// ユーザーIDの読み込み
+export const loadUidFromIdb = async (): Promise<string | null> => {
+  try {
+    const appState = await idb.appstate.get(1);
+    return appState?.uid ?? null;
+  } catch (error) {
+    throw new Error('IndexedDBからのユーザーIDの読み込みに失敗しました。' + error);
+  }
+};
+
 // クイックメモの読み込み
 export const loadQuickMemoFromIdb = async (): Promise<string | null> => {
   try {
@@ -170,11 +180,12 @@ export const saveTimeStampToIdb = async (targetTree: UniqueIdentifier | null, ne
 };
 
 // appStateデータベースの初期化
-export const initializeAppStateIdb = async (timestamp: number, quickMemo: string, darkMode: boolean, hideDoneItems: boolean, treesList: TreesList) => {
+export const initializeAppStateIdb = async (uid: string, timestamp: number, quickMemo: string, darkMode: boolean, hideDoneItems: boolean, treesList: TreesList) => {
   try {
     await idb.appstate.clear();
     await idb.appstate.put({
       id: 1,
+      uid: uid,
       timestamp: timestamp,
       quickMemo: quickMemo,
       settings: {

@@ -69,7 +69,7 @@ export const useSync = () => {
       const settingsDb = await dbService.loadAppStateFromDb(uid);
       const quickMemoDb = await dbService.loadQuickMemoFromDb(uid);
       const { orderedTreesList: treesListFromDb } = await dbService.loadTreesListFromDb(uid);
-      await idbService.initializeAppStateIdb(localTimestamp, quickMemoDb ?? quickMemoText, settingsDb?.darkMode ?? darkMode, settingsDb?.hideDoneItems ?? hideDoneItems, treesListFromDb ?? treesList);
+      await idbService.initializeAppStateIdb(uid, localTimestamp, quickMemoDb ?? quickMemoText, settingsDb?.darkMode ?? darkMode, settingsDb?.hideDoneItems ?? hideDoneItems, treesListFromDb ?? treesList);
       const allTreesData = await dbService.loadAllTreesDataFromDb(treesListFromDb ?? treesList);
       if (allTreesData) {
         await idbService.initializeTreeDataIdb();
@@ -118,15 +118,20 @@ export const useSync = () => {
 
   // データベースが空かどうかをチェックして、空の場合は初期データを同期 ------------------------------------------------
   const checkAndSyncDb = useCallback(async () => {
-    if (!useAppStateStore.getState().uid) {
-      return;
-    }
+    const uid = useAppStateStore.getState().uid;
+    if (!uid) return;
     try {
       // データベースが空かどうかをチェック
       const isEmpty = await idbService.checkDbEmpty();
       if (isEmpty) {
         // データベースが空の場合、初期データを登録
         await syncDb();
+      } else {
+        const uidIdb = await idbService.loadUidFromIdb();
+        if (!uidIdb || uidIdb !== uid) {
+          await idbService.deleteAllDataFromIdb();
+          await syncDb();
+        }
       }
     } catch (error) {
       handleError(error);
