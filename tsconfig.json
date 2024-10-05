@@ -27,5 +27,6 @@
     }
   },
   "include": ["src"],
+  "exclude": ["src/hooks/useElectron.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

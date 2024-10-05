@@ -38,7 +38,7 @@ export function MenuSettings({ handleLogout, handleChangeEmail }: MenuSettingsPr
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
   const currentTree = useTreeStateStore((state) => state.currentTree);
 
-  const isNotOAuthLogiin = getAuth().currentUser?.providerData.some((provider) => provider.providerId !== 'password');
+  const isHasOAuthLogiin = getAuth().currentUser?.providerData.some((provider) => provider.providerId !== 'password');
 
   const { saveAppSettings } = useAppStateManagement();
   const { handleDownloadAllTrees, handleFileUpload, handleDownloadTreeState } = useTreeManagement();
@@ -210,7 +210,7 @@ export function MenuSettings({ handleLogout, handleChangeEmail }: MenuSettingsPr
                 アカウント削除
               </MenuItem>
             </Tooltip>
-            {isNotOAuthLogiin && (
+            {!isHasOAuthLogiin && (
               <Tooltip title='メールアドレスの変更' placement='right'>
                 <MenuItem onClick={handleChangeEmail}>
                   <ListItemIcon>
