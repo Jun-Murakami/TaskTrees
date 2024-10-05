@@ -14,8 +14,6 @@ import { Capacitor } from '@capacitor/core';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
 
-import { useElectron } from '@/hooks/useElectron';
-
 export function HomePage() {
   const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
@@ -38,8 +36,6 @@ export function HomePage() {
   } = useAuth();
 
   const drawerWidth = 300;
-
-  useElectron();
 
   return (
     <>

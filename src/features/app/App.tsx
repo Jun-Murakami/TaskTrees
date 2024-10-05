@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { indexedDb } from '@/indexedDb';
 import { theme, darkTheme } from '@/theme/mui_theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { useAppStateStore } from '@/store/appStateStore';
@@ -32,6 +33,20 @@ export default function App() {
       }
     };
     asyncFunc();
+
+    const handleVisibilityChange = async () => {
+      if (!document.hidden) {
+        if (!indexedDb.isOpen()) {
+          await indexedDb.open();
+        }
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [setDarkMode]);
 
   return (
