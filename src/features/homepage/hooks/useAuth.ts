@@ -61,7 +61,7 @@ type UserComact = {
   email: string | null;
 };
 
-const isElectron = navigator.userAgent.indexOf('Electron') >= 0;
+const isElectron = navigator.userAgent.includes('Electron');
 
 export const useAuth = () => {
   const isOffline = useAppStateStore((state) => state.isOffline);
@@ -137,7 +137,7 @@ export const useAuth = () => {
           setSystemMessage(null);
         })
         .catch((error) => {
-          setSystemMessage('ログインに失敗しました。Code:100\n\n' + error.code);
+          setSystemMessage('ログインに失敗しました。Code:99\n\n' + error);
           setIsLoading(false);
         });
     }
@@ -175,11 +175,16 @@ export const useAuth = () => {
         return;
       }
     } else if (isElectron) {
-      // @ts-expect-error ElectronAPI
-      await window.electron.openOAuthURL(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/google`).then((credential) => {
-        handleCredentialLogin(credential);
-      }).catch((error: FirebaseError) => {
-        setSystemMessage('Googleログインに失敗しました。Code:102\n\n' + error.code);
+      //@ts-expect-error Electron
+      await window.electron.openOAuthURL(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/google`).then((credential: OAuthCredential) => {
+        const googleCredential = GoogleAuthProvider.credential(credential.idToken, credential.accessToken);
+        handleCredentialLogin(googleCredential);
+      }).catch((error: Error) => {
+        if (error.message.includes('closed-by-user')) {
+          setSystemMessage('Googleログインがキャンセルされました。');
+        } else {
+          setSystemMessage('Googleログインに失敗しました。Code:102\n\n' + (error instanceof Error ? error.message : 'Unknown error'));
+        }
         setIsLoading(false);
       });
     } else {
@@ -227,11 +232,16 @@ export const useAuth = () => {
         return;
       }
     } else if (isElectron) {
-      // @ts-expect-error ElectronAPI
-      await window.electron.openOAuthURL(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/apple`).then((credential) => {
-        handleCredentialLogin(credential);
-      }).catch((error: FirebaseError) => {
-        setSystemMessage('Appleログインに失敗しました。Code:107\n\n' + error.code);
+      //@ts-expect-error Electron
+      await window.electron.openOAuthURL(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/apple`).then((credential: OAuthCredential) => {
+        const appleCredential = OAuthProvider.credentialFromJSON(credential);
+        handleCredentialLogin(appleCredential);
+      }).catch((error: Error) => {
+        if (error.message.includes('closed-by-user')) {
+          setSystemMessage('Appleログインがキャンセルされました。');
+        } else {
+          setSystemMessage('Appleログインに失敗しました。Code:107\n\n' + (error instanceof Error ? error.message : 'Unknown error'));
+        }
         setIsLoading(false);
       });
     } else {

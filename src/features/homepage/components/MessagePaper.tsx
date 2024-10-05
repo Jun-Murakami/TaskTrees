@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Paper, Typography, Stack, Button, Divider } from '@mui/material';
 import { useAppStateStore } from '@/store/appStateStore';
 
-const isElectron = navigator.userAgent.indexOf('Electron') >= 0;
+const isElectron = navigator.userAgent.includes('Electron');
 
 export const MessagePaper = () => {
   const [currentVersion, setCurrentVersion] = useState('');
@@ -24,7 +24,7 @@ export const MessagePaper = () => {
 
     // 現在のアプリバージョンを取得
     const fetchCurrentVersion = async () => {
-      // @ts-expect-error ElectronAPI
+      //@ts-expect-error Electron
       const version = await window.electron.getAppVersion();
       setCurrentVersion(version);
     };
@@ -72,7 +72,7 @@ export const MessagePaper = () => {
 
   return (
     <Stack sx={{ width: '100%', maxWidth: 400, margin: 'auto', marginTop: 4 }}>
-      {isWeb && (
+      {isWeb && !isElectron && (
         <>
           <Paper>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
@@ -96,7 +96,7 @@ export const MessagePaper = () => {
         </>
       )}
       {isElectron && (
-        <Paper sx={{ maxWidth: 400, margin: 'auto', marginTop: 4 }}>
+        <Paper sx={{ width: '100%', maxWidth: 400, margin: 'auto', marginTop: 4 }}>
           <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
             ver{currentVersion}
           </Typography>
@@ -130,7 +130,11 @@ export const MessagePaper = () => {
           ©{new Date().getFullYear()} Jun Murakami
         </a>{' '}
         |{' '}
-        <a href='https://github.com/Jun-Murakami/TaskTrees' target='_blank' rel='noreferrer'>
+        <a
+          href={isElectron ? 'https://github.com/Jun-Murakami/TaskTrees-Electron' : 'https://github.com/Jun-Murakami/TaskTrees'}
+          target='_blank'
+          rel='noreferrer'
+        >
           GitHub
         </a>{' '}
         |{' '}
