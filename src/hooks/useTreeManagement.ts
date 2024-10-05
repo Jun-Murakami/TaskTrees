@@ -610,8 +610,11 @@ export const useTreeManagement = () => {
       const isOffline = useAppStateStore.getState().isOffline;
       const treesList = useTreeStateStore.getState().treesList;
       const isConnectedDb = useAppStateStore.getState().isConnectedDb;
-      if (!uid || !isConnectedDb || isOffline || !treesList) {
+      if (!uid || !isConnectedDb || isOffline) {
         throw new Error('データベースとの接続が確立されていません');
+      }
+      if (!treesList) {
+        throw new Error('ツリーのリストが取得できませんでした');
       }
       const treesListItemIncludingItems: TreesListItemIncludingItems[] | null | undefined =
         await dbService.loadAllTreesDataFromDb(treesList);
@@ -657,7 +660,9 @@ export const useTreeManagement = () => {
       if (error instanceof Error && error.message.includes('cancel')) {
         return Promise.resolve('');
       }
-      await showDialog('ツリーのバックアップに失敗しました。\n\n' + error, 'Error');
+      if (!isSilent) {
+        await showDialog('ツリーのバックアップに失敗しました。\n\n' + error, 'Error');
+      }
       return Promise.reject('');
     }
   }, [showDialog]);
