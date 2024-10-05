@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { TreeItem, TreeItems } from '../types/types';
 import {
@@ -10,44 +11,43 @@ import {
   ensureChildrenProperty,
   isTreeItemArray,
   extractSubtree,
-} from '../components/SortableTree/utilities';
+} from '@/features/sortableTree/utilities';
 import { ref, getDatabase, get, set } from 'firebase/database';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { useDatabase } from './useDatabase';
-import { useIndexedDb } from './useIndexedDb';
-import { useAttachedFile } from './useAttachedFile';
-import { useTreeStateStore } from '../store/treeStateStore';
-import { useAppStateStore } from '../store/appStateStore';
-import { useDialogStore } from '../store/dialogStore';
+import { useSync } from '@/hooks/useSync';
+import { useAttachedFile } from '@/features/sortableTree/hooks/useAttachedFile';
+import { useTreeStateStore } from '@/store/treeStateStore';
+import { useAppStateStore } from '@/store/appStateStore';
+import { useDialogStore } from '@/store/dialogStore';
 
 // タスクの追加、削除、復元、コピー、移動、done状態の変更を行う
 // 一部にデータベースの処理を含む
 
 export const useTaskManagement = () => {
-  const items = useTreeStateStore((state) => state.items);
-  const currentTree = useTreeStateStore((state) => state.currentTree);
   const setItems = useTreeStateStore((state) => state.setItems);
   const showDialog = useDialogStore((state) => state.showDialog);
 
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
 
   const { deleteFile } = useAttachedFile();
-  const { saveTimeStampDb } = useDatabase();
-  const { copyTreeDataToIdbFromDb } = useIndexedDb();
+  const { updateTimeStamp, copyTreeDataToIdbFromDb } = useSync();
 
   // タスクを追加する ------------------------------
   // ※ SortableTreeコンポーネントに移動した
 
   // アイテムのテキスト値を変更する ------------------------------
   const handleValueChange = (id: UniqueIdentifier, newValue: string) => {
+    const items = useTreeStateStore.getState().items;
     const newItems = setProperty(items, id, 'value', () => newValue);
     setItems(newItems);
   }
 
   // タスクの削除 ------------------------------
-  function handleRemove(id: UniqueIdentifier | undefined) {
+  const handleRemove = useCallback(async (id: UniqueIdentifier | undefined) => {
+
     if (!id) return;
-    const currentItems = items;
+    const currentItems = useTreeStateStore.getState().items;
+    const currentTree = useTreeStateStore.getState().currentTree;
     const itemToRemove = findItemDeep(currentItems, id);
     const trashItem = currentItems.find((item) => item.id === 'trash');
 
@@ -94,11 +94,12 @@ export const useTaskManagement = () => {
       setItems(updatedItems);
       setIsLoading(false);
     }
-  }
+  }, [showDialog, setIsLoading, deleteFile, setItems]);
 
   // ゴミ箱を空にする ------------------------------
-  const removeTrashDescendants = async () => {
-    const targetItems = items;
+  const removeTrashDescendants = useCallback(async () => {
+    const targetItems = useTreeStateStore.getState().items;
+    const currentTree = useTreeStateStore.getState().currentTree;
     const result = await showDialog(
       'ゴミ箱の中のすべてのアイテムが完全に削除されます。実行しますか？',
       'Confirm Requirements',
@@ -137,11 +138,12 @@ export const useTaskManagement = () => {
     }
     setItems(itemsWithoutTrashDescendants);
     setIsLoading(false);
-  };
+  }, [showDialog, setIsLoading, deleteFile, setItems]);
 
   // ゴミ箱内のdoneプロパティがtrueの完了済みタスクをすべて削除する ------------------------------
-  const removeTrashDescendantsWithDone = async () => {
-    const targetItems = items;
+  const removeTrashDescendantsWithDone = useCallback(async () => {
+    const targetItems = useTreeStateStore.getState().items;
+    const currentTree = useTreeStateStore.getState().currentTree;
     const result = await showDialog(
       'ゴミ箱の中の完了済みタスクが完全に削除されます。（未完了のタスクを含むブランチは削除されません。）実行しますか？',
       'Confirm Requirements',
@@ -190,12 +192,12 @@ export const useTaskManagement = () => {
     }
     setItems(updatedItems);
     setIsLoading(false);
-  };
+  }, [showDialog, setIsLoading, deleteFile, setItems]);
 
   // タスクをゴミ箱から復元する ------------------------------
-  const handleRestore = (id: UniqueIdentifier) => {
+  const handleRestore = useCallback(async (id: UniqueIdentifier) => {
     if (!id) return;
-    const currentItems = items;
+    const currentItems = useTreeStateStore.getState().items;
     const itemToRestore = findItemDeep(currentItems, id);
     const trashIndex = currentItems.find((item) => item.id === 'trash');
 
@@ -214,12 +216,13 @@ export const useTaskManagement = () => {
       // 復元したアイテムを更新
       setItems(updatedItems);
     }
-  };
+  }, [setItems]);
 
   // タスクのコピー ------------------------------
-  const handleCopy = async (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
+  const handleCopy = useCallback(async (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
     if (!targetTreeId || !targetTaskId) return false;
-
+    const items = useTreeStateStore.getState().items;
+    const currentTree = useTreeStateStore.getState().currentTree;
     try {
       // コピー元のアイテムをchildrenに含まれる子要素も含めて抽出し、新しいツリーを作成
       const subtree = extractSubtree(items, targetTaskId);
@@ -290,8 +293,8 @@ export const useTaskManagement = () => {
                   await set(treeItemsRef, newItems).catch((error) => {
                     throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error);
                   });
-                  await saveTimeStampDb(targetTreeId);
                   await copyTreeDataToIdbFromDb(targetTreeId);
+                  await updateTimeStamp(targetTreeId);
                 }
                 return true;
               } else {
@@ -313,10 +316,12 @@ export const useTaskManagement = () => {
       return false;
     }
     return false;
-  };
+  }, [showDialog, setItems, updateTimeStamp, copyTreeDataToIdbFromDb]);
 
   // タスクの移動 ------------------------------
-  const handleMove = async (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
+  const handleMove = useCallback(async (targetTreeId: UniqueIdentifier, targetTaskId: UniqueIdentifier) => {
+    const items = useTreeStateStore.getState().items;
+    const currentTree = useTreeStateStore.getState().currentTree;
     if (!targetTreeId || !targetTaskId || !currentTree) return;
 
     try {
@@ -388,7 +393,7 @@ export const useTaskManagement = () => {
                 await set(treeItemsRef, newItems).catch((error) => {
                   throw new Error('データベースにアイテムを保存できませんでした。\n\n' + error);
                 });
-                await saveTimeStampDb(targetTreeId);
+                await updateTimeStamp(targetTreeId);
                 await copyTreeDataToIdbFromDb(targetTreeId);
                 setItems(removeItem(items, targetTaskId));
               } else {
@@ -408,11 +413,11 @@ export const useTaskManagement = () => {
       console.error('エラーが発生しました。\n\n' + error);
       await showDialog('エラーが発生しました。\n\n' + error, 'Error');
     }
-  };
+  }, [showDialog, setItems, updateTimeStamp, copyTreeDataToIdbFromDb, deleteFile]);
 
   // アイテムのdone状態を変更する ------------------------------
   // 子孫のdone状態を更新する
-  const updateChildrenDone = (items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems => {
+  const updateChildrenDone = useCallback((items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems => {
     return items.map((item) => {
       // アイテム自体かその子孫が対象のIDと一致する場合、done状態を更新
       if (item.id === targetId) {
@@ -427,26 +432,27 @@ export const useTaskManagement = () => {
       }
       return item;
     });
-  }
+  }, []);
+
   // 本編
-  const handleDoneChange = (id: UniqueIdentifier, done: boolean) => {
+  const handleDoneChange = useCallback((id: UniqueIdentifier, done: boolean) => {
     const currentItems = useTreeStateStore.getState().items;
     // アイテム自体のdone状態を更新
     const updatedItems = setProperty(currentItems, id, 'done', () => done);
     // 子要素のdone状態も更新
     const newItems = updateChildrenDone(updatedItems, id, done);
     setItems(newItems);
-  }
+  }, [updateChildrenDone, setItems]);
 
   // アイテムにファイルを添付する ------------------------------
-  const handleAttachFile = (id: UniqueIdentifier, fileName: string) => {
+  const handleAttachFile = useCallback((id: UniqueIdentifier, fileName: string) => {
     const currentItems = useTreeStateStore.getState().items;
     const newItems = setProperty(currentItems, id, 'attachedFile', () => fileName);
     setItems(newItems);
-  };
+  }, [setItems]);
 
   // アイテムにタイマーをセットする ------------------------------
-  const handleSetTimer = (id: UniqueIdentifier, timer: string | undefined, isUpLift: boolean | undefined, upLiftMinute: number | undefined, isNotify: boolean | undefined, notifyMinute: number | undefined) => {
+  const handleSetTimer = useCallback((id: UniqueIdentifier, timer: string | undefined, isUpLift: boolean | undefined, upLiftMinute: number | undefined, isNotify: boolean | undefined, notifyMinute: number | undefined) => {
     const currentItems = useTreeStateStore.getState().items;
     const setTimer = (items: TreeItems, id: UniqueIdentifier, timer: string | undefined, isUpLift: boolean | undefined, upLiftMinute: number | undefined, isNotify: boolean | undefined, notifyMinute: number | undefined): TreeItems => {
       return items.map((item) => {
@@ -460,7 +466,7 @@ export const useTaskManagement = () => {
     }
     const newItems = setTimer(currentItems, id, timer ? timer : undefined, isUpLift ? isUpLift : undefined, upLiftMinute ? upLiftMinute : undefined, isNotify ? isNotify : undefined, notifyMinute ? notifyMinute : undefined);
     setItems(newItems);
-  }
+  }, [setItems]);
 
   return {
     handleRemove,

@@ -1,11 +1,11 @@
 import { createTheme } from '@mui/material/styles';
-import '@fontsource/biz-udpgothic';
+import '@fontsource-variable/noto-sans-jp';
 import '@fontsource/m-plus-1p';
 
 // ユーザーのデバイスのDPIを検出
 const dpi = window.devicePixelRatio;
 
-let mainFont = '"BIZ UDPGothic"';
+let mainFont = '"Noto Sans JP Variable"';
 
 if (dpi >= 1.5) {
   // 1.5倍以上のDPIの場合、M PLIUS 1Pにする
@@ -81,6 +81,7 @@ const windowsScrollbarStylesDark = {
 };
 
 export const theme = createTheme({
+  cssVariables: true,
   breakpoints: {
     values: breakpointsValues,
   },
@@ -101,13 +102,29 @@ export const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         // ユーザーエージェントにWinを含むか、プラットフォームがWinから始まる場合にスクロールバーのスタイルを適用
-        body: navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win') ? windowsScrollbarStyles : {},
+        body:
+          navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win') ? windowsScrollbarStyles : undefined,
+        a: {
+          color: 'var(--mui-palette-primary-main)',
+          textDecoration: 'none',
+          '&:hover': {
+            textDecoration: 'underline',
+          },
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          transform: 'rotate(0.05deg)',
+        },
       },
     },
     MuiTextField: {
       defaultProps: {
         inputProps: {
           spellCheck: 'false',
+          transform: 'rotate(0.05deg)',
         },
       },
     },
@@ -115,13 +132,14 @@ export const theme = createTheme({
 });
 
 export const darkTheme = createTheme({
+  cssVariables: true,
   breakpoints: {
     values: breakpointsValues,
   },
   palette: {
     mode: 'dark',
     primary: {
-      main: '#325599',
+      main: '#5275b9',
     },
     secondary: {
       main: '#ef0a0a',
@@ -136,13 +154,31 @@ export const darkTheme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         // ユーザーエージェントにWinを含むか、プラットフォームがWinから始まる場合にスクロールバーのスタイルを適用
-        body: navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win') ? windowsScrollbarStylesDark : {},
+        body:
+          navigator.userAgent?.indexOf('Win') > 0 || navigator.platform.startsWith('Win')
+            ? windowsScrollbarStylesDark
+            : undefined,
+        a: {
+          color: 'var(--mui-palette-primary-main)',
+          textDecoration: 'none',
+          '&:hover': {
+            textDecoration: 'underline',
+          },
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          transform: 'rotate(0.05deg)',
+        },
       },
     },
     MuiTextField: {
       defaultProps: {
         inputProps: {
           spellCheck: 'false',
+          transform: 'rotate(0.05deg)',
         },
       },
     },

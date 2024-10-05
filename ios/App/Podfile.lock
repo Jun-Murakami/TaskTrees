@@ -5,27 +5,27 @@ PODS:
   - AppAuth/Core (1.7.3)
   - AppAuth/ExternalUserAgent (1.7.3):
     - AppAuth/Core
-  - Capacitor (6.1.0):
+  - Capacitor (6.1.2):
     - CapacitorCordova
-  - CapacitorCordova (6.1.0)
-  - CapacitorFilesystem (6.0.0):
+  - CapacitorCordova (6.1.2)
+  - CapacitorFilesystem (6.0.1):
     - Capacitor
-  - CapacitorFirebaseAuthentication (6.0.0):
+  - CapacitorFirebaseAuthentication (6.1.0):
     - Capacitor
-    - CapacitorFirebaseAuthentication/Lite (= 6.0.0)
-    - FirebaseAuth (~> 10.24)
-  - CapacitorFirebaseAuthentication/Google (6.0.0):
+    - CapacitorFirebaseAuthentication/Lite (= 6.1.0)
+    - FirebaseAuth (~> 10.25)
+  - CapacitorFirebaseAuthentication/Google (6.1.0):
     - Capacitor
-    - FirebaseAuth (~> 10.24)
+    - FirebaseAuth (~> 10.25)
     - GoogleSignIn (= 7.0.0)
-  - CapacitorFirebaseAuthentication/Lite (6.0.0):
+  - CapacitorFirebaseAuthentication/Lite (6.1.0):
     - Capacitor
-    - FirebaseAuth (~> 10.24)
-  - CapacitorPreferences (6.0.1):
+    - FirebaseAuth (~> 10.25)
+  - CapacitorPreferences (6.0.2):
     - Capacitor
-  - CapacitorShare (6.0.1):
+  - CapacitorShare (6.0.2):
     - Capacitor
-  - CapawesomeCapacitorFilePicker (6.0.0):
+  - CapawesomeCapacitorFilePicker (6.0.1):
     - Capacitor
   - FirebaseAppCheckInterop (10.28.0)
   - FirebaseAuth (10.28.0):
@@ -116,13 +116,13 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AppAuth: a13994980c1ec792f7e2e665acd4d4aa6be43240
-  Capacitor: 187bd7847b6f71467015a20200a1a071be3e5f14
-  CapacitorCordova: be703980ca797f847c3356f78fa175d21c8330c2
-  CapacitorFilesystem: 60e59ba274c234a979e7a3be2552feaadcee4263
-  CapacitorFirebaseAuthentication: 8c75784e96c4106ebab9da2fc022366bca661451
-  CapacitorPreferences: 72909b165bc7807103778ddbb86d5d8ce06abf71
-  CapacitorShare: 02222f2457ff003e642370a9c1ecd101baaa27c8
-  CapawesomeCapacitorFilePicker: 983e8d272d200897cf1c12cf9a62439fa2fb2c35
+  Capacitor: 679f9673fdf30597493a6362a5d5bf233d46abc2
+  CapacitorCordova: f48c89f96c319101cd2f0ce8a2b7449b5fb8b3dd
+  CapacitorFilesystem: 37fb3aa5c945b4539ab11c74a5c57925a302bf24
+  CapacitorFirebaseAuthentication: 731483d98bf879a1c1b071c1efedd4bd5b0da6f2
+  CapacitorPreferences: e8284bf740cf8c6d3f25409af3c01df87dfeb5a1
+  CapacitorShare: 591ae4693d85686ceb590db8e8b44aa014ec6490
+  CapawesomeCapacitorFilePicker: c80c30759ba48986ff34a2b51b23ac2babfd3774
   FirebaseAppCheckInterop: 5315f40293191bfec04b2cfab0215760e441540a
   FirebaseAuth: 3d872fbbfc4223edeb72769e488f325fa8b0a4a9
   FirebaseCore: dfc33f0dffba05f76181da9cc0151171ebb3bd10

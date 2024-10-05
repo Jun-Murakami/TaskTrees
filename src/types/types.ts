@@ -22,6 +22,7 @@ export type TreeItems = TreeItem[];
 export type TreesListItem = {
   id: UniqueIdentifier;
   name: string;
+  isArchived?: boolean;
 };
 
 export type TreesList = TreesListItem[];
@@ -37,6 +38,7 @@ export type TreesListItemIncludingItems = {
   members?: string[];
   membersV2?: MemberItems;
   timestamp?: number;
+  isArchived?: boolean;
   items: TreeItems;
 };
 

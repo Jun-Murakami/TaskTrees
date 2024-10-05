@@ -21,7 +21,7 @@ jobs:
       - run: npm run build
         env:
           VITE_API_KEY: ${{ secrets.VITE_API_KEY_PROD }}
-          VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN_PROD }}
+          VITE_AUTH_DOMAIN: tasktree-s.web.app
           VITE_DATABASE_URL: ${{ secrets.VITE_DATABASE_URL_PROD }}
           VITE_PROJECT_ID: ${{ secrets.VITE_PROJECT_ID_PROD }}
           VITE_STORAGE_BUCKET: ${{ secrets.VITE_STORAGE_BUCKET_PROD }}
