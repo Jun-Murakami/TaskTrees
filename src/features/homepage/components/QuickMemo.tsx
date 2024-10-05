@@ -78,7 +78,7 @@ export const QuickMemo = () => {
           sx={{
             p: 0,
             height: isQuickMemoExpanded
-              ? 'calc(405px + env(safe-area-inset-bottom))'
+              ? 'calc(385px + env(safe-area-inset-bottom))'
               : 'calc(40px + env(safe-area-inset-bottom))',
             paddingBottom: 'env(safe-area-inset-bottom)',
             backgroundColor: darkMode
@@ -138,7 +138,7 @@ export const QuickMemo = () => {
               multiline
               fullWidth
               autoFocus
-              rows={14}
+              rows={13}
               value={quickMemoLocalText}
               onChange={handleChange}
               onFocus={() => {
@@ -166,8 +166,8 @@ export const QuickMemo = () => {
                 sx={{
                   position: 'absolute',
                   color: theme.palette.grey[500],
-                  bottom: 'calc(env(safe-area-inset-bottom) + 360px)',
-                  right: 40,
+                  bottom: 'calc(env(safe-area-inset-bottom) + 340px)',
+                  right: 45,
                 }}
                 onClick={handleClear}
               >

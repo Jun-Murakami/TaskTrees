@@ -35,7 +35,7 @@ export function ImportQuickMemo({ id, ...Props }: Props) {
             left: { xs: '50%', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px)' },
           },
           transform: 'translateX(-50%)',
-          bottom: `calc(env(safe-area-inset-bottom) + 367px)`,
+          bottom: `calc(env(safe-area-inset-bottom) + 347px)`,
           zIndex: 1211,
           height: '30px',
           width: '50%',

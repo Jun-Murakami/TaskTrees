@@ -232,7 +232,7 @@ export function ResponsiveDrawer({ handleLogout, handleChangeEmail }: Responsive
     </>
   );
 
-  const quickMemoSpacer = isQuickMemoExpanded ? 360 : 0;
+  const quickMemoSpacer = isQuickMemoExpanded ? 340 : 0;
 
   return (
     <>
