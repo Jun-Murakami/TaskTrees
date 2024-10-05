@@ -580,10 +580,10 @@ export const useTreeManagement = () => {
           encoding: Encoding.UTF8,
         });
         await Share.share({
-          title: 'TaskTrees Backup title',
-          text: 'TaskTrees Backup text',
+          title: `TaskTrees Backup ${currentTreeName}`,
+          text: `TaskTrees Backup ${currentTreeName}`,
           url: result.uri,
-          dialogTitle: 'TaskTrees Backup dialog title',
+          dialogTitle: `TaskTrees Backup ${currentTreeName}`,
         });
         return result.uri;
       } catch (error) {
@@ -639,10 +639,10 @@ export const useTreeManagement = () => {
           encoding: Encoding.UTF8,
         });
         await Share.share({
-          title: 'TaskTrees Backup title',
-          text: 'TaskTrees Backup text',
+          title: `TaskTrees All Backup ${getCurrentDateTime()}`,
+          text: `TaskTrees All Backup ${getCurrentDateTime()}`,
           url: result.uri,
-          dialogTitle: 'TaskTrees Backup dialog title',
+          dialogTitle: `TaskTrees All Backup ${getCurrentDateTime()}`,
         });
         return Promise.resolve(result.uri);
       } else {
