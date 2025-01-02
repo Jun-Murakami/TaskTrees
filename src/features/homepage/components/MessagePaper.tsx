@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Paper, Typography, Stack, Button, Divider } from '@mui/material';
+import { Paper, Typography, Stack, Button, Divider, Box } from '@mui/material';
 import { useAppStateStore } from '@/store/appStateStore';
 
 const isElectron = navigator.userAgent.includes('Electron');
@@ -76,13 +76,24 @@ export const MessagePaper = () => {
         <>
           <Paper>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-              2025.1.2 バックグラウンド時のデータ保存の問題を修正しました。
-              <br />
-              2024.10.5 アーカイブ機能を追加しました。
-              <br />
-              2024.7.5 タイマー機能を追加しました。
-              <br />
-              2024.4.15 クイックメモ機能を追加しました。
+              <Stack spacing={1}>
+                <Box sx={{ display: 'flex' }}>
+                  <Box sx={{ minWidth: '85px', fontWeight: 'bold' }}>2025.1.2</Box>
+                  <Box>バックグラウンド時のデータ保存の問題を修正しました。</Box>
+                </Box>
+                <Box sx={{ display: 'flex' }}>
+                  <Box sx={{ minWidth: '85px', fontWeight: 'bold' }}>2024.10.5</Box>
+                  <Box>アーカイブ機能を追加しました。</Box>
+                </Box>
+                <Box sx={{ display: 'flex' }}>
+                  <Box sx={{ minWidth: '85px', fontWeight: 'bold' }}>2024.7.5</Box>
+                  <Box>タイマー機能を追加しました。</Box>
+                </Box>
+                <Box sx={{ display: 'flex' }}>
+                  <Box sx={{ minWidth: '85px', fontWeight: 'bold' }}>2024.4.15</Box>
+                  <Box>クイックメモ機能を追加しました。</Box>
+                </Box>
+              </Stack>
             </Typography>
           </Paper>
           <Button
