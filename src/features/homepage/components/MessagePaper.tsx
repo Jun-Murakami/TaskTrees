@@ -7,7 +7,7 @@ const isElectron = navigator.userAgent.includes('Electron');
 const updateHistory = [
   {
     date: '2025.01.02',
-    content: 'バックグラウンド時のデータ保存の問題を修正しました。',
+    content: 'アプリ休止時のデータ保存の問題を修正しました。',
   },
   {
     date: '2024.10.05',
