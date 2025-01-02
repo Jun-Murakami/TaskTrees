@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { get } from 'firebase/database';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
@@ -29,6 +29,69 @@ export const useObserve = () => {
   const { syncDb, checkAndSyncDb, copyTreeDataToIdbFromDb, loadAndSetLocalTimeStamp } = useSync();
   const { loadAndSetSettingsFromDb, loadAndSetQuickMemoFromDb, loadAndSetQuickMemoFromIdb, saveQuickMemo, loadAppSettingsFromIdb } = useAppStateManagement();
   const { handleError } = useError();
+
+  // デバウンスタイマーの参照を保持
+  const itemsDebounceTimer = useRef<NodeJS.Timeout>();
+  const memoDebounceTimer = useRef<NodeJS.Timeout>();
+
+  // バックグラウンド移行時の即時保存処理
+  const saveImmediately = useCallback(async () => {
+    const currentTree = useTreeStateStore.getState().currentTree;
+    const isOffline = useAppStateStore.getState().isOffline;
+    const uid = useAppStateStore.getState().uid;
+    const currentItems = useTreeStateStore.getState().items;
+    const currentQuickMemo = useAppStateStore.getState().quickMemoText;
+
+    // デバウンスタイマーをクリア
+    if (itemsDebounceTimer.current) {
+      clearTimeout(itemsDebounceTimer.current);
+    }
+    if (memoDebounceTimer.current) {
+      clearTimeout(memoDebounceTimer.current);
+    }
+
+    try {
+      // アイテムの保存
+      if (currentTree && currentItems.length > 0) {
+        if (isOffline) {
+          await Preferences.set({
+            key: `items_offline`,
+            value: JSON.stringify(currentItems),
+          });
+        } else if (uid) {
+          await saveItems(currentItems, currentTree);
+        }
+      }
+
+      // クイックメモの保存
+      if (currentQuickMemo) {
+        if (isOffline) {
+          await Preferences.set({
+            key: `quick_memo_offline`,
+            value: currentQuickMemo,
+          });
+        } else if (uid) {
+          await saveQuickMemo(currentQuickMemo);
+        }
+      }
+    } catch (error) {
+      handleError('バックグラウンド移行時のデータ保存に失敗しました。\n\n' + error);
+    }
+  }, [saveItems, saveQuickMemo, handleError]);
+
+  // アプリケーションの状態変更を監視
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        saveImmediately();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [saveImmediately]);
 
   // サーバのタイムスタンプを監視 ------------------------------------------------
   const observeTimeStamp = useCallback(
@@ -173,7 +236,12 @@ export const useObserve = () => {
     } else {
       setPrevItems(items);
       const targetTree = currentTree;
-      const debounceSave = setTimeout(() => {
+
+      if (itemsDebounceTimer.current) {
+        clearTimeout(itemsDebounceTimer.current);
+      }
+
+      itemsDebounceTimer.current = setTimeout(() => {
         try {
           if (isOffline) {
             Preferences.set({
@@ -197,11 +265,14 @@ export const useObserve = () => {
           handleError('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error);
         }
       }, 5000);
-
-      return () => clearTimeout(debounceSave);
     }
 
-    return () => clearInterval(intervalId);
+    return () => {
+      if (itemsDebounceTimer.current) {
+        clearTimeout(itemsDebounceTimer.current);
+      }
+      clearInterval(intervalId);
+    };
   }, [items, handleError, saveItems, setItems, setPrevCurrentTree, setPrevItems, setIsLoading, setLocalTimestamp, showDialog]);
 
   // ローカルのクイックメモの変更を監視し、データベースに保存 ---------------------------------------------------------------------------
@@ -209,8 +280,8 @@ export const useObserve = () => {
     const isConnectedDb = useAppStateStore.getState().isConnectedDb;
     const isOffline = useAppStateStore.getState().isOffline;
     const uid = useAppStateStore.getState().uid;
-    const quickMemoText = useAppStateStore.getState().quickMemoText;
     const isLoadedMemoFromDb = useAppStateStore.getState().isLoadedMemoFromDb;
+
     if ((!uid && !isOffline) || (!isConnectedDb && !isOffline) || !quickMemoText) {
       return;
     }
@@ -218,10 +289,14 @@ export const useObserve = () => {
       setIsLoadedMemoFromDb(false);
       return;
     }
-    const debounceSave = setTimeout(() => {
+
+    if (memoDebounceTimer.current) {
+      clearTimeout(memoDebounceTimer.current);
+    }
+
+    memoDebounceTimer.current = setTimeout(() => {
       try {
         if (isOffline) {
-          // オフラインモードの場合、ローカルストレージに保存
           Preferences.set({
             key: `quick_memo_offline`,
             value: quickMemoText,
@@ -235,10 +310,13 @@ export const useObserve = () => {
       } catch (error) {
         handleError('クイックメモの変更をデータベースに保存できませんでした。\n\n' + error);
       }
-    }, 3000); // 3秒のデバウンス
+    }, 3000);
 
-    // コンポーネントがアンマウントされるか、依存配列の値が変更された場合にタイマーをクリア
-    return () => clearTimeout(debounceSave);
+    return () => {
+      if (memoDebounceTimer.current) {
+        clearTimeout(memoDebounceTimer.current);
+      }
+    };
   }, [quickMemoText, handleError, saveQuickMemo, setIsLoadedMemoFromDb, setIsLoading, showDialog]);
 
   return {
