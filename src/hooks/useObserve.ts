@@ -31,8 +31,9 @@ export const useObserve = () => {
   const { handleError } = useError();
 
   // デバウンスタイマーの参照を保持
-  const itemsDebounceTimer = useRef<NodeJS.Timeout>();
-  const memoDebounceTimer = useRef<NodeJS.Timeout>();
+  const itemsDebounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const memoDebounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+
 
   // バックグラウンド移行時の即時保存処理
   const saveImmediately = useCallback(async () => {

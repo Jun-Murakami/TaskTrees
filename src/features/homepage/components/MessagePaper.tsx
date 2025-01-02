@@ -96,7 +96,7 @@ export const MessagePaper = () => {
           <Paper>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
               <Stack spacing={1}>
-                {updateHistory.map((update, index) => (
+                {updateHistory.map((update, index: number) => (
                   <Box key={index} sx={{ display: 'flex' }}>
                     <Box sx={{ minWidth: '85px' }}>{update.date}</Box>
                     <Box>{update.content}</Box>

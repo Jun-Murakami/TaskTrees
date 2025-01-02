@@ -43,7 +43,7 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLLIElement>, 'id' 
 
 export interface TreeItemContentProps extends TreeItemProps {
   darkMode: boolean;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
   isDragOver: boolean;
   setIsDragOver: (isDragOver: boolean) => void;
   isFocusedOrHovered: boolean;
