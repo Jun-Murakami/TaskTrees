@@ -4,6 +4,25 @@ import { useAppStateStore } from '@/store/appStateStore';
 
 const isElectron = navigator.userAgent.includes('Electron');
 
+const updateHistory = [
+  {
+    date: '2025.01.02',
+    content: 'バックグラウンド時のデータ保存の問題を修正しました。',
+  },
+  {
+    date: '2024.10.05',
+    content: 'アーカイブ機能を追加しました。',
+  },
+  {
+    date: '2024.07.05',
+    content: 'タイマー機能を追加しました。',
+  },
+  {
+    date: '2024.04.15',
+    content: 'クイックメモ機能を追加しました。',
+  },
+];
+
 export const MessagePaper = () => {
   const [currentVersion, setCurrentVersion] = useState('');
   const [latestVersion, setLatestVersion] = useState('');
@@ -77,22 +96,12 @@ export const MessagePaper = () => {
           <Paper>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
               <Stack spacing={1}>
-                <Box sx={{ display: 'flex' }}>
-                  <Box sx={{ minWidth: '85px', fontWeight: 'bold' }}>2025.1.2</Box>
-                  <Box>バックグラウンド時のデータ保存の問題を修正しました。</Box>
-                </Box>
-                <Box sx={{ display: 'flex' }}>
-                  <Box sx={{ minWidth: '85px', fontWeight: 'bold' }}>2024.10.5</Box>
-                  <Box>アーカイブ機能を追加しました。</Box>
-                </Box>
-                <Box sx={{ display: 'flex' }}>
-                  <Box sx={{ minWidth: '85px', fontWeight: 'bold' }}>2024.7.5</Box>
-                  <Box>タイマー機能を追加しました。</Box>
-                </Box>
-                <Box sx={{ display: 'flex' }}>
-                  <Box sx={{ minWidth: '85px', fontWeight: 'bold' }}>2024.4.15</Box>
-                  <Box>クイックメモ機能を追加しました。</Box>
-                </Box>
+                {updateHistory.map((update, index) => (
+                  <Box key={index} sx={{ display: 'flex' }}>
+                    <Box sx={{ minWidth: '85px' }}>{update.date}</Box>
+                    <Box>{update.content}</Box>
+                  </Box>
+                ))}
               </Stack>
             </Typography>
           </Paper>
