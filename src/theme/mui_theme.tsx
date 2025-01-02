@@ -1,5 +1,4 @@
 import { createTheme } from '@mui/material/styles';
-import '@fontsource-variable/noto-sans-jp';
 import '@fontsource/m-plus-1p';
 
 const fontFamilySet = [
