@@ -76,11 +76,11 @@ export const MessagePaper = () => {
         <>
           <Paper>
             <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
+              2025.1.2 バックグラウンド時のデータ保存の問題を修正しました。
+              <br />
               2024.10.5 アーカイブ機能を追加しました。
               <br />
-              <br />
               2024.7.5 タイマー機能を追加しました。
-              <br />
               <br />
               2024.4.15 クイックメモ機能を追加しました。
             </Typography>
