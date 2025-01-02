@@ -2,17 +2,8 @@ import { createTheme } from '@mui/material/styles';
 import '@fontsource-variable/noto-sans-jp';
 import '@fontsource/m-plus-1p';
 
-// ユーザーのデバイスのDPIを検出
-const dpi = window.devicePixelRatio;
-
-let mainFont = '"Noto Sans JP Variable"';
-
-if (dpi >= 1.5) {
-  // 1.5倍以上のDPIの場合、M PLIUS 1Pにする
-  mainFont = '"M PLUS 1p"';
-}
 const fontFamilySet = [
-  `${mainFont}`,
+  '"M PLUS 1p"',
   '-apple-system',
   'BlinkMacSystemFont',
   '"Segoe UI"',
@@ -25,22 +16,15 @@ const fontFamilySet = [
   '"Segoe UI Symbol"',
 ].join(',');
 
-let typographyStyles = {};
-if (dpi >= 1.5) {
-  typographyStyles = {
-    fontFamily: fontFamilySet,
-  };
-} else {
-  typographyStyles = {
-    fontFamily: fontFamilySet,
-    h3: {
-      fontSize: '35px',
-    },
-    caption: {
-      fontSize: '11px',
-    },
-  };
-}
+const typographyStyles = {
+  fontFamily: fontFamilySet,
+  h3: {
+    fontSize: '35px',
+  },
+  caption: {
+    fontSize: '11px',
+  },
+};
 
 const breakpointsValues = {
   xs: 0,
