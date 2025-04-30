@@ -6,6 +6,10 @@ const isElectron = navigator.userAgent.includes('Electron');
 
 const updateHistory = [
   {
+    date: '2025.04.30',
+    content: '軽微なバグの修正とパフォーマンスの改善を行いました。',
+  },
+  {
     date: '2025.01.02',
     content: '軽微なバグを修正しました。',
   },
