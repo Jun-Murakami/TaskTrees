@@ -302,14 +302,14 @@ export const QuickMemo = () => {
       position={quickMemoPosition}
       minWidth={250}
       minHeight={120}
-      onDragStop={(e, d) => {
+      onDragStop={(_e, d) => {
         const maxX = window.innerWidth - quickMemoSize.width;
         const maxY = window.innerHeight - quickMemoSize.height;
         const x = Math.max(0, Math.min(d.x, maxX));
         const y = Math.max(0, Math.min(d.y, maxY));
         setQuickMemoPosition({ x, y });
       }}
-      onResizeStop={(e, direction, ref, delta, position) => {
+      onResizeStop={(_e, _direction, ref, _delta, position) => {
         const width = ref.offsetWidth;
         const height = ref.offsetHeight;
         // 右端・下端がウィンドウ外に出ないように補正
