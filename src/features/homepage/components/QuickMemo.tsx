@@ -218,13 +218,10 @@ export const QuickMemo = () => {
           onBlur={() => {
             setIsEditingTextLocal(false);
           }}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
             e.stopPropagation();
           }}
-          onMouseDown={(e) => {
-            e.stopPropagation();
-          }}
-          onResize={(e) => {
+          onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
             e.stopPropagation();
           }}
           sx={{
