@@ -298,14 +298,29 @@ export const QuickMemo = () => {
   // 切り離し状態
   return (
     <Rnd
-      bounds="window"
       size={quickMemoSize}
       position={quickMemoPosition}
       minWidth={250}
       minHeight={120}
-      onDragStop={(e, d) => setQuickMemoPosition({ x: d.x, y: d.y })}
-      onResizeStop={(e, direction, ref) => setQuickMemoSize({ width: ref.offsetWidth, height: ref.offsetHeight })}
-      style={{ zIndex: 1300 }}
+      onDragStop={(e, d) => {
+        const maxX = window.innerWidth - quickMemoSize.width;
+        const maxY = window.innerHeight - quickMemoSize.height;
+        const x = Math.max(0, Math.min(d.x, maxX));
+        const y = Math.max(0, Math.min(d.y, maxY));
+        setQuickMemoPosition({ x, y });
+      }}
+      onResizeStop={(e, direction, ref, delta, position) => {
+        const width = ref.offsetWidth;
+        const height = ref.offsetHeight;
+        // 右端・下端がウィンドウ外に出ないように補正
+        const maxX = window.innerWidth - width;
+        const maxY = window.innerHeight - height;
+        const x = Math.max(0, Math.min(position.x, maxX));
+        const y = Math.max(0, Math.min(position.y, maxY));
+        setQuickMemoSize({ width, height });
+        setQuickMemoPosition({ x, y });
+      }}
+      style={{ zIndex: 1300, position: 'fixed' }}
     >
       <Box sx={{ position: 'relative', height: '100%', }}>{memoContent}</Box>
     </Rnd>
