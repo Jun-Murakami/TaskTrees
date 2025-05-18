@@ -6,6 +6,10 @@ const isElectron = navigator.userAgent.includes('Electron');
 
 const updateHistory = [
   {
+    date: '2025.05.18',
+    content: 'クイックメモをドッキング/切り離しできるようにしました。',
+  },
+  {
     date: '2025.04.30',
     content: '軽微なバグの修正とパフォーマンスの改善を行いました。',
   },
@@ -20,10 +24,6 @@ const updateHistory = [
   {
     date: '2024.07.05',
     content: 'タイマー機能を追加しました。',
-  },
-  {
-    date: '2024.04.15',
-    content: 'クイックメモ機能を追加しました。',
   },
 ];
 
