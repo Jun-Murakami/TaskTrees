@@ -252,6 +252,7 @@ export const QuickMemo = () => {
               bottom: 'calc(env(safe-area-inset-bottom) + 15px)',
               right: 15,
             }}
+            size='small'
           >
             <SaveAsIcon />
           </IconButton>
