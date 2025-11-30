@@ -17,7 +17,7 @@ jobs:
           rm -rf node_modules
           rm -f package-lock.json
       - name: Install Dependencies
-        run: npm install
+        run: npm install --force
       - run: npm run build
         env:
           VITE_API_KEY: ${{ secrets.VITE_API_KEY_PROD }}
