@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
+import { PlatformRouter as Router } from '@/features/app/PlatformRouter';
 import { indexedDb } from '@/indexedDb';
 import { theme, darkTheme } from '@/theme/mui_theme';
 import { CssBaseline, ThemeProvider } from '@mui/material';

@@ -1,4 +1,4 @@
-import { Button, CircularProgress, Typography, Box } from '@mui/material';
+import { Button, CircularProgress, Typography, Box, Divider } from '@mui/material';
 import { DeleteForever } from '@mui/icons-material';
 import { TaskTreesLogo } from '@/features/common/TaskTreesLogo';
 import { ResponsiveDrawer } from '@/features/homepage/components/ResponsiveDrawer';
@@ -13,6 +13,11 @@ import { Capacitor } from '@capacitor/core';
 
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+
+import { useElectron } from '@/hooks/useElectron';
+
+const isElectron = navigator.userAgent.includes('Electron');
+const isWindows = navigator.userAgent.includes('Windows');
 
 export function HomePage() {
   const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
@@ -37,8 +42,11 @@ export function HomePage() {
 
   const drawerWidth = 300;
 
+  useElectron();
+
   return (
     <>
+      {isElectron && isWindows && <Divider sx={{ width: '100%', position: 'fixed', top: 0, zIndex: 1500 }} />}
       {isLoggedIn ? (
         !isWaitingForDelete ? (
           // ログイン後のメイン画面

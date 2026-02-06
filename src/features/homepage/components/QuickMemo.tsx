@@ -105,11 +105,13 @@ export const QuickMemo = () => {
   // ドック/切り離しトグルボタン（AccordionSummary内で右端に表示するため、Stackに組み込む）
   const dockToggleBtn = !isMobile && (
     <Button
+      component="div"
+      role="button"
       size="small"
       variant="outlined"
       sx={{ mx: 1, height: 28, alignSelf: 'center' }}
       onClick={(e) => {
-        e.stopPropagation(); // Accordionの展開トグルを防ぐ
+        e.stopPropagation();
         setIsQuickMemoDocked(!isQuickMemoDocked);
       }}
     >

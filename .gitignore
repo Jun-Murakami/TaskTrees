@@ -11,6 +11,7 @@ vite.config.ts.timestamp-*
 node_modules
 dist
 dist-ssr
+out
 .firebase
 .firebaserc
 firebase.json

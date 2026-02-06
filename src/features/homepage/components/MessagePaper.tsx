@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Paper, Typography, Stack, Button, Divider, Box } from '@mui/material';
 import { useAppStateStore } from '@/store/appStateStore';
 
@@ -31,8 +31,6 @@ export const MessagePaper = () => {
   const [currentVersion, setCurrentVersion] = useState('');
   const [latestVersion, setLatestVersion] = useState('');
   const [updateMessage, setUpdateMessage] = useState('');
-  const [isNewVersionAvailable, setIsNewVersionAvailable] = useState(false);
-
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
 
   const currentUrl = window.location.href;
@@ -47,15 +45,14 @@ export const MessagePaper = () => {
 
     // 現在のアプリバージョンを取得
     const fetchCurrentVersion = async () => {
-      //@ts-expect-error Electron
-      const version = await window.electron.getAppVersion();
+      const version = await window.electron!.getAppVersion();
       setCurrentVersion(version);
     };
 
     // 最新バージョン情報を取得
     const fetchLatestVersion = async () => {
       try {
-        const repoUrl = 'https://api.github.com/repos/Jun-Murakami/TaskTrees-Electron/releases/latest';
+        const repoUrl = 'https://api.github.com/repos/Jun-Murakami/TaskTrees/releases/latest';
         const response = await fetch(repoUrl);
         const data = await response.json();
         if (!data) {
@@ -72,25 +69,15 @@ export const MessagePaper = () => {
     fetchLatestVersion();
   }, [isLoggedIn]);
 
-  // 新しいバージョンがあるかどうかを判定
-  useEffect(() => {
-    if (!isElectron) return;
-
-    if (currentVersion && latestVersion) {
-      const currentVersionArray = currentVersion.split('.').map((v) => parseInt(v));
-      const latestVersionArray = latestVersion.split('.').map((v) => parseInt(v));
-      if (currentVersionArray[0] < latestVersionArray[0]) {
-        setIsNewVersionAvailable(true);
-      } else if (currentVersionArray[0] === latestVersionArray[0]) {
-        if (currentVersionArray[1] < latestVersionArray[1]) {
-          setIsNewVersionAvailable(true);
-        } else if (currentVersionArray[1] === latestVersionArray[1]) {
-          if (currentVersionArray[2] < latestVersionArray[2]) {
-            setIsNewVersionAvailable(true);
-          }
-        }
-      }
-    }
+  const isNewVersionAvailable = useMemo(() => {
+    if (!isElectron || !currentVersion || !latestVersion) return false;
+    const currentVersionArray = currentVersion.split('.').map((v) => parseInt(v));
+    const latestVersionArray = latestVersion.split('.').map((v) => parseInt(v));
+    if (currentVersionArray[0] < latestVersionArray[0]) return true;
+    if (currentVersionArray[0] > latestVersionArray[0]) return false;
+    if (currentVersionArray[1] < latestVersionArray[1]) return true;
+    if (currentVersionArray[1] > latestVersionArray[1]) return false;
+    return currentVersionArray[2] < latestVersionArray[2];
   }, [currentVersion, latestVersion]);
 
   return (
@@ -155,7 +142,7 @@ export const MessagePaper = () => {
         </a>{' '}
         |{' '}
         <a
-          href={isElectron ? 'https://github.com/Jun-Murakami/TaskTrees-Electron' : 'https://github.com/Jun-Murakami/TaskTrees'}
+          href='https://github.com/Jun-Murakami/TaskTrees'
           target='_blank'
           rel='noreferrer'
         >

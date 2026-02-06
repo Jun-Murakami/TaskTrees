@@ -1,8 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import type { TreeItem } from '@/types/types';
 import { indexedDb as idb } from '@/indexedDb';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+
+// 再帰的にアイテムを検索する関数
+function containsSearchKey(item: TreeItem, searchKey: string): boolean {
+  if (item.value.toLowerCase().includes(searchKey.toLowerCase())) {
+    return true;
+  }
+  return item.children.some(child => containsSearchKey(child, searchKey));
+}
 
 export const useSearch = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -10,14 +18,6 @@ export const useSearch = () => {
   const searchKey = useAppStateStore((state) => state.searchKey);
   const setSearchResults = useTreeStateStore((state) => state.setSearchResults);
   const treesList = useTreeStateStore((state) => state.treesList);
-
-  // 再帰的にアイテムを検索する関数
-  const containsSearchKey = useCallback((item: TreeItem, searchKey: string): boolean => {
-    if (item.value.toLowerCase().includes(searchKey.toLowerCase())) {
-      return true;
-    }
-    return item.children.some(child => containsSearchKey(child, searchKey));
-  }, []);
 
   useEffect(() => {
     if (searchKey || searchKey !== '') {
@@ -34,7 +34,7 @@ export const useSearch = () => {
     } else {
       setSearchResults(treesList);
     }
-  }, [searchKey, setSearchResults, treesList, containsSearchKey]);
+  }, [searchKey, setSearchResults, treesList]);
 
 
   const searchDocument = () => {

@@ -97,11 +97,11 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
   // const [notifyHour, setNotifyHour] = useState<number | undefined>(undefined);
   // const [notifyMinute, setNotifyMinute] = useState<number | undefined>(undefined);
 
-  const anchorElParent = useRef<HTMLButtonElement>(null);
-  const anchorElCopy = useRef<HTMLButtonElement>(null);
-  const anchorElMove = useRef<HTMLButtonElement>(null);
-  const anchorEliOS = useRef<HTMLButtonElement>(null);
-  const anchorElTimer = useRef<HTMLButtonElement>(null);
+  const [anchorElParent, setAnchorElParent] = useState<HTMLElement | null>(null);
+  const [anchorElCopy, setAnchorElCopy] = useState<HTMLElement | null>(null);
+  const [anchorElMove, setAnchorElMove] = useState<HTMLElement | null>(null);
+  const [anchorEliOS, setAnchorEliOS] = useState<HTMLElement | null>(null);
+  const [anchorElTimer, setAnchorElTimer] = useState<HTMLElement | null>(null);
 
   const isOffline = useAppStateStore((state) => state.isOffline);
   const currentTree = useTreeStateStore((state) => state.currentTree);
@@ -253,11 +253,11 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
 
   return (
     <>
-      <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
+      <IconButton onClick={(event) => { setAnchorElParent(event.currentTarget); handleParentClick(); }} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
         <MoreVert />
       </IconButton>
       <Menu
-        anchorEl={anchorElParent.current}
+        anchorEl={anchorElParent}
         id='menu-item-management-parent'
         open={openParentMenu}
         onClose={handleParentClose}
@@ -279,7 +279,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
         {!isOffline && (
           <Box>
             <Divider />
-            <Box ref={anchorElTimer}>
+            <Box ref={(node: HTMLDivElement | null) => setAnchorElTimer(node)}>
               <MenuItem
                 disableRipple
                 onClick={() => {
@@ -293,7 +293,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
                 </ListItemIcon>
                 タイマーをセット
                 <Menu
-                  anchorEl={anchorElTimer.current}
+                  anchorEl={anchorElTimer}
                   id='menu-item-management-timer'
                   open={openTimerMenu}
                   onClose={() => {
@@ -460,7 +460,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
               </MenuItem>
             </Box>
             <Divider />
-            <Box ref={anchorEliOS}>
+            <Box ref={(node: HTMLDivElement | null) => setAnchorEliOS(node)}>
               <MenuItem
                 onClick={async () => {
                   await handleUploadClick();
@@ -471,7 +471,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
                 </ListItemIcon>
                 ファイルを添付
                 <Menu
-                  anchorEl={anchorEliOS.current}
+                  anchorEl={anchorEliOS}
                   id='menu-item-management-ios'
                   open={openIOSMenu}
                   onClose={() => {
@@ -508,7 +508,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
               </MenuItem>
             </Box>
             <Divider />
-            <Box ref={anchorElCopy}>
+            <Box ref={(node: HTMLDivElement | null) => setAnchorElCopy(node)}>
               <MenuItem
                 onClick={() => {
                   handleCopyClick();
@@ -519,7 +519,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
                 </ListItemIcon>
                 コピー
                 <Menu
-                  anchorEl={anchorElCopy.current}
+                  anchorEl={anchorElCopy}
                   id='menu-item-management-copy'
                   open={openCopyMenu}
                   onClose={() => {
@@ -548,7 +548,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
                 </Menu>
               </MenuItem>
             </Box>
-            <Box ref={anchorElMove}>
+            <Box ref={(node: HTMLDivElement | null) => setAnchorElMove(node)}>
               <MenuItem
                 onClick={() => {
                   handleMoveClick();
@@ -559,7 +559,7 @@ export function MenuItems({ id, attachedFile, timerDef, isUpLiftDef, upLiftMinut
                 </ListItemIcon>
                 移動
                 <Menu
-                  anchorEl={anchorElMove.current}
+                  anchorEl={anchorElMove}
                   id='menu-item-management-move'
                   open={openMoveMenu}
                   onClose={() => {
@@ -600,7 +600,7 @@ export function MenuItemsTrash({ id }: MenuItemsTrashProps) {
 
   const { handleRemove, handleRestore } = useTaskManagement();
 
-  const anchorElParent = useRef<HTMLButtonElement>(null);
+  const [anchorElParent, setAnchorElParent] = useState<HTMLElement | null>(null);
 
   const theme = useTheme();
 
@@ -614,11 +614,11 @@ export function MenuItemsTrash({ id }: MenuItemsTrashProps) {
 
   return (
     <>
-      <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
+      <IconButton onClick={(event) => { setAnchorElParent(event.currentTarget); handleParentClick(); }} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
         <MoreVert />
       </IconButton>
       <Menu
-        anchorEl={anchorElParent.current}
+        anchorEl={anchorElParent}
         id='menu-item-management-parent'
         open={openParentMenu}
         onClose={handleParentClose}
@@ -659,7 +659,7 @@ export function MenuItemsTrashRoot() {
 
   const { removeTrashDescendants, removeTrashDescendantsWithDone } = useTaskManagement();
 
-  const anchorElParent = useRef<HTMLButtonElement>(null);
+  const [anchorElParent, setAnchorElParent] = useState<HTMLElement | null>(null);
 
   const theme = useTheme();
 
@@ -673,11 +673,11 @@ export function MenuItemsTrashRoot() {
 
   return (
     <>
-      <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
+      <IconButton onClick={(event) => { setAnchorElParent(event.currentTarget); handleParentClick(); }} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
         <MoreVert />
       </IconButton>
       <Menu
-        anchorEl={anchorElParent.current}
+        anchorEl={anchorElParent}
         id='menu-item-management-parent'
         open={openParentMenu}
         onClose={handleParentClose}
@@ -721,7 +721,7 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
 
   const { downloadFile, deleteFile } = useAttachedFile();
 
-  const anchorElParent = useRef<HTMLButtonElement>(null);
+  const [anchorElParent, setAnchorElParent] = useState<HTMLElement | null>(null);
   const prevAttachedFileRef = useRef<string | null>(null);
 
   const theme = useTheme();
@@ -746,17 +746,17 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
           .catch((error) => {
             console.error(error);
           });
-      } else {
-        setImageURL(null);
       }
+      prevAttachedFileRef.current = attachedFile;
     }
-    // 現在のattachedFileを記録
-    prevAttachedFileRef.current = attachedFile;
   }, [attachedFile, currentTree]);
+
+  const isImageFile = attachedFile?.match(/\.(jpg|jpeg|png|gif|svg|webp|tif|tiff|bmp|ico|cur)$/i);
+  const resolvedImageURL = isImageFile ? imageURL : null;
 
   return (
     <>
-      {imageURL && (
+      {resolvedImageURL && (
         <Box
           sx={{
             width: '30px',
@@ -775,15 +775,15 @@ export function MenuItemsAttachedFile({ attachedFile }: MenuItemsAttachedFilePro
               height: 'auto',
               width: '100%',
             }}
-            src={imageURL}
+            src={resolvedImageURL}
           />
         </Box>
       )}
-      <IconButton ref={anchorElParent} onClick={handleParentClick} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
-        <AttachFile />
+      <IconButton onClick={(event) => { setAnchorElParent(event.currentTarget); handleParentClick(); }} sx={{ ...iconButtonStyle, color: theme.palette.grey[500] }}>
+        <MoreVert />
       </IconButton>
       <Menu
-        anchorEl={anchorElParent.current}
+        anchorEl={anchorElParent}
         id='menu-item-management-parent'
         open={openParentMenu}
         onClose={handleParentClose}
@@ -833,7 +833,7 @@ export function MenuItemsTimer({ id, timerDef, done, isUpLiftDef, upLiftMinuteDe
   const [upLiftMinute, setUpLiftMinute] = useState<number | undefined>(upLiftMinuteDef ? upLiftMinuteDef % 60 : undefined);
   const [currentTime, setCurrentTime] = useState<Dayjs>(dayjs());
 
-  const anchorElTimer = useRef<HTMLButtonElement>(null);
+  const [anchorElTimer, setAnchorElTimer] = useState<HTMLElement | null>(null);
 
   const hours = [...Array(49).keys()];
   const minutes = [...Array(60).keys()];
@@ -869,14 +869,13 @@ export function MenuItemsTimer({ id, timerDef, done, isUpLiftDef, upLiftMinuteDe
         <>
           <IconButton
             key={id}
-            ref={anchorElTimer}
-            onClick={() => setOpenTimerMenu(true)}
+            onClick={(event) => { setAnchorElTimer(event.currentTarget); setOpenTimerMenu(true); }}
             sx={{ ...iconButtonStyle, color: timerColor }}
           >
             <AccessAlarm fontSize='small' />
           </IconButton>
           <Menu
-            anchorEl={anchorElTimer.current}
+            anchorEl={anchorElTimer}
             id='menu-item-management-timer'
             open={openTimerMenu}
             onClose={() => {

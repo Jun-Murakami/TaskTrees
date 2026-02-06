@@ -175,8 +175,7 @@ export const useAuth = () => {
         return;
       }
     } else if (isElectron) {
-      //@ts-expect-error Electron
-      await window.electron.openOAuthURL(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/google`).then((credential: OAuthCredential) => {
+      await window.electron!.openOAuthURL(`https://${import.meta.env.VITE_ELECTRON_AUTH_DOMAIN}/auth/google`).then((credential: OAuthCredential) => {
         const googleCredential = GoogleAuthProvider.credential(credential.idToken, credential.accessToken);
         handleCredentialLogin(googleCredential);
       }).catch((error: Error) => {
@@ -232,8 +231,7 @@ export const useAuth = () => {
         return;
       }
     } else if (isElectron) {
-      //@ts-expect-error Electron
-      await window.electron.openOAuthURL(`https://${import.meta.env.VITE_AUTH_DOMAIN}/auth/apple`).then((credential: OAuthCredential) => {
+      await window.electron!.openOAuthURL(`https://${import.meta.env.VITE_ELECTRON_AUTH_DOMAIN}/auth/apple`).then((credential: OAuthCredential) => {
         const appleCredential = OAuthProvider.credentialFromJSON(credential);
         handleCredentialLogin(appleCredential);
       }).catch((error: Error) => {

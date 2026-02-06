@@ -45,7 +45,7 @@ export function Download() {
           variant={'contained'}
           startIcon={<MicrosoftIcon />}
           component='a'
-          href={`https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v${version}/TaskTrees-${version}-setup_win_x64.exe`}
+          href={`https://github.com/Jun-Murakami/TaskTrees/releases/download/v${version}/TaskTrees-${version}-setup_win_x64.exe`}
           download
         >
           Windows
@@ -55,7 +55,7 @@ export function Download() {
           variant={'contained'}
           startIcon={<AppleIcon />}
           component='a'
-          href={`https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v${version}/TaskTrees-${version}_mac_arm64.dmg`}
+          href={`https://github.com/Jun-Murakami/TaskTrees/releases/download/v${version}/TaskTrees-${version}_mac_arm64.dmg`}
           download
         >
           MacOS (Apple Silicon/M1,M2,M3..)
@@ -65,7 +65,7 @@ export function Download() {
           variant={'contained'}
           startIcon={<AppleIcon />}
           component='a'
-          href={`https://github.com/Jun-Murakami/TaskTrees-Electron/releases/download/v${version}/TaskTrees-${version}_mac_x64.dmg`}
+          href={`https://github.com/Jun-Murakami/TaskTrees/releases/download/v${version}/TaskTrees-${version}_mac_x64.dmg`}
           download
         >
           MacOS (Intel)

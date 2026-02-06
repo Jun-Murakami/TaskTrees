@@ -39,6 +39,7 @@ export function TreeSettingsAccordion() {
 
   const [editedTreeName, setEditedTreeName] = useState<string | null>(currentTreeName || '');
   const [isComposing, setIsComposing] = useState(false);
+  const [prevCurrentTree, setPrevCurrentTree] = useState(currentTree);
 
   const { handleTreeNameSubmit, handleAddUserToTree, handleDeleteUserFromTree, handleDeleteTree, handleChangeIsArchived } =
     useTreeManagement();
@@ -54,10 +55,10 @@ export function TreeSettingsAccordion() {
   // TextFielのRefをセット
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 新しいツリーが呼び出されたらTextFIeldにツリー名をセット
-  useEffect(() => {
+  if (currentTree !== prevCurrentTree) {
+    setPrevCurrentTree(currentTree);
     setEditedTreeName(currentTreeName);
-  }, [currentTree, currentTreeName]);
+  }
 
   // フォーカスをセット
   useEffect(() => {
