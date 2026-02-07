@@ -88,9 +88,15 @@ export const useObserve = () => {
       }
     };
 
+    const handleBeforeUnload = () => {
+      saveImmediately();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [saveImmediately]);
 

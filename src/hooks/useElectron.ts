@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
+import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 
 const isElectron = navigator.userAgent.includes('Electron');
 
@@ -10,6 +11,7 @@ export const useElectron = () => {
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn);
 
   const { handleCreateNewTree, handleLoadedContent, handleDownloadTreeState, handleDownloadAllTrees, saveItems } = useTreeManagement();
+  const { saveQuickMemo } = useAppStateManagement();
 
   useEffect(() => {
     if (!isElectron || !isLoggedIn) return;
@@ -85,6 +87,15 @@ export const useElectron = () => {
           window.electron?.sendCloseCompleted('error');
           return;
         }
+        const currentTree = useTreeStateStore.getState().currentTree;
+        const currentItems = useTreeStateStore.getState().items;
+        if (currentTree && currentItems.length > 0) {
+          await saveItems(currentItems, currentTree);
+        }
+        const quickMemoText = useAppStateStore.getState().quickMemoText;
+        if (quickMemoText) {
+          await saveQuickMemo(quickMemoText);
+        }
         const data = await handleDownloadAllTrees(true);
         if (data && typeof data === 'string') {
           window.electron?.sendCloseCompleted(data);
@@ -100,7 +111,7 @@ export const useElectron = () => {
     return () => {
       window.electron?.removeBeforeCloseListener();
     };
-  }, [handleDownloadAllTrees, isLoggedIn]);
+  }, [handleDownloadAllTrees, saveItems, saveQuickMemo, isLoggedIn]);
 
   useEffect(() => {
     if (!isElectron) return;
@@ -140,10 +151,14 @@ export const useElectron = () => {
       if (currentTree) {
         await saveItems(items, currentTree);
       }
+      const quickMemoText = useAppStateStore.getState().quickMemoText;
+      if (quickMemoText) {
+        await saveQuickMemo(quickMemoText);
+      }
     });
 
     return () => {
       window.electron?.removeSaveLastTreeListener();
     };
-  }, [saveItems, isLoggedIn]);
+  }, [saveItems, saveQuickMemo, isLoggedIn]);
 };
