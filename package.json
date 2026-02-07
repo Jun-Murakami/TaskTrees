@@ -16,7 +16,12 @@
     "build:electron:unpack": "npm run build:electron && electron-builder --dir",
     "build:electron:win": "npm run build:electron && electron-builder --win",
     "build:electron:mac": "electron-vite build && APPLE_API_KEY_ID=\"$APPLE_API_KEY\" APPLE_API_KEY=\"$APPLE_API_KEY_PATH\" electron-builder --mac",
-    "build:electron:linux": "electron-vite build && electron-builder --linux"
+    "build:electron:linux": "electron-vite build && electron-builder --linux",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run src/__tests__/unit",
+    "test:integration": "bash scripts/test-with-emulator.sh -- src/__tests__/integration",
+    "test:all": "bash scripts/test-with-emulator.sh"
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "^8.0.1",
@@ -54,11 +59,12 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.0.2",
+    "@electron-toolkit/tsconfig": "^2.0.0",
     "@eslint/js": "^9.0.0",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.3",
-    "@electron-toolkit/tsconfig": "^2.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "electron": "^40.2.1",
     "electron-builder": "^26.7.0",
     "electron-vite": "^5.0.0",
@@ -66,8 +72,10 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.0",
     "globals": "^17.3.0",
+    "happy-dom": "^20.5.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.54.0",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   }
 }
