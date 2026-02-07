@@ -135,8 +135,13 @@ if (!gotTheLock) {
 
     // CSP ------------------------------------------------------------------------------------
     // Dev mode skips CSP — HMR requires inline scripts injected by @vitejs/plugin-react-swc
+    // Production: apply CSP only to the main renderer (file:// origin), not to OAuth windows
     if (!is.dev) {
       session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        if (!details.url.startsWith('file://')) {
+          callback({ cancel: false });
+          return;
+        }
         callback({
           responseHeaders: {
             ...details.responseHeaders,
@@ -240,6 +245,7 @@ if (!gotTheLock) {
           { label: '切り取り', role: 'cut' as const },
           { label: 'コピー', role: 'copy' as const },
           { label: '貼り付け', role: 'paste' as const },
+          { label: 'すべて選択', role: 'selectAll' as const },
         ],
       },
     ];
@@ -271,6 +277,8 @@ if (!gotTheLock) {
           },
           autoHideMenuBar: true,
         })
+        const defaultUA = window.webContents.getUserAgent()
+        window.webContents.setUserAgent(defaultUA.replace(/\s*Electron\/\S+/, ''))
         window.loadURL(url)
 
         // ユーザーがウィンドウを閉じた場合にRejectを返す

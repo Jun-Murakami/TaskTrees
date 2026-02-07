@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   Box,
@@ -11,10 +11,13 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Typography,
+  Button,
+  Chip,
 } from '@mui/material';
-import { Settings, Logout, Upload, Download, DeleteForever, Email } from '@mui/icons-material';
+import { Settings, Logout, Upload, Download, DeleteForever, Email, Link, LinkOff } from '@mui/icons-material';
 import { ListItemIcon } from '@mui/material';
-import { getAuth } from 'firebase/auth';
+import { getAuth, UserInfo } from 'firebase/auth';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useAppStateStore } from '@/store/appStateStore';
@@ -73,10 +76,24 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
 interface MenuSettingsProps {
   handleLogout: () => Promise<void>;
   handleChangeEmail: () => Promise<void>;
+  getLinkedProviders: () => UserInfo[];
+  handleLinkGoogle: () => Promise<void>;
+  handleLinkApple: () => Promise<void>;
+  handleLinkEmail: () => Promise<void>;
+  handleUnlinkProvider: (providerId: string) => Promise<void>;
 }
 
-export function MenuSettings({ handleLogout, handleChangeEmail }: MenuSettingsProps) {
+export function MenuSettings({
+  handleLogout,
+  handleChangeEmail,
+  getLinkedProviders,
+  handleLinkGoogle,
+  handleLinkApple,
+  handleLinkEmail,
+  handleUnlinkProvider,
+}: MenuSettingsProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [linkedProviders, setLinkedProviders] = useState<UserInfo[]>([]);
 
   const isOffline = useAppStateStore((state) => state.isOffline);
   const darkMode = useAppStateStore((state) => state.darkMode);
@@ -94,8 +111,38 @@ export function MenuSettings({ handleLogout, handleChangeEmail }: MenuSettingsPr
 
   const open = Boolean(anchorEl);
 
+  const refreshProviders = useCallback(() => {
+    setLinkedProviders(getLinkedProviders());
+  }, [getLinkedProviders]);
+
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
+    refreshProviders();
+  };
+
+  const getProviderDisplayName = (providerId: string) => {
+    switch (providerId) {
+      case 'google.com':
+        return 'Google';
+      case 'apple.com':
+        return 'Apple';
+      case 'password':
+        return 'メール/パスワード';
+      default:
+        return providerId;
+    }
+  };
+
+  const isProviderLinked = (providerId: string) => linkedProviders.some((p) => p.providerId === providerId);
+
+  const handleLinkAndRefresh = async (linkFn: () => Promise<void>) => {
+    await linkFn();
+    refreshProviders();
+  };
+
+  const handleUnlinkAndRefresh = async (providerId: string) => {
+    await handleUnlinkProvider(providerId);
+    refreshProviders();
   };
 
   const handleClose = () => {
@@ -197,6 +244,73 @@ export function MenuSettings({ handleLogout, handleChangeEmail }: MenuSettingsPr
       >
         {!isOffline && (
           <Box>
+            <Box sx={{ px: 2, py: 1 }}>
+              <Typography variant='caption' color='text.secondary' sx={{ fontWeight: 'bold' }}>
+                アカウント連携
+              </Typography>
+              {linkedProviders.map((provider) => (
+                <Box
+                  key={provider.providerId}
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}
+                >
+                  <Chip
+                    label={getProviderDisplayName(provider.providerId)}
+                    size='small'
+                    color='primary'
+                    variant='outlined'
+                    sx={{ mr: 1 }}
+                  />
+                  <Typography variant='caption' color='text.secondary' sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {provider.email ?? ''}
+                  </Typography>
+                  <Button
+                    size='small'
+                    color='warning'
+                    startIcon={<LinkOff sx={{ fontSize: 14 }} />}
+                    onClick={() => handleUnlinkAndRefresh(provider.providerId)}
+                    sx={{ minWidth: 'auto', fontSize: '0.7rem', whiteSpace: 'nowrap' }}
+                  >
+                    解除
+                  </Button>
+                </Box>
+              ))}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                {!isProviderLinked('google.com') && (
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<Link sx={{ fontSize: 14 }} />}
+                    onClick={() => handleLinkAndRefresh(handleLinkGoogle)}
+                    sx={{ fontSize: '0.7rem' }}
+                  >
+                    Google
+                  </Button>
+                )}
+                {!isProviderLinked('apple.com') && (
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<Link sx={{ fontSize: 14 }} />}
+                    onClick={() => handleLinkAndRefresh(handleLinkApple)}
+                    sx={{ fontSize: '0.7rem' }}
+                  >
+                    Apple
+                  </Button>
+                )}
+                {!isProviderLinked('password') && (
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    startIcon={<Link sx={{ fontSize: 14 }} />}
+                    onClick={() => handleLinkAndRefresh(handleLinkEmail)}
+                    sx={{ fontSize: '0.7rem' }}
+                  >
+                    メール
+                  </Button>
+                )}
+              </Box>
+            </Box>
+            <Divider />
             <Tooltip title='アプリケーションの全データとアカウントの削除' placement='right'>
               <MenuItem
                 onClick={() => {

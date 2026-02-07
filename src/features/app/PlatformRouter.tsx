@@ -1,10 +1,10 @@
 import { ReactNode } from 'react';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 
-const isElectron = navigator.userAgent.includes('Electron');
+const isElectronRenderer = typeof window.electron !== 'undefined';
 
 export function PlatformRouter({ children }: { children: ReactNode }) {
-  if (isElectron) {
+  if (isElectronRenderer) {
     return <HashRouter>{children}</HashRouter>;
   }
   return <BrowserRouter>{children}</BrowserRouter>;

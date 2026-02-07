@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import { Add, Menu, KeyboardArrowUp, KeyboardArrowDown, Clear, Archive } from '@mui/icons-material';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { UserInfo } from 'firebase/auth';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
@@ -33,9 +34,22 @@ const drawerWidth = 300;
 interface ResponsiveDrawerProps {
   handleLogout: () => Promise<void>;
   handleChangeEmail: () => Promise<void>;
+  getLinkedProviders: () => UserInfo[];
+  handleLinkGoogle: () => Promise<void>;
+  handleLinkApple: () => Promise<void>;
+  handleLinkEmail: () => Promise<void>;
+  handleUnlinkProvider: (providerId: string) => Promise<void>;
 }
 
-export function ResponsiveDrawer({ handleLogout, handleChangeEmail }: ResponsiveDrawerProps) {
+export function ResponsiveDrawer({
+  handleLogout,
+  handleChangeEmail,
+  getLinkedProviders,
+  handleLinkGoogle,
+  handleLinkApple,
+  handleLinkEmail,
+  handleUnlinkProvider,
+}: ResponsiveDrawerProps) {
   const [drawerState, setDrawerState] = useState(false);
 
   const darkMode = useAppStateStore((state) => state.darkMode);
@@ -226,7 +240,15 @@ export function ResponsiveDrawer({ handleLogout, handleChangeEmail }: Responsive
         </List>
         <Divider />
         <List sx={{ py: 0.6 }}>
-          <MenuSettings handleLogout={handleLogout} handleChangeEmail={handleChangeEmail} />
+          <MenuSettings
+            handleLogout={handleLogout}
+            handleChangeEmail={handleChangeEmail}
+            getLinkedProviders={getLinkedProviders}
+            handleLinkGoogle={handleLinkGoogle}
+            handleLinkApple={handleLinkApple}
+            handleLinkEmail={handleLinkEmail}
+            handleUnlinkProvider={handleUnlinkProvider}
+          />
         </List>
       </Box>
     </>

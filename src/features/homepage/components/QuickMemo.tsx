@@ -180,19 +180,21 @@ export const QuickMemo = () => {
             )}
           </Stack>
           {dockToggleBtn}
-                  {isQuickMemoExpanded && quickMemoText && quickMemoText !== '' && (
-          <IconButton
-            sx={{
-              color: theme.palette.grey[500],
-            }}
+          {isQuickMemoExpanded && quickMemoText && quickMemoText !== '' && (
+            <IconButton
+              component="div"
+              role="button"
+              sx={{
+                color: theme.palette.grey[500],
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 handleClear();
               }}
-          >
-            <ClearIcon />
-          </IconButton>
-        )}
+            >
+              <ClearIcon />
+            </IconButton>
+          )}
         </Stack>
       </AccordionSummary>
       <AccordionDetails

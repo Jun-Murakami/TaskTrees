@@ -38,6 +38,11 @@ export function HomePage() {
     handleChangeEmail,
     handleLogout,
     handleDeleteAccount,
+    getLinkedProviders,
+    handleLinkGoogle,
+    handleLinkApple,
+    handleLinkEmail,
+    handleUnlinkProvider,
   } = useAuth();
 
   const drawerWidth = 300;
@@ -52,7 +57,15 @@ export function HomePage() {
           // ログイン後のメイン画面
           <>
             <QuickMemo />
-            <ResponsiveDrawer handleLogout={handleLogout} handleChangeEmail={handleChangeEmail} />
+            <ResponsiveDrawer
+              handleLogout={handleLogout}
+              handleChangeEmail={handleChangeEmail}
+              getLinkedProviders={getLinkedProviders}
+              handleLinkGoogle={handleLinkGoogle}
+              handleLinkApple={handleLinkApple}
+              handleLinkEmail={handleLinkEmail}
+              handleUnlinkProvider={handleUnlinkProvider}
+            />
             <Box
               sx={{
                 flexGrow: 1,

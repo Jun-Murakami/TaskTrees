@@ -6,6 +6,7 @@ import {
   initializeAuth,
   GoogleAuthProvider,
   OAuthProvider,
+  EmailAuthProvider,
   signInWithCredential,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -15,7 +16,11 @@ import {
   signInWithRedirect,
   getRedirectResult,
   updateEmail,
+  linkWithCredential,
+  linkWithPopup,
+  unlink,
   OAuthCredential,
+  UserInfo,
 } from 'firebase/auth';
 import { getDatabase, remove, ref, get, set } from 'firebase/database';
 import { getStorage, ref as storageRef, deleteObject, listAll } from 'firebase/storage';
@@ -374,6 +379,221 @@ export const useAuth = () => {
       });
   };
 
+  // 紐づいているプロバイダー一覧を取得
+  const getLinkedProviders = useCallback((): UserInfo[] => {
+    const user = auth.currentUser;
+    if (!user) return [];
+    return user.providerData;
+  }, []);
+
+  // Googleアカウントを紐づけ
+  const handleLinkGoogle = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setSystemMessage('ユーザーがログインしていません。');
+      return;
+    }
+    try {
+      if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+        await linkWithCredential(user, credential);
+      } else if (isElectron) {
+        const oauthCredential = await window.electron!.openOAuthURL(
+          `https://${import.meta.env.VITE_ELECTRON_AUTH_DOMAIN}/auth/google`
+        );
+        const credential = GoogleAuthProvider.credential(oauthCredential.idToken, oauthCredential.accessToken);
+        await linkWithCredential(user, credential);
+      } else {
+        const provider = new GoogleAuthProvider();
+        await linkWithPopup(user, provider);
+      }
+      await showDialog('Googleアカウントを紐づけました。', 'Account Linked');
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/provider-already-linked') {
+          await showDialog('Googleアカウントを紐づけました。', 'Account Linked');
+        } else if (error.code === 'auth/credential-already-in-use') {
+          await showDialog(
+            'このGoogleアカウントは既に別のアカウントに紐づけられています。先にそちらのアカウントからGoogleの紐づけを解除してください。',
+            'Error'
+          );
+        } else if (error.code === 'auth/requires-recent-login') {
+          await showDialog(
+            'セキュリティの制限により、アカウントの紐づけはログインから一定時間内に行う必要があります。一度ログアウトしてから再度ログインしてください。',
+            'Security Restriction'
+          );
+        } else {
+          await showDialog('Googleアカウントの紐づけに失敗しました。\n\n' + error.code, 'Error');
+        }
+      } else if (error instanceof Error && error.message.includes('closed-by-user')) {
+        // ユーザーがキャンセルした場合は何もしない
+      } else {
+        await showDialog(
+          'Googleアカウントの紐づけに失敗しました。\n\n' + (error instanceof Error ? error.message : 'Unknown error'),
+          'Error'
+        );
+      }
+    }
+  };
+
+  // Appleアカウントを紐づけ
+  const handleLinkApple = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setSystemMessage('ユーザーがログインしていません。');
+      return;
+    }
+    try {
+      if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+        const result = await FirebaseAuthentication.signInWithApple();
+        if (!result.credential) {
+          await showDialog('Appleログインのcredentialが取得できませんでした。', 'Error');
+          return;
+        }
+        const provider = new OAuthProvider('apple.com');
+        const credential = provider.credential({ idToken: result.credential.idToken, rawNonce: result.credential.nonce });
+        await linkWithCredential(user, credential);
+      } else if (isElectron) {
+        const oauthCredential = await window.electron!.openOAuthURL(
+          `https://${import.meta.env.VITE_ELECTRON_AUTH_DOMAIN}/auth/apple`
+        );
+        const credential = OAuthProvider.credentialFromJSON(oauthCredential);
+        await linkWithCredential(user, credential);
+      } else {
+        const provider = new OAuthProvider('apple.com');
+        await linkWithPopup(user, provider);
+      }
+      await showDialog('Appleアカウントを紐づけました。', 'Account Linked');
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/provider-already-linked') {
+          await showDialog('Appleアカウントを紐づけました。', 'Account Linked');
+        } else if (error.code === 'auth/credential-already-in-use') {
+          await showDialog(
+            'このAppleアカウントは既に別のアカウントに紐づけられています。先にそちらのアカウントからAppleの紐づけを解除してください。',
+            'Error'
+          );
+        } else if (error.code === 'auth/requires-recent-login') {
+          await showDialog(
+            'セキュリティの制限により、アカウントの紐づけはログインから一定時間内に行う必要があります。一度ログアウトしてから再度ログインしてください。',
+            'Security Restriction'
+          );
+        } else {
+          await showDialog('Appleアカウントの紐づけに失敗しました。\n\n' + error.code, 'Error');
+        }
+      } else if (error instanceof Error && error.message.includes('closed-by-user')) {
+        // ユーザーがキャンセルした場合は何もしない
+      } else {
+        await showDialog(
+          'Appleアカウントの紐づけに失敗しました。\n\n' + (error instanceof Error ? error.message : 'Unknown error'),
+          'Error'
+        );
+      }
+    }
+  };
+
+  // メール/パスワード認証を紐づけ
+  const handleLinkEmail = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setSystemMessage('ユーザーがログインしていません。');
+      return;
+    }
+    const emailResult = await showInputDialog(
+      'アカウントに紐づけるメールアドレスを入力してください',
+      'Link Email',
+      'メールアドレス',
+      '',
+      false
+    );
+    if (emailResult === '') return;
+
+    const passwordResult = await showInputDialog(
+      'パスワードを設定してください（6文字以上）',
+      'Link Email',
+      'パスワード',
+      '',
+      true
+    );
+    if (passwordResult === '') return;
+
+    try {
+      const credential = EmailAuthProvider.credential(emailResult, passwordResult);
+      await linkWithCredential(user, credential);
+      await showDialog('メール/パスワード認証を紐づけました。', 'Account Linked');
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/provider-already-linked') {
+          await showDialog('メール/パスワード認証を紐づけました。', 'Account Linked');
+        } else if (error.code === 'auth/credential-already-in-use') {
+          await showDialog('このメールアドレスは既に別のアカウントで使用されています。', 'Error');
+        } else if (error.code === 'auth/requires-recent-login') {
+          await showDialog(
+            'セキュリティの制限により、アカウントの紐づけはログインから一定時間内に行う必要があります。一度ログアウトしてから再度ログインしてください。',
+            'Security Restriction'
+          );
+        } else if (error.code === 'auth/weak-password') {
+          await showDialog('パスワードが弱すぎます。6文字以上のパスワードを設定してください。', 'Error');
+        } else if (error.code === 'auth/email-already-in-use') {
+          await showDialog('このメールアドレスは既に別のアカウントで使用されています。', 'Error');
+        } else {
+          await showDialog('メール/パスワード認証の紐づけに失敗しました。\n\n' + error.code, 'Error');
+        }
+      } else {
+        await showDialog(
+          'メール/パスワード認証の紐づけに失敗しました。\n\n' + (error instanceof Error ? error.message : 'Unknown error'),
+          'Error'
+        );
+      }
+    }
+  };
+
+  // プロバイダーの紐づけを解除
+  const handleUnlinkProvider = async (providerId: string) => {
+    const user = auth.currentUser;
+    if (!user) {
+      setSystemMessage('ユーザーがログインしていません。');
+      return;
+    }
+    // 最後の認証方法は解除できない
+    if (user.providerData.length <= 1) {
+      await showDialog(
+        '最後のログイン方法を解除することはできません。先に別のログイン方法を紐づけてから解除してください。',
+        'Error'
+      );
+      return;
+    }
+    const providerName =
+      providerId === 'google.com' ? 'Google' : providerId === 'apple.com' ? 'Apple' : 'メール/パスワード';
+    const confirmed = await showDialog(`${providerName}の紐づけを解除しますか？`, 'Confirm', true);
+    if (!confirmed) return;
+
+    try {
+      await unlink(user, providerId);
+      await user.reload();
+      await showDialog(`${providerName}の紐づけを解除しました。`, 'Unlinked');
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/no-such-provider') {
+          await showDialog('このプロバイダーは紐づけられていません。', 'Error');
+        } else if (error.code === 'auth/requires-recent-login') {
+          await showDialog(
+            'セキュリティの制限により、紐づけの解除はログインから一定時間内に行う必要があります。一度ログアウトしてから再度ログインしてください。',
+            'Security Restriction'
+          );
+        } else {
+          await showDialog('紐づけの解除に失敗しました。\n\n' + error.code, 'Error');
+        }
+      } else {
+        await showDialog(
+          '紐づけの解除に失敗しました。\n\n' + (error instanceof Error ? error.message : 'Unknown error'),
+          'Error'
+        );
+      }
+    }
+  };
+
   // ログアウト
   const handleLogout = async () => {
     signOut(getAuth())
@@ -525,5 +745,10 @@ export const useAuth = () => {
     handleChangeEmail,
     handleLogout,
     handleDeleteAccount,
+    getLinkedProviders,
+    handleLinkGoogle,
+    handleLinkApple,
+    handleLinkEmail,
+    handleUnlinkProvider,
   };
 };
