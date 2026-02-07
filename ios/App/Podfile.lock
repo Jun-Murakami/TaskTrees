@@ -1,83 +1,92 @@
 PODS:
-  - AppAuth (1.7.6):
-    - AppAuth/Core (= 1.7.6)
-    - AppAuth/ExternalUserAgent (= 1.7.6)
-  - AppAuth/Core (1.7.6)
-  - AppAuth/ExternalUserAgent (1.7.6):
+  - AppAuth (2.0.0):
+    - AppAuth/Core (= 2.0.0)
+    - AppAuth/ExternalUserAgent (= 2.0.0)
+  - AppAuth/Core (2.0.0)
+  - AppAuth/ExternalUserAgent (2.0.0):
     - AppAuth/Core
-  - Capacitor (7.4.4):
+  - AppCheckCore (11.2.0):
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - PromisesObjC (~> 2.4)
+  - Capacitor (8.0.2):
     - CapacitorCordova
-  - CapacitorCordova (7.4.4)
-  - CapacitorFilesystem (7.1.5):
+  - CapacitorCordova (8.0.2)
+  - CapacitorFilesystem (8.1.0):
     - Capacitor
-    - IONFilesystemLib (~> 1.0.1)
-  - CapacitorFirebaseAuthentication (7.4.0):
+    - IONFilesystemLib (~> 1.1.0)
+  - CapacitorFirebaseAuthentication (8.0.1):
     - Capacitor
-    - CapacitorFirebaseAuthentication/Lite (= 7.4.0)
-    - FirebaseAuth (~> 11.7.0)
-  - CapacitorFirebaseAuthentication/Google (7.4.0):
+    - CapacitorFirebaseAuthentication/Lite (= 8.0.1)
+    - FirebaseAuth (~> 12.7.0)
+  - CapacitorFirebaseAuthentication/Google (8.0.1):
     - Capacitor
-    - FirebaseAuth (~> 11.7.0)
-    - GoogleSignIn (= 7.1.0)
-  - CapacitorFirebaseAuthentication/Lite (7.4.0):
+    - FirebaseAuth (~> 12.7.0)
+    - GoogleSignIn (= 9.0.0)
+  - CapacitorFirebaseAuthentication/Lite (8.0.1):
     - Capacitor
-    - FirebaseAuth (~> 11.7.0)
-  - CapacitorPreferences (7.0.2):
+    - FirebaseAuth (~> 12.7.0)
+  - CapacitorPreferences (8.0.0):
     - Capacitor
-  - CapacitorShare (7.0.2):
+  - CapacitorShare (8.0.0):
     - Capacitor
-  - CapawesomeCapacitorFilePicker (7.2.0):
+  - CapawesomeCapacitorFilePicker (8.0.1):
     - Capacitor
-  - FirebaseAppCheckInterop (11.12.0)
-  - FirebaseAuth (11.7.0):
-    - FirebaseAppCheckInterop (~> 11.0)
-    - FirebaseAuthInterop (~> 11.0)
-    - FirebaseCore (~> 11.7.0)
-    - FirebaseCoreExtension (~> 11.7.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
-    - RecaptchaInterop (~> 100.0)
-  - FirebaseAuthInterop (11.12.0)
-  - FirebaseCore (11.7.0):
-    - FirebaseCoreInternal (~> 11.7.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GoogleUtilities/Logger (~> 8.0)
-  - FirebaseCoreExtension (11.7.0):
-    - FirebaseCore (~> 11.7.0)
-  - FirebaseCoreInternal (11.7.0):
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
-  - GoogleSignIn (7.1.0):
-    - AppAuth (< 2.0, >= 1.7.3)
-    - GTMAppAuth (< 5.0, >= 4.1.1)
+  - FirebaseAppCheckInterop (12.7.0)
+  - FirebaseAuth (12.7.0):
+    - FirebaseAppCheckInterop (~> 12.7.0)
+    - FirebaseAuthInterop (~> 12.7.0)
+    - FirebaseCore (~> 12.7.0)
+    - FirebaseCoreExtension (~> 12.7.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GTMSessionFetcher/Core (< 6.0, >= 3.4)
+    - RecaptchaInterop (~> 101.0)
+  - FirebaseAuthInterop (12.7.0)
+  - FirebaseCore (12.7.0):
+    - FirebaseCoreInternal (~> 12.7.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/Logger (~> 8.1)
+  - FirebaseCoreExtension (12.7.0):
+    - FirebaseCore (~> 12.7.0)
+  - FirebaseCoreInternal (12.7.0):
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+  - GoogleSignIn (9.0.0):
+    - AppAuth (~> 2.0)
+    - AppCheckCore (~> 11.0)
+    - GTMAppAuth (~> 5.0)
     - GTMSessionFetcher/Core (~> 3.3)
-  - GoogleUtilities/AppDelegateSwizzler (8.0.2):
+  - GoogleUtilities/AppDelegateSwizzler (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
     - GoogleUtilities/Network
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Environment (8.0.2):
+  - GoogleUtilities/Environment (8.1.0):
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Logger (8.0.2):
+  - GoogleUtilities/Logger (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Network (8.0.2):
+  - GoogleUtilities/Network (8.1.0):
     - GoogleUtilities/Logger
     - "GoogleUtilities/NSData+zlib"
     - GoogleUtilities/Privacy
     - GoogleUtilities/Reachability
-  - "GoogleUtilities/NSData+zlib (8.0.2)":
+  - "GoogleUtilities/NSData+zlib (8.1.0)":
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Privacy (8.0.2)
-  - GoogleUtilities/Reachability (8.0.2):
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/Reachability (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
-  - GTMAppAuth (4.1.1):
-    - AppAuth/Core (~> 1.7)
+  - GoogleUtilities/UserDefaults (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GTMAppAuth (5.0.0):
+    - AppAuth/Core (~> 2.0)
     - GTMSessionFetcher/Core (< 4.0, >= 3.3)
   - GTMSessionFetcher/Core (3.5.0)
-  - IONFilesystemLib (1.0.1)
-  - RecaptchaInterop (100.0.0)
+  - IONFilesystemLib (1.1.0)
+  - PromisesObjC (2.4.0)
+  - RecaptchaInterop (101.0.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -92,6 +101,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - AppAuth
+    - AppCheckCore
     - FirebaseAppCheckInterop
     - FirebaseAuth
     - FirebaseAuthInterop
@@ -103,6 +113,7 @@ SPEC REPOS:
     - GTMAppAuth
     - GTMSessionFetcher
     - IONFilesystemLib
+    - PromisesObjC
     - RecaptchaInterop
 
 EXTERNAL SOURCES:
@@ -122,27 +133,29 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capawesome/capacitor-file-picker"
 
 SPEC CHECKSUMS:
-  AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
-  Capacitor: 358dd1c3fdd71d969547b17e159fd8a7736cb45f
-  CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
-  CapacitorFilesystem: 609d5cceca1ed93d7f25839dbfdfd224bfe78209
-  CapacitorFirebaseAuthentication: 2297f469e0f7a51a19446d28c452179675dfc330
-  CapacitorPreferences: 65107ed7437d96ee72583df5763985e3c0ff2bc2
-  CapacitorShare: be166411fa995ead2d39b104aa0aae56d8615c66
-  CapawesomeCapacitorFilePicker: 0f4a913a00e39dd77213449f0d917e92f35a5ca9
-  FirebaseAppCheckInterop: 73b173e5ec45192e2d522ad43f526a82ad10b852
-  FirebaseAuth: 77e25aa24f3e1c626c5babd3338551fc1669ee0e
-  FirebaseAuthInterop: b583210c039a60ed3f1e48865e1f3da44a796595
-  FirebaseCore: 3227e35f4197a924206fbcdc0349325baf4f5de4
-  FirebaseCoreExtension: 206c1b399f0d103055207c16f299b28e3dbd1949
-  FirebaseCoreInternal: d6c17dafc8dc33614733a8b52df78fcb4394c881
-  GoogleSignIn: d4281ab6cf21542b1cfaff85c191f230b399d2db
-  GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
-  GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
+  AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
+  AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
+  Capacitor: 2b79172ad27f3be2d103cce88b8eb9803fdcc744
+  CapacitorCordova: 921bdb690ebe82421b24fce45552fd3dea2ae43a
+  CapacitorFilesystem: a957d4a4b6860844c4eba5bf441607a5166f92a7
+  CapacitorFirebaseAuthentication: cb5ddfd40d28ae8522b9af25741ba62eaa939501
+  CapacitorPreferences: 443fabe9670226200e595658a87ef0b1566716d4
+  CapacitorShare: 12f1d192170cbcf9f108fd675ac8e343761a4638
+  CapawesomeCapacitorFilePicker: cbd96b593d2bfdceb353ed161f9462ce4a9d67a9
+  FirebaseAppCheckInterop: d58366471f1dadf2ed998b15f85c658458a10142
+  FirebaseAuth: 88beaef7c688a2950541552b6dd195d22137c41a
+  FirebaseAuthInterop: deb2638881b5d98c88c4371dd0de65b6110f217b
+  FirebaseCore: c7b57863ce0859281a66d16ca36d665c45d332b5
+  FirebaseCoreExtension: 731a5744970bcd73ad95ab2a2b8a1f46353e86dd
+  FirebaseCoreInternal: 571a2dd8c975410966199623351db3a3265c874d
+  GoogleSignIn: c7f09cfbc85a1abf69187be091997c317cc33b77
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
+  GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
-  IONFilesystemLib: 89258b8e3e85465da93127d25d7ce37f977e8a6f
-  RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
+  IONFilesystemLib: 50b9a0f3052a9b40b9bedb43f328a8fe222f9f87
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
 
-PODFILE CHECKSUM: e296fd5377e1bb857c13c44b5c5e2faa30b81e02
+PODFILE CHECKSUM: dcd43526444dc1632df82687a6ca692055c078de
 
 COCOAPODS: 1.16.2
