@@ -1,9 +1,11 @@
 import { useCallback } from 'react';
 import { isValidAppSettingsState } from '@/features/sortableTree/utilities';
 import { useSync } from '@/hooks/useSync';
+import { hashData } from '@/utils/syncUtils';
 import * as dbService from '@/services/databaseService';
 import * as idbService from '@/services/indexedDbService';
 import { useAppStateStore } from '@/store/appStateStore';
+import { useSyncStateStore } from '@/store/syncStateStore';
 import { useError } from '@/hooks/useError';
 
 export const useAppStateManagement = () => {
@@ -54,6 +56,9 @@ export const useAppStateManagement = () => {
       }
       setIsLoadedMemoFromDb(true);
       setQuickMemoText(quickMemo);
+
+      const memoHash = hashData(quickMemo);
+      useSyncStateStore.getState().setMemoBaseFromServer(quickMemo, memoHash);
     } catch (error) {
       handleError(error);
     }
@@ -66,6 +71,9 @@ export const useAppStateManagement = () => {
       if (quickMemo) {
         setIsLoadedMemoFromDb(true);
         setQuickMemoText(quickMemo);
+
+        const memoHash = hashData(quickMemo);
+        useSyncStateStore.getState().setMemoBaseFromServer(quickMemo, memoHash);
       }
     } catch (error) {
       handleError(error);
@@ -110,6 +118,10 @@ export const useAppStateManagement = () => {
       await dbService.saveQuickMemoToDb(uid, quickMemoText);
       await idbService.saveQuickMemoToIdb(quickMemoText);
       await updateTimeStamp(null);
+
+      const newHash = hashData(quickMemoText);
+      useSyncStateStore.getState().setMemoServerHash(newHash);
+      useSyncStateStore.getState().clearMemoDirty();
     } catch (error) {
       handleError('クイックメモの変更をデータベースに保存できませんでした。\n\n' + error);
     }

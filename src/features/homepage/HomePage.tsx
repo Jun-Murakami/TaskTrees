@@ -6,6 +6,7 @@ import { MessagePaper } from '@/features/homepage/components/MessagePaper';
 import { TreeSettingsAccordion } from '@/features/homepage/components/TreeSettingsAccordion';
 import { SortableTree } from '@/features/sortableTree/SortableTree';
 import { QuickMemo } from '@/features/homepage/components/QuickMemo';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { useAuth } from '@/features/homepage/hooks/useAuth';
 import { Login } from '@/features/homepage/components/Login';
 import { ArchiveList } from '@/features/homepage/components/ArchiveList';
@@ -80,6 +81,7 @@ export function HomePage() {
                 pb: Capacitor.isNativePlatform() ? 'env(safe-area-inset-bottom)' : 0,
               }}
             >
+              <OfflineBanner />
               {isShowArchive ? (
                 <ArchiveList />
               ) : (

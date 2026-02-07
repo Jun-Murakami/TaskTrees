@@ -6,8 +6,10 @@ import { initialItems, initialOfflineItems } from '@/features/sortableTree/mock'
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useSyncStateStore } from '@/store/syncStateStore';
 import { useAttachedFile } from '@/features/sortableTree/hooks/useAttachedFile';
 import { useSync } from '@/hooks/useSync';
+import { hashData } from '@/utils/syncUtils';
 import * as dbService from '@/services/databaseService';
 import * as idbService from '@/services/indexedDbService';
 import { useDialogStore, useInputDialogStore } from '@/store/dialogStore';
@@ -61,6 +63,10 @@ export const useTreeManagement = () => {
       await dbService.saveItemsDb(targetTree, newItems);
       await idbService.saveItemsToIdb(targetTree, newItems);
       await updateTimeStamp(targetTree);
+
+      const newHash = hashData(newItems);
+      useSyncStateStore.getState().setItemsServerHash(newHash);
+      useSyncStateStore.getState().clearItemsDirty();
     } catch (error) {
       await showDialog('ツリー内容の変更をデータベースに保存できませんでした。\n\n' + error, 'Error');
     }
@@ -143,6 +149,9 @@ export const useTreeManagement = () => {
         }
         setItems(treeData.items);
         setItemsTreeId(targetTree);
+
+        const initialHash = hashData(treeData.items);
+        useSyncStateStore.getState().setItemsBaseFromServer(treeData.items, initialHash);
       }
 
     } catch (error) {

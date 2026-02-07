@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { getAuth, signOut } from 'firebase/auth';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useSyncStateStore } from '@/store/syncStateStore';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 // エラーハンドリングに関連するカスタムフック
@@ -35,6 +36,7 @@ export const useError = () => {
       setItems([]);
       setItemsTreeId(null);
       setIsAccordionExpanded(false);
+      useSyncStateStore.getState().resetAllSync();
       signOut(getAuth());
       FirebaseAuthentication.signOut();
       setIsLoggedIn(false);

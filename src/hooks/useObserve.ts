@@ -7,10 +7,14 @@ import { useError } from '@/hooks/useError';
 import { useSync } from '@/hooks/useSync';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import * as timerService from '@/services/timerService';
+import * as dbService from '@/services/databaseService';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useSyncStateStore } from '@/store/syncStateStore';
 import { useDialogStore } from '@/store/dialogStore';
 import { Preferences } from '@capacitor/preferences';
+import * as idbService from '@/services/indexedDbService';
+import { getClientId, hashData } from '@/utils/syncUtils';
 
 export const useObserve = () => {
   const items = useTreeStateStore((state) => state.items);
@@ -51,6 +55,8 @@ export const useObserve = () => {
       clearTimeout(memoDebounceTimer.current);
     }
 
+    const isConnectedDb = useAppStateStore.getState().isConnectedDb;
+
     try {
       const itemsTreeId = useTreeStateStore.getState().itemsTreeId;
       if (currentTree && currentItems.length > 0 && (itemsTreeId === null || itemsTreeId === currentTree)) {
@@ -59,18 +65,23 @@ export const useObserve = () => {
             key: `items_offline`,
             value: JSON.stringify(currentItems),
           });
+        } else if (uid && !isConnectedDb) {
+          await idbService.saveItemsToIdb(currentTree, currentItems);
+          useSyncStateStore.getState().markItemsDirty(currentItems);
         } else if (uid) {
           await saveItems(currentItems, currentTree);
         }
       }
 
-      // クイックメモの保存
       if (currentQuickMemo) {
         if (isOffline) {
           await Preferences.set({
             key: `quick_memo_offline`,
             value: currentQuickMemo,
           });
+        } else if (uid && !isConnectedDb) {
+          await idbService.saveQuickMemoToIdb(currentQuickMemo);
+          useSyncStateStore.getState().markMemoDirty(currentQuickMemo);
         } else if (uid) {
           await saveQuickMemo(currentQuickMemo);
         }
@@ -115,68 +126,122 @@ export const useObserve = () => {
       // Firebaseのタイムスタンプを監視
       const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
       const unsubscribeDbObserver = onValue(timestampRef, async (snapshot) => {
-        setIsLoading(true);
         const serverTimestamp = snapshot.val();
         const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
-        if (serverTimestamp && serverTimestamp > currentLocalTimestamp) {
+        if (!serverTimestamp || serverTimestamp <= currentLocalTimestamp) {
+          return;
+        }
+
+        const remoteClientId = await dbService.loadLastWriteClientIdFromDb(uid);
+        const localClientId = getClientId();
+
+        if (remoteClientId === localClientId) {
+          setLocalTimestamp(serverTimestamp);
+          return;
+        }
+
+        const { setIsSyncing } = useSyncStateStore.getState();
+        setIsSyncing(true);
+        setIsLoading(true);
+
+        try {
           setLocalTimestamp(serverTimestamp);
           await loadAndSetSettingsFromDb({ saveToIdb: true });
-          await loadAndSetQuickMemoFromDb({ saveToIdb: true });
+
+          const { dirty: memoDirty, baseHash: memoBaseHash } = useSyncStateStore.getState().memoSync;
+          if (!memoDirty) {
+            await loadAndSetQuickMemoFromDb({ saveToIdb: true });
+          } else {
+            const serverMemo = await dbService.loadQuickMemoFromDb(uid);
+            const serverMemoHash = hashData(serverMemo ?? '');
+            if (serverMemoHash === memoBaseHash) {
+              const currentMemo = useAppStateStore.getState().quickMemoText;
+              await dbService.saveQuickMemoToDb(uid, currentMemo);
+              await idbService.saveQuickMemoToIdb(currentMemo);
+              useSyncStateStore.getState().clearMemoDirty();
+              useSyncStateStore.getState().setMemoServerHash(hashData(currentMemo));
+            } else {
+              const localMemoHash = hashData(useAppStateStore.getState().quickMemoText);
+              if (serverMemoHash === localMemoHash) {
+                useSyncStateStore.getState().clearMemoDirty();
+                useSyncStateStore.getState().setMemoServerHash(serverMemoHash);
+              } else {
+                console.warn('Memo sync conflict detected — keeping local edits (Phase 2 will add merge)');
+              }
+            }
+          }
+
           const newTreesList = await loadAndSetTreesListFromDb({ saveToIdb: true });
           if (!newTreesList) {
             return;
           }
-          // 各ツリーのタイムスタンプをチェックし、最新のツリーをコピー
+
+          const { dirty: itemsDirty, baseHash: itemsBaseHash } = useSyncStateStore.getState().itemsSync;
+          const currentTreeBeforeSync = useTreeStateStore.getState().currentTree;
+
           const treeIds = newTreesList.map((tree) => tree.id);
           let treeUpdateCount = 0;
           for (const treeId of treeIds) {
-            setIsLoading(true);
             const treeTimestampRef = ref(getDatabase(), `trees/${treeId}/timestamp`);
-            await get(treeTimestampRef).then(async (snapshot) => {
-              if (snapshot.exists()) {
-                const data = snapshot.val();
-                if (data > currentLocalTimestamp) {
+            const treeSnapshot = await get(treeTimestampRef);
+            if (treeSnapshot.exists()) {
+              const data = treeSnapshot.val();
+              if (data > currentLocalTimestamp) {
+                if (treeId === currentTreeBeforeSync && itemsDirty) {
+                  const serverItems = await dbService.loadItemsFromDb(treeId);
+                  const serverItemsHash = hashData(serverItems);
+
+                  if (serverItemsHash === itemsBaseHash) {
+                    const currentItems = useTreeStateStore.getState().items;
+                    await dbService.saveItemsDb(treeId, currentItems);
+                    await idbService.saveItemsToIdb(treeId, currentItems);
+                    useSyncStateStore.getState().clearItemsDirty();
+                    useSyncStateStore.getState().setItemsServerHash(hashData(currentItems));
+                  } else {
+                    const localItemsHash = hashData(useTreeStateStore.getState().items);
+                    if (serverItemsHash === localItemsHash) {
+                      useSyncStateStore.getState().clearItemsDirty();
+                      useSyncStateStore.getState().setItemsServerHash(serverItemsHash);
+                    } else {
+                      console.warn('Items sync conflict detected — keeping local edits (Phase 2 will add merge)');
+                    }
+                  }
+                } else {
                   await copyTreeDataToIdbFromDb(treeId);
-                  treeUpdateCount++;
                 }
+                treeUpdateCount++;
               }
-            });
+            }
           }
-          // サーバータイムスタンプのV1とV2に差異がある場合、同期し直す
-          if (treeUpdateCount == 0) {
-            setIsLoading(true);
+
+          if (treeUpdateCount === 0) {
             const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
-            await get(timestampV2Ref).then(async (snapshot) => {
-              if (snapshot.exists()) {
-                const data = snapshot.val();
-                if (data !== serverTimestamp) {
-                  console.log('サーバータイムスタンプのV1とV2に差異があるため、同期し直します。');
-                  await syncDb();
-                }
+            const v2Snapshot = await get(timestampV2Ref);
+            if (v2Snapshot.exists()) {
+              const data = v2Snapshot.val();
+              if (data !== serverTimestamp) {
+                console.log('サーバータイムスタンプのV1とV2に差異があるため、同期し直します。');
+                await syncDb();
               }
-            });
+            }
           }
+
           const currentTreeAfterSync = useTreeStateStore.getState().currentTree;
-          if (currentTreeAfterSync) {
-            setIsLoading(true);
+          if (currentTreeAfterSync && !itemsDirty) {
             setPrevCurrentTree(null);
             await loadAndSetCurrentTreeDataFromIdb(currentTreeAfterSync);
           }
+        } finally {
+          useSyncStateStore.getState().setIsSyncing(false);
+          setIsLoading(false);
         }
-        setIsLoading(false);
       });
 
       // Firebaseの接続状態を監視
       const connectedRef = ref(getDatabase(), '.info/connected');
       const unsubscribeDbConnectionChecker = onValue(connectedRef, (snap) => {
-        const isLoading = useAppStateStore.getState().isLoading;
         const setIsConnectedDb = useAppStateStore.getState().setIsConnectedDb;
         setIsConnectedDb(snap.val() === true);
-        if (snap.val() === true && isLoading) {
-          setIsLoading(false);
-        } else if (snap.val() === false && !isLoading) {
-          setIsLoading(true);
-        }
       });
 
       return () => {
@@ -212,7 +277,7 @@ export const useObserve = () => {
     const uid = useAppStateStore.getState().uid;
     const prevItems = useTreeStateStore.getState().prevItems;
     const prevCurrentTree = useTreeStateStore.getState().prevCurrentTree;
-    if ((!uid && !isOffline) || !currentTree || (!isConnectedDb && !isOffline)) {
+    if ((!uid && !isOffline) || !currentTree) {
       return;
     }
 
@@ -230,6 +295,7 @@ export const useObserve = () => {
     }, 60000); // 1分ごとにチェック
 
     if (currentTree !== prevCurrentTree) {
+      useSyncStateStore.getState().resetAllSync();
       if (prevItems.length > 0) {
         const asyncFunc = async () => {
           if (prevCurrentTree) {
@@ -250,7 +316,10 @@ export const useObserve = () => {
 
       itemsDebounceTimer.current = setTimeout(() => {
         try {
-          // レースコンディション防止: 保存時にitemsが属するツリーとcurrentTreeの一致を確認
+          if (useSyncStateStore.getState().isSyncing) {
+            return;
+          }
+
           const itemsTreeId = useTreeStateStore.getState().itemsTreeId;
           const latestCurrentTree = useTreeStateStore.getState().currentTree;
           if (itemsTreeId !== null && itemsTreeId !== latestCurrentTree) {
@@ -267,6 +336,12 @@ export const useObserve = () => {
                 value: currentTreeName,
               });
             }
+          } else if (!isConnectedDb) {
+            const asyncFunc = async () => {
+              await idbService.saveItemsToIdb(targetTree, items);
+              useSyncStateStore.getState().markItemsDirty(items);
+            };
+            asyncFunc();
           } else {
             const asyncFunc = async () => {
               await saveItems(items, targetTree);
@@ -295,7 +370,7 @@ export const useObserve = () => {
     const uid = useAppStateStore.getState().uid;
     const isLoadedMemoFromDb = useAppStateStore.getState().isLoadedMemoFromDb;
 
-    if ((!uid && !isOffline) || (!isConnectedDb && !isOffline) || !quickMemoText) {
+    if ((!uid && !isOffline) || !quickMemoText) {
       return;
     }
     if (isLoadedMemoFromDb) {
@@ -309,11 +384,21 @@ export const useObserve = () => {
 
     memoDebounceTimer.current = setTimeout(() => {
       try {
+        if (useSyncStateStore.getState().isSyncing) {
+          return;
+        }
+
         if (isOffline) {
           Preferences.set({
             key: `quick_memo_offline`,
             value: quickMemoText,
           });
+        } else if (!isConnectedDb) {
+          const asyncFunc = async () => {
+            await idbService.saveQuickMemoToIdb(quickMemoText);
+            useSyncStateStore.getState().markMemoDirty(quickMemoText);
+          };
+          asyncFunc();
         } else {
           const asyncFunc = async () => {
             await saveQuickMemo(quickMemoText);

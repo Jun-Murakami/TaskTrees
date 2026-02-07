@@ -29,6 +29,7 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { useObserve } from '@/hooks/useObserve';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useSyncStateStore } from '@/store/syncStateStore';
 import * as idbService from '@/services/indexedDbService';
 import { useInputDialogStore } from '@/store/dialogStore';
 import { useDialogStore } from '@/store/dialogStore';
@@ -614,6 +615,7 @@ export const useAuth = () => {
         setCurrentTree(null);
         setCurrentTreeName(null);
         setCurrentTreeMembers(null);
+        useSyncStateStore.getState().resetAllSync();
         if (!isWaitingForDelete && !isOffline) {
           setSystemMessage('ログアウトしました。');
         } else {

@@ -2,6 +2,7 @@ import { getDatabase, ref, set, get } from 'firebase/database';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { isValidAppSettingsState } from '@/utils/appStateUtils';
+import { getClientId } from '@/utils/syncUtils';
 import { TreeItems, TreesList, TreesListItem, TreesListItemIncludingItems, AppState } from '@/types/types';
 
 type currentTreeMembers = { uid: string; email: string }[] | null;
@@ -14,6 +15,8 @@ export const saveTimeStampDb = async (
   newTimestamp: number
 ) => {
   try {
+    const clientId = getClientId();
+
     // ユーザーのタイムスタンプV2を更新
     const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
     await set(timestampV2Ref, newTimestamp);
@@ -21,6 +24,9 @@ export const saveTimeStampDb = async (
     // ユーザーのタイムスタンプを更新
     const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
     await set(timestampRef, newTimestamp);
+
+    const userClientIdRef = ref(getDatabase(), `users/${uid}/lastWriteClientId`);
+    await set(userClientIdRef, clientId);
 
     // ツリーのタイムスタンプを更新
     if (targetTree) {
@@ -31,6 +37,9 @@ export const saveTimeStampDb = async (
           await updateTreeTimestamp({ treeId: targetTree, timestamp: newTimestamp });
         }
       });
+
+      const treeClientIdRef = ref(getDatabase(), `trees/${targetTree}/lastWriteClientId`);
+      await set(treeClientIdRef, clientId).catch(() => {});
     }
 
     // 自分以外のメンバーのuidを抽出してタイムスタンプを更新
@@ -343,5 +352,15 @@ export const saveQuickMemoToDb = async (uid: string, quickMemoText: string) => {
     await set(quickMemoRef, quickMemoText);
   } catch (error) {
     throw new Error('データベースへのクイックメモの保存に失敗しました。\n\n' + error);
+  }
+};
+
+export const loadLastWriteClientIdFromDb = async (uid: string): Promise<string | null> => {
+  try {
+    const clientIdRef = ref(getDatabase(), `users/${uid}/lastWriteClientId`);
+    const snapshot = await get(clientIdRef);
+    return snapshot.exists() ? snapshot.val() : null;
+  } catch {
+    return null;
   }
 };
