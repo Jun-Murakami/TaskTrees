@@ -12,6 +12,7 @@ type TreeState = {
   currentTreeIsArchived: boolean | null;
   prevCurrentTree: UniqueIdentifier | null;
   prevItems: TreeItem[];
+  itemsTreeId: UniqueIdentifier | null;
   setItems: (items: TreeItem[]) => void;
   setTreesList: (treesList: TreesList) => void;
   setSearchResults: (searchResults: TreesList) => void;
@@ -19,6 +20,7 @@ type TreeState = {
   setCurrentTreeName: (currentTreeName: string | null) => void;
   setCurrentTreeMembers: (currentTreeMembers: { uid: string; email: string }[] | null) => void;
   setCurrentTreeIsArchived: (currentTreeIsArchived: boolean | null) => void;
+  setItemsTreeId: (itemsTreeId: UniqueIdentifier | null) => void;
   setPrevCurrentTree: (prevCurrentTree: UniqueIdentifier | null) => void;
   setPrevItems: (prevItems: TreeItem[]) => void;
 };
@@ -32,6 +34,7 @@ export const useTreeStateStore = create<TreeState>((set) => ({
   currentTreeMembers: null,
   prevCurrentTree: null,
   prevItems: [],
+  itemsTreeId: null,
   currentTreeIsArchived: null,
   setItems: (items) => set({ items }),
   setTreesList: (treesList) => set({ treesList }),
@@ -40,6 +43,7 @@ export const useTreeStateStore = create<TreeState>((set) => ({
   setCurrentTreeName: (currentTreeName) => set({ currentTreeName }),
   setCurrentTreeMembers: (currentTreeMembers) => set({ currentTreeMembers }),
   setCurrentTreeIsArchived: (currentTreeIsArchived) => set({ currentTreeIsArchived }),
+  setItemsTreeId: (itemsTreeId) => set({ itemsTreeId }),
   setPrevCurrentTree: (prevCurrentTree) => set({ prevCurrentTree }),
   setPrevItems: (prevItems) => set({ prevItems }),
 }));

@@ -66,6 +66,7 @@ export function ResponsiveDrawer({
   const setCurrentTree = useTreeStateStore((state) => state.setCurrentTree);
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const setItems = useTreeStateStore((state) => state.setItems);
+  const setItemsTreeId = useTreeStateStore((state) => state.setItemsTreeId);
   const treesList = useTreeStateStore((state) => state.treesList);
 
   const { saveAppSettings } = useAppStateManagement();
@@ -155,6 +156,7 @@ export function ResponsiveDrawer({
                 setCurrentTree(null);
                 setCurrentTreeName(null);
                 setItems([]);
+                setItemsTreeId(null);
                 setIsShowArchive(true);
                 setDrawerState(false);
               }}

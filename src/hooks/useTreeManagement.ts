@@ -30,6 +30,7 @@ export const useTreeManagement = () => {
   const setCurrentTreeName = useTreeStateStore((state) => state.setCurrentTreeName);
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
   const setCurrentTreeIsArchived = useTreeStateStore((state) => state.setCurrentTreeIsArchived);
+  const setItemsTreeId = useTreeStateStore((state) => state.setItemsTreeId);
 
   const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
@@ -124,6 +125,10 @@ export const useTreeManagement = () => {
     }
     try {
       const treeData = await idbService.loadCurrentTreeDataFromIdb(targetTree);
+      // レースコンディション防止: await後にcurrentTreeが変わっていたら適用しない
+      if (useTreeStateStore.getState().currentTree !== targetTree) {
+        return;
+      }
       if (treeData && treeData.name && treeData.membersV2 && treeData.items) {
         setCurrentTreeName(treeData.name);
         const members: { uid: string; email: string }[] = [];
@@ -137,12 +142,13 @@ export const useTreeManagement = () => {
           setCurrentTreeIsArchived(false);
         }
         setItems(treeData.items);
+        setItemsTreeId(targetTree);
       }
 
     } catch (error) {
       await showDialog('ツリーのデータの取得に失敗しました。\n\n' + error, 'Error');
     }
-  }, [showDialog, setCurrentTreeName, setCurrentTreeMembers, setItems, setCurrentTreeIsArchived]);
+  }, [showDialog, setCurrentTreeName, setCurrentTreeMembers, setItems, setCurrentTreeIsArchived, setItemsTreeId]);
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = useCallback(async (targetTree: UniqueIdentifier) => {
@@ -188,12 +194,13 @@ export const useTreeManagement = () => {
       setCurrentTreeName(null);
       setCurrentTreeMembers(null);
       setItems([]);
+      setItemsTreeId(null);
       setIsAccordionExpanded(false);
 
     } catch (error) {
       await showDialog('ツリーの削除に失敗しました。\n\n' + error, 'Error');
     }
-  }, [deleteFile, showDialog, setTreesList, updateTimeStamp, setCurrentTree, setCurrentTreeName, setCurrentTreeMembers, setItems, setIsAccordionExpanded]);
+  }, [deleteFile, showDialog, setTreesList, updateTimeStamp, setCurrentTree, setCurrentTreeName, setCurrentTreeMembers, setItems, setItemsTreeId, setIsAccordionExpanded]);
 
   // ダイアログ付きで呼び出す場合
   const handleDeleteTree = useCallback(async () => {
@@ -330,17 +337,16 @@ export const useTreeManagement = () => {
       setTreesList([{ id: 'offline' as UniqueIdentifier, name: 'オフラインツリー' }]);
       const { value } = await Preferences.get({ key: `items_offline` });
       if (value) {
-        // ローカルストレージから読み込んだデータが存在する場合
         const items = JSON.parse(value);
         setItems(items);
       } else {
-        // ローカルストレージにデータが存在しない場合、初期のオフラインアイテムをセット
         setItems(initialOfflineItems);
       }
+      setItemsTreeId('offline');
     } catch (error) {
       console.error('ローカルストレージからの読み込みに失敗しました', error);
-      // エラーが発生した場合は初期のオフラインアイテムをセット
       setItems(initialOfflineItems);
+      setItemsTreeId('offline');
     }
     setIsLoading(false);
   }, [
@@ -350,6 +356,7 @@ export const useTreeManagement = () => {
     setCurrentTreeMembers,
     setTreesList,
     setItems,
+    setItemsTreeId,
   ]);
 
   // ファイルを読み込んでツリーの状態を復元する ---------------------------------------------------------------------------
@@ -789,6 +796,7 @@ export const useTreeManagement = () => {
           setCurrentTreeName(null);
           setCurrentTreeMembers(null);
           setItems([]);
+          setItemsTreeId(null);
           setIsAccordionExpanded(false);
           await idbService.deleteTreeFromIdb(currentTree);
           const { orderedTreesList } = await dbService.loadTreesListFromDb(uid);
@@ -816,6 +824,7 @@ export const useTreeManagement = () => {
     setCurrentTreeName,
     setIsAccordionExpanded,
     setItems,
+    setItemsTreeId,
     setTreesList,
     setIsLoading,
     showDialog,

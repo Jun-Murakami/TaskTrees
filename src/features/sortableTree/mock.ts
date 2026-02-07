@@ -2,6 +2,14 @@ import { TreeItem } from '@/types/types';
 
 export const initialItems: TreeItem[] = [
   {
+    id: '1',
+    value: '',
+    children: [],
+    depth: 0,
+    parentId: null,
+    done: false,
+  },
+  {
     id: 'trash',
     value: 'Trash',
     children: [],

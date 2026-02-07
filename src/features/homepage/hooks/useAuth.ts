@@ -80,6 +80,7 @@ export const useAuth = () => {
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete);
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete);
   const setItems = useTreeStateStore((state) => state.setItems);
+  const setItemsTreeId = useTreeStateStore((state) => state.setItemsTreeId);
   const setPrevCurrentTree = useTreeStateStore((state) => state.setPrevCurrentTree);
   const setPrevItems = useTreeStateStore((state) => state.setPrevItems);
   const treesList = useTreeStateStore((state) => state.treesList);
@@ -608,6 +609,7 @@ export const useAuth = () => {
         setPrevCurrentTree(null);
         setPrevItems([]);
         setItems([]);
+        setItemsTreeId(null);
         setTreesList([]);
         setCurrentTree(null);
         setCurrentTreeName(null);

@@ -16,6 +16,7 @@ export const useError = () => {
       const isLoading = useAppStateStore.getState().isLoading;
       const setSystemMessage = useAppStateStore.getState().setSystemMessage;
       const setItems = useTreeStateStore.getState().setItems;
+      const setItemsTreeId = useTreeStateStore.getState().setItemsTreeId;
       const setIsLoggedIn = useAppStateStore.getState().setIsLoggedIn;
       const setIsLoading = useAppStateStore.getState().setIsLoading;
       const setCurrentTree = useTreeStateStore.getState().setCurrentTree;
@@ -32,6 +33,7 @@ export const useError = () => {
       setCurrentTreeName(null);
       setCurrentTreeMembers(null);
       setItems([]);
+      setItemsTreeId(null);
       setIsAccordionExpanded(false);
       signOut(getAuth());
       FirebaseAuthentication.signOut();

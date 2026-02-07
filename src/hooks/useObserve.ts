@@ -52,8 +52,8 @@ export const useObserve = () => {
     }
 
     try {
-      // アイテムの保存
-      if (currentTree && currentItems.length > 0) {
+      const itemsTreeId = useTreeStateStore.getState().itemsTreeId;
+      if (currentTree && currentItems.length > 0 && (itemsTreeId === null || itemsTreeId === currentTree)) {
         if (isOffline) {
           await Preferences.set({
             key: `items_offline`,
@@ -150,11 +150,11 @@ export const useObserve = () => {
               }
             });
           }
-          const currentTree = useTreeStateStore.getState().currentTree;
-          if (currentTree) {
+          const currentTreeAfterSync = useTreeStateStore.getState().currentTree;
+          if (currentTreeAfterSync) {
             setIsLoading(true);
             setPrevCurrentTree(null);
-            await loadAndSetCurrentTreeDataFromIdb(currentTree);
+            await loadAndSetCurrentTreeDataFromIdb(currentTreeAfterSync);
           }
         }
         setIsLoading(false);
@@ -244,6 +244,12 @@ export const useObserve = () => {
 
       itemsDebounceTimer.current = setTimeout(() => {
         try {
+          // レースコンディション防止: 保存時にitemsが属するツリーとcurrentTreeの一致を確認
+          const itemsTreeId = useTreeStateStore.getState().itemsTreeId;
+          const latestCurrentTree = useTreeStateStore.getState().currentTree;
+          if (itemsTreeId !== null && itemsTreeId !== latestCurrentTree) {
+            return;
+          }
           if (isOffline) {
             Preferences.set({
               key: `items_offline`,
