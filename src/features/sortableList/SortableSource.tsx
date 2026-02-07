@@ -32,7 +32,7 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
       onClick={async () => {
         await handleListItemButtonClick();
       }}
-      sx={{ opacity: 1, height: 50 }}
+      sx={{ opacity: 1, height: 36, minHeight: 36, py: 0 }}
     >
       <Button
         ref={handlerProps?.ref}

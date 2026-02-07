@@ -15,12 +15,12 @@ import {
   Button,
   Chip,
 } from '@mui/material';
-import { Settings, Logout, Upload, Download, DeleteForever, Email, Link, LinkOff } from '@mui/icons-material';
+import { Settings, Logout, Upload, Download, DeleteForever, Email, Link, LinkOff, WifiOff } from '@mui/icons-material';
 import { ListItemIcon } from '@mui/material';
 import { getAuth, UserInfo } from 'firebase/auth';
+import { useAppStateStore } from '@/store/appStateStore';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
-import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useDialogStore } from '@/store/dialogStore';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
@@ -184,6 +184,10 @@ export function MenuSettings({
     }
   };
 
+  const isConnectedDb = useAppStateStore((s) => s.isConnectedDb);
+  const isLoggedIn = useAppStateStore((s) => s.isLoggedIn);
+  const showOffline = isLoggedIn && !isOffline && !isConnectedDb;
+
   return (
     <ListItem disablePadding>
       <ListItemButton
@@ -200,6 +204,14 @@ export function MenuSettings({
         </ListItemIcon>
         <ListItemText secondary='設定' />
       </ListItemButton>
+      {showOffline && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pr: 1.5, flexShrink: 0 }}>
+          <WifiOff sx={{ fontSize: 14, color: 'warning.main', opacity: 0.8 }} />
+          <Typography variant='caption' sx={{ color: 'warning.main', opacity: 0.8, whiteSpace: 'nowrap', fontSize: '0.7rem' }}>
+            オフライン
+          </Typography>
+        </Box>
+      )}
       <Menu
         anchorEl={anchorEl}
         id='account-menu'

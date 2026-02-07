@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { Box, Button } from '@mui/material';
 import SwipeUpIcon from '@mui/icons-material/SwipeUp';
 import ReplyIcon from '@mui/icons-material/Reply';
+import WifiOffIcon from '@mui/icons-material/WifiOff';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
 import { useAppStateStore } from '@/store/appStateStore';
@@ -15,12 +16,29 @@ export function AddTask({ id, ...Props }: Props) {
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id });
   const isAccordionExpanded = useAppStateStore((state) => state.isAccordionExpanded);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
+  const isConnectedDb = useAppStateStore((s) => s.isConnectedDb);
+  const isOffline = useAppStateStore((s) => s.isOffline);
+  const isLoggedIn = useAppStateStore((s) => s.isLoggedIn);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <>
+      {isMobile && isLoggedIn && !isOffline && !isConnectedDb && (
+        <WifiOffIcon
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            position: 'fixed',
+            bottom: `calc(env(safe-area-inset-bottom) + ${isQuickMemoExpanded ? 340 : 0}px + 68px)`,
+            left: 38,
+            zIndex: 900,
+            fontSize: 20,
+            color: 'warning.main',
+            opacity: 0.7,
+          }}
+        />
+      )}
       {!(isMobile && isQuickMemoExpanded) && (
         <Box
           key={id}
