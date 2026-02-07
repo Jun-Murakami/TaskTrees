@@ -1,4 +1,4 @@
-import { Button, CircularProgress, Typography, Box, Divider } from '@mui/material';
+import { Button, Typography, Box, Divider } from '@mui/material';
 import { DeleteForever } from '@mui/icons-material';
 import { TaskTreesLogo } from '@/features/common/TaskTreesLogo';
 import { ResponsiveDrawer } from '@/features/homepage/components/ResponsiveDrawer';
@@ -20,7 +20,6 @@ const isElectron = navigator.userAgent.includes('Electron');
 const isWindows = navigator.userAgent.includes('Windows');
 
 export function HomePage() {
-  const isLoading = useAppStateStore((state) => state.isLoading); // ローディング中の状態
   const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
   const isWaitingForDelete = useAppStateStore((state) => state.isWaitingForDelete); // アカウント削除の確認状態
   const setIsWaitingForDelete = useAppStateStore((state) => state.setIsWaitingForDelete); // アカウント削除の確認状態を変更
@@ -111,24 +110,6 @@ export function HomePage() {
                     </Box>
                   )}
                 </>
-              )}
-              {isLoading && (
-                // ローディング中
-                <CircularProgress
-                  sx={{
-                    position: 'fixed',
-                    display: 'block',
-                    left: 'calc(50% - 20px)',
-                    '@media (min-width: 1249px) and (max-width: 1546px)': {
-                      left: { xs: 'calc(50% - 20px)', sm: '745px' },
-                    },
-                    '@media (max-width: 1249px)': {
-                      left: { xs: 'calc(50% - 20px)', sm: 'calc((100vw - (100vw - 100%) - 300px) / 2 + 300px - 20px)' },
-                    },
-                    top: 'calc(50vh - 20px)',
-                    zIndex: 1400,
-                  }}
-                />
               )}
             </Box>
           </>

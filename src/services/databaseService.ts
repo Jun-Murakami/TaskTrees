@@ -1,4 +1,4 @@
-import { getDatabase, ref, set, get } from 'firebase/database';
+import { getDatabase, ref, set, get, update } from 'firebase/database';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { isValidAppSettingsState } from '@/utils/appStateUtils';
@@ -17,16 +17,13 @@ export const saveTimeStampDb = async (
   try {
     const clientId = getClientId();
 
-    // ユーザーのタイムスタンプV2を更新
-    const timestampV2Ref = ref(getDatabase(), `users/${uid}/timestampV2`);
-    await set(timestampV2Ref, newTimestamp);
-
-    // ユーザーのタイムスタンプを更新
-    const timestampRef = ref(getDatabase(), `users/${uid}/timestamp`);
-    await set(timestampRef, newTimestamp);
-
-    const userClientIdRef = ref(getDatabase(), `users/${uid}/lastWriteClientId`);
-    await set(userClientIdRef, clientId);
+    // ユーザーのtimestamp, timestampV2, lastWriteClientIdをアトミックに更新
+    // onValueリスナーが発火した時点でlastWriteClientIdが確実に最新になるようにする
+    const userUpdates: Record<string, unknown> = {};
+    userUpdates[`users/${uid}/timestampV2`] = newTimestamp;
+    userUpdates[`users/${uid}/lastWriteClientId`] = clientId;
+    userUpdates[`users/${uid}/timestamp`] = newTimestamp;
+    await update(ref(getDatabase()), userUpdates);
 
     // ツリーのタイムスタンプを更新
     if (targetTree) {

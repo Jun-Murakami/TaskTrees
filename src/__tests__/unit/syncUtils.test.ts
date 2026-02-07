@@ -115,25 +115,80 @@ describe('hashData', () => {
 
 describe('getClientId', () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
   });
 
-  it('generates a UUID and stores it in localStorage', () => {
+  it('generates a UUID and stores it in sessionStorage', () => {
     const clientId = getClientId();
     expect(clientId).toBeTruthy();
-    expect(localStorage.getItem('tasktrees_client_id')).toBe(clientId);
+    expect(sessionStorage.getItem('tasktrees_client_id')).toBe(clientId);
   });
 
-  it('returns the same ID on subsequent calls', () => {
+  it('returns the same ID on subsequent calls within the same session', () => {
     const first = getClientId();
     const second = getClientId();
     expect(first).toBe(second);
   });
 
-  it('generates a new ID after localStorage is cleared', () => {
+  it('generates a new ID after sessionStorage is cleared (simulates new tab)', () => {
     const first = getClientId();
-    localStorage.clear();
+    sessionStorage.clear();
     const second = getClientId();
     expect(first).not.toBe(second);
+  });
+
+  it('is not shared via localStorage (each tab gets its own ID)', () => {
+    const clientId = getClientId();
+    expect(localStorage.getItem('tasktrees_client_id')).toBeNull();
+    expect(sessionStorage.getItem('tasktrees_client_id')).toBe(clientId);
+  });
+});
+
+describe('multi-tab sync skip logic', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  function shouldSkipSync(
+    serverTimestamp: number | null,
+    localTimestamp: number,
+    remoteClientId: string | null,
+    localClientId: string
+  ): 'skip-not-newer' | 'skip-self-write' | 'sync' {
+    if (!serverTimestamp || serverTimestamp <= localTimestamp) {
+      return 'skip-not-newer';
+    }
+    if (remoteClientId === localClientId) {
+      return 'skip-self-write';
+    }
+    return 'sync';
+  }
+
+  it('skips when server timestamp is not newer', () => {
+    expect(shouldSkipSync(100, 100, 'other', 'self')).toBe('skip-not-newer');
+    expect(shouldSkipSync(99, 100, 'other', 'self')).toBe('skip-not-newer');
+    expect(shouldSkipSync(null, 100, 'other', 'self')).toBe('skip-not-newer');
+  });
+
+  it('skips self-writes when remoteClientId matches localClientId', () => {
+    expect(shouldSkipSync(200, 100, 'same-id', 'same-id')).toBe('skip-self-write');
+  });
+
+  it('syncs when timestamp is newer and clientId differs', () => {
+    expect(shouldSkipSync(200, 100, 'tab-a', 'tab-b')).toBe('sync');
+  });
+
+  it('BUG SCENARIO: localStorage clientId causes both tabs to skip (was the bug)', () => {
+    const sharedClientId = 'shared-across-tabs';
+    const result = shouldSkipSync(200, 100, sharedClientId, sharedClientId);
+    expect(result).toBe('skip-self-write');
+  });
+
+  it('FIX: sessionStorage clientId ensures different tabs have different IDs', () => {
+    const tabAId = getClientId();
+    sessionStorage.clear();
+    const tabBId = getClientId();
+    expect(tabAId).not.toBe(tabBId);
+    expect(shouldSkipSync(200, 100, tabAId, tabBId)).toBe('sync');
   });
 });

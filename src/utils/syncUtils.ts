@@ -57,10 +57,10 @@ export function hashData(data: unknown): string {
 
 export function getClientId(): string {
   const STORAGE_KEY = 'tasktrees_client_id';
-  let clientId = localStorage.getItem(STORAGE_KEY);
+  let clientId = sessionStorage.getItem(STORAGE_KEY);
   if (!clientId) {
     clientId = crypto.randomUUID();
-    localStorage.setItem(STORAGE_KEY, clientId);
+    sessionStorage.setItem(STORAGE_KEY, clientId);
   }
   return clientId;
 }

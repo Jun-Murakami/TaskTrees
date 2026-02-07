@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   Box,
+  CircularProgress,
   FormControlLabel,
   Switch,
   Menu,
@@ -186,7 +187,9 @@ export function MenuSettings({
 
   const isConnectedDb = useAppStateStore((s) => s.isConnectedDb);
   const isLoggedIn = useAppStateStore((s) => s.isLoggedIn);
+  const isLoading = useAppStateStore((s) => s.isLoading);
   const showOffline = isLoggedIn && !isOffline && !isConnectedDb;
+  const showSyncing = isLoggedIn && isLoading && !showOffline;
 
   return (
     <ListItem disablePadding>
@@ -209,6 +212,14 @@ export function MenuSettings({
           <WifiOff sx={{ fontSize: 14, color: 'warning.main', opacity: 0.8 }} />
           <Typography variant='caption' sx={{ color: 'warning.main', opacity: 0.8, whiteSpace: 'nowrap', fontSize: '0.7rem' }}>
             オフライン
+          </Typography>
+        </Box>
+      )}
+      {showSyncing && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pr: 1.5, flexShrink: 0 }}>
+          <CircularProgress size={14} sx={{ color: 'text.secondary', opacity: 0.7 }} />
+          <Typography variant='caption' sx={{ color: 'text.secondary', opacity: 0.7, whiteSpace: 'nowrap', fontSize: '0.7rem' }}>
+            同期中
           </Typography>
         </Box>
       )}

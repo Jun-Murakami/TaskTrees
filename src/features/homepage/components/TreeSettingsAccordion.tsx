@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -22,6 +22,7 @@ import { TaskTreeLogoIcon } from '@/features/common/TaskTreesLogo';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
+import { useEditedTreeName } from '@/hooks/useEditedTreeName';
 import { Capacitor } from '@capacitor/core';
 
 export function TreeSettingsAccordion() {
@@ -37,9 +38,7 @@ export function TreeSettingsAccordion() {
   const currentTreeMembers = useTreeStateStore((state) => state.currentTreeMembers);
   const currentTreeIsArchived = useTreeStateStore((state) => state.currentTreeIsArchived);
 
-  const [editedTreeName, setEditedTreeName] = useState<string | null>(currentTreeName || '');
-  const [isComposing, setIsComposing] = useState(false);
-  const [prevCurrentTree, setPrevCurrentTree] = useState(currentTree);
+  const { editedTreeName, setEditedTreeName, isComposing, setIsComposing } = useEditedTreeName(currentTreeName);
 
   const { handleTreeNameSubmit, handleAddUserToTree, handleDeleteUserFromTree, handleDeleteTree, handleChangeIsArchived } =
     useTreeManagement();
@@ -47,20 +46,8 @@ export function TreeSettingsAccordion() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // TextFieldの値をセット
-  const handleTreeNameChange = (e: string) => {
-    setEditedTreeName(e);
-  };
-
-  // TextFielのRefをセット
   const inputRef = useRef<HTMLInputElement>(null);
 
-  if (currentTree !== prevCurrentTree) {
-    setPrevCurrentTree(currentTree);
-    setEditedTreeName(currentTreeName);
-  }
-
-  // フォーカスをセット
   useEffect(() => {
     if (isFocusedTreeName && inputRef.current) {
       inputRef.current.focus();
@@ -141,7 +128,7 @@ export function TreeSettingsAccordion() {
                 fullWidth
                 size='small'
                 value={editedTreeName || ''}
-                onChange={(e) => handleTreeNameChange?.(e.target.value)}
+                onChange={(e) => setEditedTreeName(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
