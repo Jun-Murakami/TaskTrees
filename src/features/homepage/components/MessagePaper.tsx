@@ -6,24 +6,22 @@ const isElectron = navigator.userAgent.includes('Electron');
 
 const updateHistory = [
   {
+    date: '2026.02.08',
+    content:
+      '１．オフライン時や、同期中でも編集できるようになりました。\n' +
+      '２．ログイン後に認証方法の追加、解除ができるようになりました。\n' +
+      '３．新規ツリーを作成時に、空のタスクを１つ自動で作るようにしました。\n' +
+      '４．macOS版でコマンド＋Aで全選択ができるようになりました。\n' +
+      '５．クイックメモを編集してアプリをすぐに終了すると、編集が保存されないことがある問題を修正しました\n' +
+      '６．その他、細かいバグの修正とパフォーマンスの改善を行いました。',
+  },
+  {
     date: '2025.05.18',
     content: 'クイックメモをドッキング/切り離しできるようにしました。',
   },
   {
-    date: '2025.04.30',
-    content: '軽微なバグの修正とパフォーマンスの改善を行いました。',
-  },
-  {
-    date: '2025.01.02',
-    content: '軽微なバグを修正しました。',
-  },
-  {
     date: '2024.10.05',
     content: 'アーカイブ機能を追加しました。',
-  },
-  {
-    date: '2024.07.05',
-    content: 'タイマー機能を追加しました。',
   },
 ];
 
@@ -141,11 +139,7 @@ export const MessagePaper = () => {
           ©{new Date().getFullYear()} Jun Murakami
         </a>{' '}
         |{' '}
-        <a
-          href='https://github.com/Jun-Murakami/TaskTrees'
-          target='_blank'
-          rel='noreferrer'
-        >
+        <a href='https://github.com/Jun-Murakami/TaskTrees' target='_blank' rel='noreferrer'>
           GitHub
         </a>{' '}
         |{' '}
