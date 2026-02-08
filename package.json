@@ -1,5 +1,7 @@
 {
   "name": "tasktree-s",
+  "description": "A tree-structured task management app",
+  "author": "Jun Murakami",
   "private": true,
   "version": "1.4.8",
   "type": "module",

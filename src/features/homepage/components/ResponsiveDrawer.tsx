@@ -24,6 +24,7 @@ import { UserInfo } from 'firebase/auth';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useDialogStore } from '@/store/dialogStore';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useSearch } from '@/features/homepage/hooks/useSearch';
 import { SortableList } from '@/features/sortableList/SortableList';
@@ -70,8 +71,24 @@ export function ResponsiveDrawer({
   const treesList = useTreeStateStore((state) => state.treesList);
 
   const { saveAppSettings } = useAppStateManagement();
-  const { loadAndSetCurrentTreeDataFromIdb, handleCreateNewTree } = useTreeManagement();
+  const { loadAndSetCurrentTreeDataFromIdb, handleCreateNewTree, deleteTree, handleChangeIsArchived } = useTreeManagement();
   const { handlePrevButtonClick, handleNextButtonClick } = useSearch();
+  const showDialog = useDialogStore((state) => state.showDialog);
+
+  const handleTreeArchive = async (treeId: UniqueIdentifier, isArchived: boolean) => {
+    await handleChangeIsArchived(treeId, isArchived);
+  };
+
+  const handleTreeDelete = async (treeId: UniqueIdentifier) => {
+    const result = await showDialog(
+      'すべての編集メンバーからツリーが削除されます。この操作は元に戻せません。実行しますか？',
+      'Confirmation Required',
+      true
+    );
+    if (result) {
+      await deleteTree(treeId);
+    }
+  };
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -148,7 +165,7 @@ export function ResponsiveDrawer({
 
       <Box sx={{ height: 'calc(100% - (166px + env(safe-area-inset-bottom)))', overflowY: 'auto' }}>
         <List>
-          {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} />}
+          {treesList && <SortableList handleListClick={handleListClick} setDrawerState={setDrawerState} onArchive={handleTreeArchive} onDelete={handleTreeDelete} />}
           <ListItem disablePadding>
             <ListItemButton
               sx={{ opacity: 1, height: 50 }}

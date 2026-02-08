@@ -20,6 +20,7 @@ asarUnpack:
   - resources/**
 win:
   executableName: TaskTrees
+  icon: resources/icon.ico
 nsis:
   artifactName: ${productName}-${version}-setup_win_${arch}.${ext}
   shortcutName: ${productName}

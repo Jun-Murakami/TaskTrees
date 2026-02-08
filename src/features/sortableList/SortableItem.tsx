@@ -11,9 +11,11 @@ export type SortableItemProps = {
   item: TreesListItem;
   handleListClick: (treeId: UniqueIdentifier) => Promise<void>;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
+  onArchive?: (treeId: UniqueIdentifier, isArchived: boolean) => Promise<void>;
+  onDelete?: (treeId: UniqueIdentifier) => Promise<void>;
 };
 
-export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, handleListClick, setDrawerState }) => {
+export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, handleListClick, setDrawerState, onArchive, onDelete }) => {
   const { isDragging, isSorting, setNodeRef, transform, transition, setActivatorNodeRef, attributes, listeners } = useSortable({
     id: item.id,
     animateLayoutChanges: isPreviewMode ? ({ isSorting }) => !isSorting : defaultAnimateLayoutChanges,
@@ -28,7 +30,7 @@ export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, handl
     ...(isDragging ? { opacity } : {}), // opacity が undefined の場合はプロパティ自体を追加しない
     ...(canTransform && transform ? { transform: CSS.Transform.toString(transform) } : {}),
     ...(transition ? { transition } : {}),
-    height: 36,
+    height: 37,
   };
 
   return (
@@ -42,6 +44,8 @@ export const SortableItem: FC<SortableItemProps> = ({ isPreviewMode, item, handl
         }}
         handleListClick={handleListClick}
         setDrawerState={setDrawerState}
+        onArchive={onArchive}
+        onDelete={onDelete}
       />
     </Box>
   );

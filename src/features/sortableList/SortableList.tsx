@@ -13,9 +13,11 @@ import { SortableItem } from '@/features/sortableList/SortableItem';
 interface SortableListProps {
   handleListClick: (treeId: UniqueIdentifier) => Promise<void>;
   setDrawerState: React.Dispatch<React.SetStateAction<boolean>>;
+  onArchive?: (treeId: UniqueIdentifier, isArchived: boolean) => Promise<void>;
+  onDelete?: (treeId: UniqueIdentifier) => Promise<void>;
 }
 
-export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState }) => {
+export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawerState, onArchive, onDelete }) => {
   const searchKey = useAppStateStore((state) => state.searchKey);
 
   const treesList = useTreeStateStore((state) => state.treesList);
@@ -64,6 +66,8 @@ export const SortableList: FC<SortableListProps> = ({ handleListClick, setDrawer
               item={item}
               handleListClick={handleListClick}
               setDrawerState={setDrawerState}
+              onArchive={onArchive}
+              onDelete={onDelete}
             />
           ))}
         </SortableContext>
