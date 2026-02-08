@@ -3,13 +3,13 @@
   "description": "A tree-structured task management app",
   "author": "Jun Murakami",
   "private": true,
-  "version": "1.4.8",
+  "version": "1.4.9",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint .",
     "preview": "vite preview",
     "dev:electron": "electron-vite dev",
     "build:electron": "electron-vite build",
@@ -23,7 +23,10 @@
     "test:watch": "vitest",
     "test:unit": "vitest run src/__tests__/unit",
     "test:integration": "bash scripts/test-with-emulator.sh -- src/__tests__/integration",
-    "test:all": "bash scripts/test-with-emulator.sh"
+    "test:all": "bash scripts/test-with-emulator.sh",
+    "version:patch": "bash scripts/bump-version.sh patch",
+    "version:minor": "bash scripts/bump-version.sh minor",
+    "version:major": "bash scripts/bump-version.sh major"
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "^8.0.1",
