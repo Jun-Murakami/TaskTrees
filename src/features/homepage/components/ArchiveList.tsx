@@ -65,8 +65,6 @@ export const ArchiveList = () => {
         maxWidth: '900px',
         width: '100%',
         marginX: 'auto',
-        height: '100%',
-        overflowY: 'auto',
       }}
     >
       <Box sx={{ py: 4 }}>

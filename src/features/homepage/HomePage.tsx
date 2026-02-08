@@ -72,10 +72,11 @@ export function HomePage() {
             <Box
               sx={{
                 flexGrow: 1,
-                maxWidth: '930px',
-                px: '15px',
+                maxWidth: isShowArchive ? 'none' : '930px',
+                px: isShowArchive ? 0 : '15px',
                 mx: 'auto',
                 height: '100dvh',
+                overflowY: isShowArchive ? 'auto' : undefined,
                 '@media (max-width: 1546px)': {
                   ml: { xs: 'auto', sm: `${drawerWidth}px` },
                 },
