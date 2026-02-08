@@ -1,9 +1,10 @@
 import React from 'react';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { List, ListItemText, ListItemButton, Box, Button, Typography, Divider } from '@mui/material';
-import { Unarchive } from '@mui/icons-material';
+import { List, ListItemText, ListItemButton, Box, IconButton, Typography, Divider } from '@mui/material';
+import { Unarchive, DeleteForever } from '@mui/icons-material';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
+import { useDialogStore } from '@/store/dialogStore';
 import { useAppStateStore } from '@/store/appStateStore';
 
 export const ArchiveList = () => {
@@ -13,12 +14,24 @@ export const ArchiveList = () => {
   const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
   const treesList = useTreeStateStore((state) => state.treesList);
   const setIsShowArchive = useAppStateStore((state) => state.setIsShowArchive);
+  const showDialog = useDialogStore((state) => state.showDialog);
 
-  const { handleChangeIsArchived } = useTreeManagement();
+  const { handleChangeIsArchived, deleteTree } = useTreeManagement();
   const { loadAndSetCurrentTreeDataFromIdb } = useTreeManagement();
 
   const handleUnArchiveClick = (treeId: UniqueIdentifier) => {
     handleChangeIsArchived(treeId, false);
+  };
+
+  const handleDeleteClick = async (treeId: UniqueIdentifier) => {
+    const result = await showDialog(
+      'すべての編集メンバーからツリーが削除されます。この操作は元に戻せません。実行しますか？',
+      'Confirmation Required',
+      true
+    );
+    if (result) {
+      await deleteTree(treeId);
+    }
   };
 
   const handleListClick = async (treeId: UniqueIdentifier): Promise<void> => {
@@ -29,12 +42,13 @@ export const ArchiveList = () => {
     await loadAndSetCurrentTreeDataFromIdb(treeId);
     setIsShowArchive(false);
     if (isAccordionExpanded) {
-      // 0.5秒後にフォーカスをセット
       setTimeout(() => {
         setIsFocusedTreeName(true);
       }, 500);
     }
   };
+
+  const archivedTrees = treesList.filter((tree) => tree.isArchived);
 
   return (
     <Box
@@ -57,32 +71,42 @@ export const ArchiveList = () => {
             textAlign: 'left',
           }}
         >
-          {treesList
-            .filter((tree) => tree.isArchived)
-            .map((tree, index) => (
-              <React.Fragment key={tree.id}>
-                <ListItemButton onClick={async () => await handleListClick(tree.id)} sx={{ width: '100%' }}>
-                  <ListItemText
-                    primary={tree.name}
-                    sx={{
-                      width: '100%',
-                    }}
-                  />
-                  <Button
-                    startIcon={<Unarchive />}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleUnArchiveClick(tree.id);
-                    }}
-                    sx={{ width: 90 }}
-                  >
-                    戻す
-                  </Button>
-                </ListItemButton>
-                {index !== treesList.filter((tree) => tree.isArchived).length - 1 && <Divider sx={{ width: '100%' }} />}
-              </React.Fragment>
-            ))}
-          {treesList.filter((tree) => tree.isArchived).length === 0 && (
+          {archivedTrees.map((tree, index) => (
+            <React.Fragment key={tree.id}>
+              <ListItemButton
+                onClick={async () => await handleListClick(tree.id)}
+                sx={{ width: '100%', height: 36, minHeight: 36, py: 0 }}
+              >
+                <ListItemText
+                  primary={tree.name}
+                  slotProps={{ primary: { variant: 'body2' } }}
+                  sx={{ my: 0 }}
+                />
+                <IconButton
+                  size='small'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUnArchiveClick(tree.id);
+                  }}
+                  sx={{ color: 'primary.main', flexShrink: 0 }}
+                >
+                  <Unarchive sx={{ fontSize: 18 }} />
+                </IconButton>
+                <IconButton
+                  size='small'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(tree.id);
+                  }}
+                  sx={{ color: 'error.main', flexShrink: 0 }}
+                >
+                  <DeleteForever sx={{ fontSize: 18 }} />
+                </IconButton>
+              </ListItemButton>
+              {index !== archivedTrees.length - 1 && <Divider sx={{ width: '100%' }} />}
+            </React.Fragment>
+          ))}
+          {archivedTrees.length === 0 && (
             <Typography sx={{ textAlign: 'center', my: 2, width: '100%' }}>アーカイブ済みのツリーはありません</Typography>
           )}
         </List>
