@@ -13,6 +13,7 @@ type AppState = {
   uid: string | null;
   email: string | null;
   isLoading: boolean;
+  isCreatingTree: boolean;
   isWaitingForDelete: boolean;
   isAccordionExpanded: boolean;
   isQuickMemoExpanded: boolean;
@@ -36,6 +37,7 @@ type AppState = {
   setUid: (uid: string | null) => void;
   setEmail: (email: string | null) => void;
   setIsLoading: (isLoading: boolean) => void;
+  setIsCreatingTree: (isCreatingTree: boolean) => void;
   setIsWaitingForDelete: (isWaitingForDelete: boolean) => void;
   setIsAccordionExpanded: (isAccordionExpanded: boolean) => void;
   setIsQuickMemoExpanded: (isQuickMemoExpanded: boolean) => void;
@@ -64,6 +66,7 @@ export const useAppStateStore = create<AppState>()(
       uid: null,
       email: null,
       isLoading: true,
+      isCreatingTree: false,
       isWaitingForDelete: false,
       isAccordionExpanded: false,
       isQuickMemoExpanded: false,
@@ -87,6 +90,7 @@ export const useAppStateStore = create<AppState>()(
       setUid: (uid) => set({ uid }),
       setEmail: (email) => set({ email }),
       setIsLoading: (isLoading) => set({ isLoading }),
+      setIsCreatingTree: (isCreatingTree) => set({ isCreatingTree }),
       setIsWaitingForDelete: (isWaitingForDelete) => set({ isWaitingForDelete }),
       setIsAccordionExpanded: (isAccordionExpanded) => set({ isAccordionExpanded }),
       setIsQuickMemoExpanded: (isQuickMemoExpanded) => set({ isQuickMemoExpanded }),

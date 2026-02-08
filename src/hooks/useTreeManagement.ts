@@ -23,6 +23,7 @@ import { Preferences } from '@capacitor/preferences';
 
 export const useTreeManagement = () => {
   const setIsLoading = useAppStateStore((state) => state.setIsLoading);
+  const setIsCreatingTree = useAppStateStore((state) => state.setIsCreatingTree);
   const setIsAccordionExpanded = useAppStateStore((state) => state.setIsAccordionExpanded);
   const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
 
@@ -266,7 +267,7 @@ export const useTreeManagement = () => {
     }
 
     setCurrentTree(null);
-    setIsLoading(true);
+    setIsCreatingTree(true);
 
     try {
       const newTreeRef: unknown = await saveNewTree(initialItems, '新しいツリー', {
@@ -280,6 +281,13 @@ export const useTreeManagement = () => {
       const updatedTreesListWithNewTree = treesList ? [...treesList, newTree] : [newTree];
       setTreesList(updatedTreesListWithNewTree);
 
+      // レースコンディション防止: loadAndSetCurrentTreeDataFromIdbの前にcurrentTreeをセットし、
+      // アイテムを初期化して旧ツリーのデータが残らないようにする
+      setCurrentTree(newTreeRef as UniqueIdentifier);
+      setCurrentTreeName('新しいツリー');
+      setItems(initialItems);
+      setItemsTreeId(newTreeRef as UniqueIdentifier);
+
       await idbService.saveTreesListToIdb(updatedTreesListWithNewTree);
       await dbService.saveTreesListDb(uid, updatedTreesListWithNewTree);
       await copyTreeDataToIdbFromDb(newTreeRef as UniqueIdentifier);
@@ -288,9 +296,6 @@ export const useTreeManagement = () => {
       await updateTimeStamp(newTreeRef as UniqueIdentifier);
 
       setIsAccordionExpanded(true);
-      // 0.5秒後にフォーカスをセット
-      setCurrentTree(newTreeRef as UniqueIdentifier);
-      setCurrentTreeName('新しいツリー');
       if (email) {
         setCurrentTreeMembers([{ uid: uid, email: email }]);
       } else {
@@ -301,23 +306,22 @@ export const useTreeManagement = () => {
         setIsFocusedTreeName(true);
       }, 300);
 
-      setIsLoading(false);
+      setIsCreatingTree(false);
 
-      //タイマーをクリア
       return () => {
         clearTimeout(timerOne);
         Promise.resolve();
       };
     } catch (error) {
       await showDialog('新しいツリーの作成に失敗しました。\n\n' + error, 'Error');
-      setIsLoading(false);
+      setIsCreatingTree(false);
       return Promise.reject();
     }
   }, [
     showDialog,
     saveNewTree,
     setCurrentTree,
-    setIsLoading,
+    setIsCreatingTree,
     setCurrentTreeName,
     setCurrentTreeMembers,
     setIsAccordionExpanded,
@@ -327,6 +331,8 @@ export const useTreeManagement = () => {
     updateTimeStamp,
     setIsFocusedTreeName,
     setTreesList,
+    setItems,
+    setItemsTreeId,
   ]);
 
   //オフラインツリーを作成する ---------------------------------------------------------------------------

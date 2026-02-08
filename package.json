@@ -3,7 +3,7 @@
   "description": "A tree-structured task management app",
   "author": "Jun Murakami",
   "private": true,
-  "version": "1.4.9",
+  "version": "1.4.10",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {

@@ -179,6 +179,21 @@ export const saveTimeStampToIdb = async (targetTree: UniqueIdentifier | null, ne
   }
 };
 
+export const loadTreeTimestampsFromIdb = async (treeIds: UniqueIdentifier[]): Promise<Record<string, number>> => {
+  try {
+    const result: Record<string, number> = {};
+    for (const id of treeIds) {
+      const treeData = await idb.treestate.get(id);
+      if (treeData?.timestamp) {
+        result[String(id)] = treeData.timestamp;
+      }
+    }
+    return result;
+  } catch (error) {
+    throw new Error('IndexedDBからのタイムスタンプの一括読み込みに失敗しました。' + error);
+  }
+};
+
 // appStateデータベースの初期化
 export const initializeAppStateIdb = async (uid: string, timestamp: number, quickMemo: string, darkMode: boolean, hideDoneItems: boolean, treesList: TreesList) => {
   try {

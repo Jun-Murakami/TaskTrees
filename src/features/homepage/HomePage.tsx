@@ -1,4 +1,4 @@
-import { Button, Typography, Box, Divider } from '@mui/material';
+import { Button, Typography, Box, Divider, Backdrop, CircularProgress } from '@mui/material';
 import { DeleteForever } from '@mui/icons-material';
 import { TaskTreesLogo } from '@/features/common/TaskTreesLogo';
 import { ResponsiveDrawer } from '@/features/homepage/components/ResponsiveDrawer';
@@ -26,6 +26,7 @@ export function HomePage() {
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded); // クイックメモの展開状態
   const currentTree = useTreeStateStore((state) => state.currentTree);
   const isShowArchive = useAppStateStore((state) => state.isShowArchive);
+  const isCreatingTree = useAppStateStore((state) => state.isCreatingTree);
 
   // 認証状態の監視とログイン、ログアウトを行うカスタムフック
   const {
@@ -50,6 +51,9 @@ export function HomePage() {
 
   return (
     <>
+      <Backdrop open={isCreatingTree} sx={{ zIndex: 1600 }}>
+        <CircularProgress color='inherit' />
+      </Backdrop>
       {isElectron && isWindows && <Divider sx={{ width: '100%', position: 'fixed', top: 0, zIndex: 1500 }} />}
       {isLoggedIn ? (
         !isWaitingForDelete ? (

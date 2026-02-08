@@ -83,16 +83,16 @@ export const MessagePaper = () => {
       {isWeb && !isElectron && (
         <>
           <Paper>
-            <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
+            <Box sx={{ textAlign: 'left', p: 2, pb: 1 }}>
               <Stack spacing={1}>
                 {updateHistory.map((update, index: number) => (
                   <Box key={index} sx={{ display: 'flex' }}>
-                    <Box sx={{ minWidth: '85px' }}>{update.date}</Box>
-                    <Box>{update.content}</Box>
+                    <Typography variant='body2' sx={{ minWidth: '85px', flexShrink: 0 }}>{update.date}</Typography>
+                    <Typography variant='body2'>{update.content}</Typography>
                   </Box>
                 ))}
               </Stack>
-            </Typography>
+            </Box>
           </Paper>
           <Button
             href='https://jun-murakami.web.app/#tasktrees'
