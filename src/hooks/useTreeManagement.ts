@@ -131,7 +131,13 @@ export const useTreeManagement = () => {
       return;
     }
     try {
-      const treeData = await idbService.loadCurrentTreeDataFromIdb(targetTree);
+      let treeData = await idbService.loadCurrentTreeDataFromIdb(targetTree);
+
+      if (!treeData || !treeData.items) {
+        await copyTreeDataToIdbFromDb(targetTree);
+        treeData = await idbService.loadCurrentTreeDataFromIdb(targetTree);
+      }
+
       // レースコンディション防止: await後にcurrentTreeが変わっていたら適用しない
       if (useTreeStateStore.getState().currentTree !== targetTree) {
         return;
@@ -158,7 +164,7 @@ export const useTreeManagement = () => {
     } catch (error) {
       await showDialog('ツリーのデータの取得に失敗しました。\n\n' + error, 'Error');
     }
-  }, [showDialog, setCurrentTreeName, setCurrentTreeMembers, setItems, setCurrentTreeIsArchived, setItemsTreeId]);
+  }, [showDialog, setCurrentTreeName, setCurrentTreeMembers, setItems, setCurrentTreeIsArchived, setItemsTreeId, copyTreeDataToIdbFromDb]);
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = useCallback(async (targetTree: UniqueIdentifier) => {

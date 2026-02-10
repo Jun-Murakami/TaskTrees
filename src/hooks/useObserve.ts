@@ -15,6 +15,7 @@ import { useDialogStore } from '@/store/dialogStore';
 import { Preferences } from '@capacitor/preferences';
 import * as idbService from '@/services/indexedDbService';
 import { getClientId, hashData } from '@/utils/syncUtils';
+import { mergeTreeItems } from '@/utils/mergeUtils';
 
 export const useObserve = () => {
   const items = useTreeStateStore((state) => state.items);
@@ -59,7 +60,7 @@ export const useObserve = () => {
 
     try {
       const itemsTreeId = useTreeStateStore.getState().itemsTreeId;
-      if (currentTree && currentItems.length > 0 && (itemsTreeId === null || itemsTreeId === currentTree)) {
+      if (currentTree && currentItems.length > 0 && itemsTreeId === currentTree) {
         if (isOffline) {
           await Preferences.set({
             key: `items_offline`,
@@ -166,7 +167,8 @@ export const useObserve = () => {
                 useSyncStateStore.getState().clearMemoDirty();
                 useSyncStateStore.getState().setMemoServerHash(serverMemoHash);
               } else {
-                console.warn('Memo sync conflict detected — keeping local edits (Phase 2 will add merge)');
+                await loadAndSetQuickMemoFromDb({ saveToIdb: true });
+              useSyncStateStore.getState().clearMemoDirty();
               }
             }
           }
@@ -176,8 +178,57 @@ export const useObserve = () => {
             return;
           }
 
-          const { dirty: itemsDirty, baseHash: itemsBaseHash } = useSyncStateStore.getState().itemsSync;
           const currentTreeBeforeSync = useTreeStateStore.getState().currentTree;
+          if (currentTreeBeforeSync && !newTreesList.some((t) => t.id === currentTreeBeforeSync)) {
+            const currentItems = useTreeStateStore.getState().items;
+            const currentTreeName = useTreeStateStore.getState().currentTreeName;
+            if (currentItems.length > 0) {
+              const shouldSave = await showDialog(
+                `「${currentTreeName ?? 'このツリー'}」は別のデバイスで削除されました。ローカルコピーとして保存しますか？`,
+                'Tree Deleted',
+                true
+              );
+              if (shouldSave) {
+                const uid = useAppStateStore.getState().uid;
+                if (uid) {
+                  const functions = (await import('firebase/functions')).getFunctions();
+                  const createNewTree = (await import('firebase/functions')).httpsCallable(functions, 'createNewTree');
+                  const result = await createNewTree({
+                    items: currentItems.map((item) => ({
+                      id: item.id.toString(),
+                      children: item.children,
+                      value: item.value,
+                      collapsed: item.collapsed,
+                      done: item.done,
+                    })),
+                    name: `${currentTreeName ?? 'ツリー'} (コピー)`,
+                    members: { [uid]: true },
+                  });
+                  const newTreeId = result.data as string;
+                  if (newTreeId) {
+                    await copyTreeDataToIdbFromDb(newTreeId);
+                    const updatedList = [...newTreesList, { id: newTreeId, name: `${currentTreeName ?? 'ツリー'} (コピー)` }];
+                    useTreeStateStore.getState().setTreesList(updatedList);
+                    await idbService.saveTreesListToIdb(updatedList);
+                    useTreeStateStore.getState().setCurrentTree(newTreeId);
+                    await loadAndSetCurrentTreeDataFromIdb(newTreeId);
+                  }
+                }
+              }
+            }
+            if (!useTreeStateStore.getState().currentTree || useTreeStateStore.getState().currentTree === currentTreeBeforeSync) {
+              useTreeStateStore.getState().setCurrentTree(null);
+              useTreeStateStore.getState().setCurrentTreeName(null);
+              useTreeStateStore.getState().setCurrentTreeMembers(null);
+              setItems([]);
+              useTreeStateStore.getState().setItemsTreeId(null);
+            }
+            useSyncStateStore.getState().setIsSyncing(false);
+            setIsLoading(false);
+            return;
+          }
+
+          const { dirty: itemsDirty, baseHash: itemsBaseHash } = useSyncStateStore.getState().itemsSync;
 
           const treeIds = newTreesList.map((tree) => tree.id);
           let treeUpdateCount = 0;
@@ -203,7 +254,19 @@ export const useObserve = () => {
                       useSyncStateStore.getState().clearItemsDirty();
                       useSyncStateStore.getState().setItemsServerHash(serverItemsHash);
                     } else {
-                      console.warn('Items sync conflict detected — keeping local edits (Phase 2 will add merge)');
+                      const baseSnapshot = useSyncStateStore.getState().itemsSync.baseSnapshot;
+                      if (baseSnapshot && serverItems) {
+                        const localItems = useTreeStateStore.getState().items;
+                        const mergeResult = mergeTreeItems(baseSnapshot, localItems, serverItems);
+                        setItems(mergeResult.merged);
+                        await dbService.saveItemsDb(treeId, mergeResult.merged);
+                        await idbService.saveItemsToIdb(treeId, mergeResult.merged);
+                        useSyncStateStore.getState().clearItemsDirty();
+                        useSyncStateStore.getState().setItemsServerHash(hashData(mergeResult.merged));
+                      } else {
+                        await copyTreeDataToIdbFromDb(treeId);
+                        useSyncStateStore.getState().clearItemsDirty();
+                      }
                     }
                   }
                 } else {
@@ -227,7 +290,8 @@ export const useObserve = () => {
           }
 
           const currentTreeAfterSync = useTreeStateStore.getState().currentTree;
-          if (currentTreeAfterSync && !itemsDirty) {
+          const itemsTreeIdAfterSync = useTreeStateStore.getState().itemsTreeId;
+          if (currentTreeAfterSync && !itemsDirty && itemsTreeIdAfterSync === currentTreeAfterSync) {
             setPrevCurrentTree(null);
             await loadAndSetCurrentTreeDataFromIdb(currentTreeAfterSync);
           }
@@ -322,7 +386,7 @@ export const useObserve = () => {
 
           const itemsTreeId = useTreeStateStore.getState().itemsTreeId;
           const latestCurrentTree = useTreeStateStore.getState().currentTree;
-          if (itemsTreeId !== null && itemsTreeId !== latestCurrentTree) {
+          if (!itemsTreeId || itemsTreeId !== latestCurrentTree) {
             return;
           }
           if (isOffline) {

@@ -79,6 +79,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   const items = useTreeStateStore((state) => state.items);
   const setItems = useTreeStateStore((state) => state.setItems);
   const currentTree = useTreeStateStore((state) => state.currentTree);
+  const itemsTreeId = useTreeStateStore((state) => state.itemsTreeId);
   const searchKey = useAppStateStore((state) => state.searchKey);
   const isLoading = useAppStateStore((state) => state.isLoading);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
@@ -211,7 +212,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   );
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
-    if (isLoading) return;
+    if (isLoading || !itemsTreeId || itemsTreeId !== currentTree) return;
     if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
       const activeNewTaskItem = {
         id: activeId,

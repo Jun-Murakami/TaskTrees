@@ -60,6 +60,7 @@ export function ResponsiveDrawer({
   const setHideDoneItems = useAppStateStore((state) => state.setHideDoneItems);
   const searchKey = useAppStateStore((state) => state.searchKey);
   const setSearchKey = useAppStateStore((state) => state.setSearchKey);
+  const setIsLoading = useAppStateStore((state) => state.setIsLoading);
   const setIsFocusedTreeName = useAppStateStore((state) => state.setIsFocusedTreeName);
   const setIsShowArchive = useAppStateStore((state) => state.setIsShowArchive);
 
@@ -109,17 +110,19 @@ export function ResponsiveDrawer({
     setSearchKey(event.target.value);
   };
 
-  // ツリーのリストから選択されたツリーを表示する
   const handleListClick = async (treeId: UniqueIdentifier): Promise<void> => {
     if (currentTree === treeId) {
       return;
     }
     setDrawerState(false);
     setIsShowArchive(false);
+    setIsLoading(true);
     setCurrentTree(treeId);
+    setItems([]);
+    setItemsTreeId(null);
     await loadAndSetCurrentTreeDataFromIdb(treeId);
+    setIsLoading(false);
     if (isAccordionExpanded) {
-      // 0.5秒後にフォーカスをセット
       setTimeout(() => {
         setIsFocusedTreeName(true);
       }, 500);
