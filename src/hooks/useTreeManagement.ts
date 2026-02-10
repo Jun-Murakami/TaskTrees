@@ -34,6 +34,7 @@ export const useTreeManagement = () => {
   const setCurrentTreeMembers = useTreeStateStore((state) => state.setCurrentTreeMembers);
   const setCurrentTreeIsArchived = useTreeStateStore((state) => state.setCurrentTreeIsArchived);
   const setItemsTreeId = useTreeStateStore((state) => state.setItemsTreeId);
+  const setIsLoadedItemsFromIdb = useTreeStateStore((state) => state.setIsLoadedItemsFromIdb);
 
   const showDialog = useDialogStore((state) => state.showDialog);
   const showInputDialog = useInputDialogStore((state) => state.showDialog);
@@ -154,6 +155,7 @@ export const useTreeManagement = () => {
         } else {
           setCurrentTreeIsArchived(false);
         }
+        setIsLoadedItemsFromIdb(true);
         setItems(treeData.items);
         setItemsTreeId(targetTree);
 
@@ -164,7 +166,7 @@ export const useTreeManagement = () => {
     } catch (error) {
       await showDialog('ツリーのデータの取得に失敗しました。\n\n' + error, 'Error');
     }
-  }, [showDialog, setCurrentTreeName, setCurrentTreeMembers, setItems, setCurrentTreeIsArchived, setItemsTreeId, copyTreeDataToIdbFromDb]);
+  }, [showDialog, setCurrentTreeName, setCurrentTreeMembers, setItems, setCurrentTreeIsArchived, setItemsTreeId, setIsLoadedItemsFromIdb, copyTreeDataToIdbFromDb]);
 
   //ツリーを削除する関数 ---------------------------------------------------------------------------
   const deleteTree = useCallback(async (targetTree: UniqueIdentifier) => {

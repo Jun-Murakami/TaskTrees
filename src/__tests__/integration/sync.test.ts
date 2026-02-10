@@ -144,7 +144,7 @@ describe('Sync conflict detection scenarios', () => {
     const baseHash = hashData(sampleItems);
     useSyncStateStore.getState().setItemsBaseFromServer(sampleItems, baseHash);
 
-    useSyncStateStore.getState().markItemsDirty(sampleItems);
+    useSyncStateStore.getState().markItemsDirty();
     const { itemsSync } = useSyncStateStore.getState();
     expect(itemsSync.dirty).toBe(true);
 
@@ -164,7 +164,7 @@ describe('Sync conflict detection scenarios', () => {
     const baseHash = hashData(sampleItems);
     useSyncStateStore.getState().setItemsBaseFromServer(sampleItems, baseHash);
 
-    useSyncStateStore.getState().markItemsDirty(sampleItems);
+    useSyncStateStore.getState().markItemsDirty();
 
     const convergedItems = serverModifiedItems;
     const serverHash = hashData(convergedItems);
@@ -184,7 +184,7 @@ describe('Sync conflict detection scenarios', () => {
     const baseHash = hashData(sampleItems);
     useSyncStateStore.getState().setItemsBaseFromServer(sampleItems, baseHash);
 
-    useSyncStateStore.getState().markItemsDirty(sampleItems);
+    useSyncStateStore.getState().markItemsDirty();
 
     const serverHash = hashData(serverModifiedItems);
     const localHash = hashData(localModifiedItems);
@@ -215,7 +215,7 @@ describe('Sync conflict detection scenarios', () => {
     const baseHash = hashData('original');
     useSyncStateStore.getState().setMemoBaseFromServer('original', baseHash);
 
-    useSyncStateStore.getState().markMemoDirty('original');
+    useSyncStateStore.getState().markMemoDirty();
 
     const serverMemoHash = hashData('original');
     expect(serverMemoHash).toBe(baseHash);

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { TreeItems } from '@/types/types';
-import { hashData } from '@/utils/syncUtils';
 
 type SyncDocumentMeta<T = unknown> = {
   dirty: boolean;
@@ -14,12 +13,12 @@ type SyncState = {
   memoSync: SyncDocumentMeta<string>;
   isSyncing: boolean;
 
-  markItemsDirty: (currentItems: TreeItems) => void;
+  markItemsDirty: () => void;
   clearItemsDirty: () => void;
   setItemsServerHash: (hash: string) => void;
   setItemsBaseFromServer: (items: TreeItems, hash: string) => void;
 
-  markMemoDirty: (currentMemo: string) => void;
+  markMemoDirty: () => void;
   clearMemoDirty: () => void;
   setMemoServerHash: (hash: string) => void;
   setMemoBaseFromServer: (memo: string, hash: string) => void;
@@ -40,15 +39,13 @@ export const useSyncStateStore = create<SyncState>((set) => ({
   memoSync: initialSyncMeta<string>(),
   isSyncing: false,
 
-  markItemsDirty: (currentItems) =>
+  markItemsDirty: () =>
     set((state) => {
       if (state.itemsSync.dirty) return state;
       return {
         itemsSync: {
           ...state.itemsSync,
           dirty: true,
-          baseSnapshot: currentItems,
-          baseHash: hashData(currentItems),
         },
       };
     }),
@@ -81,15 +78,13 @@ export const useSyncStateStore = create<SyncState>((set) => ({
       },
     })),
 
-  markMemoDirty: (currentMemo) =>
+  markMemoDirty: () =>
     set((state) => {
       if (state.memoSync.dirty) return state;
       return {
         memoSync: {
           ...state.memoSync,
           dirty: true,
-          baseSnapshot: currentMemo,
-          baseHash: hashData(currentMemo),
         },
       };
     }),

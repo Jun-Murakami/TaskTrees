@@ -68,7 +68,7 @@ export const useObserve = () => {
           });
         } else if (uid && !isConnectedDb) {
           await idbService.saveItemsToIdb(currentTree, currentItems);
-          useSyncStateStore.getState().markItemsDirty(currentItems);
+          useSyncStateStore.getState().markItemsDirty();
         } else if (uid) {
           await saveItems(currentItems, currentTree);
         }
@@ -82,7 +82,7 @@ export const useObserve = () => {
           });
         } else if (uid && !isConnectedDb) {
           await idbService.saveQuickMemoToIdb(currentQuickMemo);
-          useSyncStateStore.getState().markMemoDirty(currentQuickMemo);
+          useSyncStateStore.getState().markMemoDirty();
         } else if (uid) {
           await saveQuickMemo(currentQuickMemo);
         }
@@ -407,6 +407,13 @@ export const useObserve = () => {
       setPrevCurrentTree(currentTree);
       setPrevItems([]);
     } else {
+      const isLoadedItemsFromIdb = useTreeStateStore.getState().isLoadedItemsFromIdb;
+      if (isLoadedItemsFromIdb) {
+        useTreeStateStore.getState().setIsLoadedItemsFromIdb(false);
+      } else if (!useSyncStateStore.getState().isSyncing) {
+        useSyncStateStore.getState().markItemsDirty();
+      }
+
       setPrevItems(items);
       const targetTree = currentTree;
 
@@ -439,7 +446,6 @@ export const useObserve = () => {
           } else if (!isConnectedDb) {
             const asyncFunc = async () => {
               await idbService.saveItemsToIdb(targetTree, items);
-              useSyncStateStore.getState().markItemsDirty(items);
             };
             asyncFunc();
           } else {
@@ -478,6 +484,10 @@ export const useObserve = () => {
       return;
     }
 
+    if (!useSyncStateStore.getState().isSyncing) {
+      useSyncStateStore.getState().markMemoDirty();
+    }
+
     if (memoDebounceTimer.current) {
       clearTimeout(memoDebounceTimer.current);
     }
@@ -496,7 +506,6 @@ export const useObserve = () => {
         } else if (!isConnectedDb) {
           const asyncFunc = async () => {
             await idbService.saveQuickMemoToIdb(quickMemoText);
-            useSyncStateStore.getState().markMemoDirty(quickMemoText);
           };
           asyncFunc();
         } else {

@@ -26,8 +26,9 @@ describe('syncStateStore — items sync', () => {
     expect(itemsSync.lastServerHash).toBe('');
   });
 
-  it('markItemsDirty sets dirty flag and captures base snapshot/hash', () => {
-    useSyncStateStore.getState().markItemsDirty(sampleItems);
+  it('markItemsDirty sets dirty flag and preserves existing base', () => {
+    useSyncStateStore.getState().setItemsBaseFromServer(sampleItems, hashData(sampleItems));
+    useSyncStateStore.getState().markItemsDirty();
     const { itemsSync } = useSyncStateStore.getState();
 
     expect(itemsSync.dirty).toBe(true);
@@ -35,11 +36,12 @@ describe('syncStateStore — items sync', () => {
     expect(itemsSync.baseHash).toBe(hashData(sampleItems));
   });
 
-  it('markItemsDirty is idempotent — second call does not overwrite base', () => {
-    useSyncStateStore.getState().markItemsDirty(sampleItems);
+  it('markItemsDirty is idempotent — second call does not change state', () => {
+    useSyncStateStore.getState().setItemsBaseFromServer(sampleItems, hashData(sampleItems));
+    useSyncStateStore.getState().markItemsDirty();
     const firstHash = useSyncStateStore.getState().itemsSync.baseHash;
 
-    useSyncStateStore.getState().markItemsDirty(sampleItemsModified);
+    useSyncStateStore.getState().markItemsDirty();
     const { itemsSync } = useSyncStateStore.getState();
 
     expect(itemsSync.baseHash).toBe(firstHash);
@@ -47,8 +49,9 @@ describe('syncStateStore — items sync', () => {
   });
 
   it('clearItemsDirty resets dirty state but preserves lastServerHash', () => {
+    useSyncStateStore.getState().setItemsBaseFromServer(sampleItems, hashData(sampleItems));
     useSyncStateStore.getState().setItemsServerHash('server-hash-1');
-    useSyncStateStore.getState().markItemsDirty(sampleItems);
+    useSyncStateStore.getState().markItemsDirty();
     useSyncStateStore.getState().clearItemsDirty();
 
     const { itemsSync } = useSyncStateStore.getState();
@@ -64,7 +67,8 @@ describe('syncStateStore — items sync', () => {
   });
 
   it('setItemsBaseFromServer sets all fields and clears dirty', () => {
-    useSyncStateStore.getState().markItemsDirty(sampleItems);
+    useSyncStateStore.getState().setItemsBaseFromServer(sampleItems, hashData(sampleItems));
+    useSyncStateStore.getState().markItemsDirty();
     const serverHash = hashData(sampleItemsModified);
     useSyncStateStore.getState().setItemsBaseFromServer(sampleItemsModified, serverHash);
 
@@ -88,8 +92,9 @@ describe('syncStateStore — memo sync', () => {
     expect(memoSync.baseHash).toBe('');
   });
 
-  it('markMemoDirty sets dirty flag and captures base', () => {
-    useSyncStateStore.getState().markMemoDirty('initial memo');
+  it('markMemoDirty sets dirty flag and preserves existing base', () => {
+    useSyncStateStore.getState().setMemoBaseFromServer('initial memo', hashData('initial memo'));
+    useSyncStateStore.getState().markMemoDirty();
     const { memoSync } = useSyncStateStore.getState();
 
     expect(memoSync.dirty).toBe(true);
@@ -98,17 +103,19 @@ describe('syncStateStore — memo sync', () => {
   });
 
   it('markMemoDirty is idempotent', () => {
-    useSyncStateStore.getState().markMemoDirty('first');
+    useSyncStateStore.getState().setMemoBaseFromServer('first', hashData('first'));
+    useSyncStateStore.getState().markMemoDirty();
     const firstHash = useSyncStateStore.getState().memoSync.baseHash;
 
-    useSyncStateStore.getState().markMemoDirty('second');
+    useSyncStateStore.getState().markMemoDirty();
     expect(useSyncStateStore.getState().memoSync.baseHash).toBe(firstHash);
     expect(useSyncStateStore.getState().memoSync.baseSnapshot).toBe('first');
   });
 
   it('clearMemoDirty resets dirty but preserves lastServerHash', () => {
+    useSyncStateStore.getState().setMemoBaseFromServer('memo text', hashData('memo text'));
     useSyncStateStore.getState().setMemoServerHash('memo-server');
-    useSyncStateStore.getState().markMemoDirty('memo text');
+    useSyncStateStore.getState().markMemoDirty();
     useSyncStateStore.getState().clearMemoDirty();
 
     const { memoSync } = useSyncStateStore.getState();
@@ -118,7 +125,8 @@ describe('syncStateStore — memo sync', () => {
   });
 
   it('setMemoBaseFromServer sets all fields', () => {
-    useSyncStateStore.getState().markMemoDirty('old');
+    useSyncStateStore.getState().setMemoBaseFromServer('old', hashData('old'));
+    useSyncStateStore.getState().markMemoDirty();
     const serverHash = hashData('new memo from server');
     useSyncStateStore.getState().setMemoBaseFromServer('new memo from server', serverHash);
 
@@ -144,8 +152,10 @@ describe('syncStateStore — global operations', () => {
   });
 
   it('resetAllSync clears everything', () => {
-    useSyncStateStore.getState().markItemsDirty(sampleItems);
-    useSyncStateStore.getState().markMemoDirty('memo');
+    useSyncStateStore.getState().setItemsBaseFromServer(sampleItems, hashData(sampleItems));
+    useSyncStateStore.getState().markItemsDirty();
+    useSyncStateStore.getState().setMemoBaseFromServer('memo', hashData('memo'));
+    useSyncStateStore.getState().markMemoDirty();
     useSyncStateStore.getState().setIsSyncing(true);
     useSyncStateStore.getState().setItemsServerHash('h1');
     useSyncStateStore.getState().setMemoServerHash('h2');
