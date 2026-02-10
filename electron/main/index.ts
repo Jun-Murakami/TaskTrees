@@ -6,6 +6,7 @@ import contextMenu from 'electron-context-menu';
 import icon from '../../resources/icon.png?asset';
 
 let mainWindow: BrowserWindow | null = null; // mainWindowをグローバル変数として宣言
+let forceCloseTimeout: ReturnType<typeof setTimeout> | null = null; // レンダラー応答なし時の強制終了タイマー
 interface WindowState {
   bounds?: {
     width?: number;
@@ -82,12 +83,6 @@ function createWindow(): void {
     e.preventDefault();
 
     if (mainWindow && !mainWindow.isDestroyed()) {
-      // 最後のツリー状態を保存
-      mainWindow.webContents.send('save-last-tree');
-
-      // 全ツリーをバックアップ
-      mainWindow.webContents.send('before-close');
-
       // ウィンドウの状態を取得（最大化を解除せずに通常サイズを取得）
       const isMaximized = mainWindow.isMaximized();
       const bounds = isMaximized ? mainWindow.getNormalBounds() : mainWindow.getBounds();
@@ -103,6 +98,20 @@ function createWindow(): void {
         fs.mkdirSync(userDataPath, { recursive: true });
       }
       fs.writeFileSync(path.join(userDataPath, 'windowState.json'), JSON.stringify(windowState));
+
+      if (!forceCloseTimeout) {
+        // 最後のツリー状態を保存
+        mainWindow.webContents.send('save-last-tree');
+
+        // 全ツリーをバックアップ
+        mainWindow.webContents.send('before-close');
+
+        // レンダラーが応答しない場合、8秒後に強制終了
+        forceCloseTimeout = setTimeout(() => {
+          forceCloseTimeout = null;
+          mainWindow?.destroy();
+        }, 8000);
+      }
     }
   });
 }
@@ -340,6 +349,10 @@ if (!gotTheLock) {
 
     // データをバックアップしてからウィンドウを閉じる
     ipcMain.on('close-completed', (_, data) => {
+      if (forceCloseTimeout) {
+        clearTimeout(forceCloseTimeout);
+        forceCloseTimeout = null;
+      }
       if (data !== 'error') {
         saveBackup(data);
       }
