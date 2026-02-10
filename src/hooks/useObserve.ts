@@ -184,8 +184,8 @@ export const useObserve = () => {
             const currentTreeName = useTreeStateStore.getState().currentTreeName;
             if (currentItems.length > 0) {
               const shouldSave = await showDialog(
-                `「${currentTreeName ?? 'このツリー'}」は別のデバイスで削除されました。ローカルコピーとして保存しますか？`,
-                'Tree Deleted',
+                `「${currentTreeName ?? 'このツリー'}」は削除されたか、アクセス権限が変更されました。ローカルコピーとして保存しますか？`,
+                'Information',
                 true
               );
               if (shouldSave) {
@@ -301,11 +301,47 @@ export const useObserve = () => {
         }
       });
 
-      // Firebaseの接続状態を監視
+      let wasConnected = false;
       const connectedRef = ref(getDatabase(), '.info/connected');
-      const unsubscribeDbConnectionChecker = onValue(connectedRef, (snap) => {
+      const unsubscribeDbConnectionChecker = onValue(connectedRef, async (snap) => {
+        const isNowConnected = snap.val() === true;
         const setIsConnectedDb = useAppStateStore.getState().setIsConnectedDb;
-        setIsConnectedDb(snap.val() === true);
+        setIsConnectedDb(isNowConnected);
+
+        if (!wasConnected && isNowConnected) {
+          const { dirty: itemsDirty, baseSnapshot } = useSyncStateStore.getState().itemsSync;
+          const currentTree = useTreeStateStore.getState().currentTree;
+
+          if (itemsDirty && baseSnapshot && currentTree) {
+            try {
+              const serverItems = await dbService.loadItemsFromDb(currentTree);
+              if (serverItems) {
+                const localItems = useTreeStateStore.getState().items;
+                const result = mergeTreeItems(baseSnapshot, localItems, serverItems);
+                setItems(result.merged);
+                await dbService.saveItemsDb(currentTree, result.merged);
+                await idbService.saveItemsToIdb(currentTree, result.merged);
+                useSyncStateStore.getState().clearItemsDirty();
+                useSyncStateStore.getState().setItemsServerHash(hashData(result.merged));
+              }
+            } catch {
+              // Merge on reconnect failed — will retry on next timestamp change
+            }
+          }
+
+          const { dirty: memoDirty } = useSyncStateStore.getState().memoSync;
+          if (memoDirty) {
+            try {
+              const currentMemo = useAppStateStore.getState().quickMemoText;
+              await dbService.saveQuickMemoToDb(uid, currentMemo);
+              await idbService.saveQuickMemoToIdb(currentMemo);
+              useSyncStateStore.getState().clearMemoDirty();
+            } catch {
+              // Memo sync on reconnect failed — will retry on next timestamp change
+            }
+          }
+        }
+        wasConnected = isNowConnected;
       });
 
       return () => {

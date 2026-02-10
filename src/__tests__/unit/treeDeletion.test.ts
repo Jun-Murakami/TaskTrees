@@ -24,7 +24,7 @@ function detectTreeDeletion(
   return { deleted: true, hasUnsavedData: currentItems.length > 0 };
 }
 
-describe('tree deletion detection', () => {
+describe('tree deletion and permission loss detection', () => {
   it('detects when current tree is removed from server trees list', () => {
     const currentTree = 'tree-1';
     const newTreesList: TreesList = [{ id: 'tree-2', name: 'Other Tree' }];
@@ -95,5 +95,38 @@ describe('tree deletion detection', () => {
 
     expect(result.deleted).toBe(true);
     expect(result.hasUnsavedData).toBe(true);
+  });
+
+  it('detects permission loss (member removed from shared tree)', () => {
+    const currentTree = 'shared-tree-xyz';
+    const previousList: TreesList = [
+      { id: 'my-tree', name: 'My Tree' },
+      { id: 'shared-tree-xyz', name: 'Shared Project' },
+    ];
+    const newTreesList: TreesList = [
+      { id: 'my-tree', name: 'My Tree' },
+    ];
+    const currentItems: TreeItems = [makeItem(1, 'Editing shared task'), makeTrash()];
+
+    const result = detectTreeDeletion(currentTree, newTreesList, currentItems);
+
+    expect(result.deleted).toBe(true);
+    expect(result.hasUnsavedData).toBe(true);
+
+    const removedTrees = previousList.filter((p) => !newTreesList.some((n) => n.id === p.id));
+    expect(removedTrees.length).toBe(1);
+    expect(removedTrees[0].id).toBe('shared-tree-xyz');
+  });
+
+  it('does not trigger for non-current tree removal', () => {
+    const currentTree = 'my-tree';
+    const newTreesList: TreesList = [
+      { id: 'my-tree', name: 'My Tree' },
+    ];
+    const currentItems: TreeItems = [makeItem(1, 'Task'), makeTrash()];
+
+    const result = detectTreeDeletion(currentTree, newTreesList, currentItems);
+
+    expect(result.deleted).toBe(false);
   });
 });
