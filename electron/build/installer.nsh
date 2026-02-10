@@ -1,18 +1,39 @@
-; Fix: electron-builder's default NSIS upgrade runs the old uninstaller which
-; uses PowerShell Get-CimInstance to check ALL processes in $INSTDIR, causing
-; false positives. The old uninstaller is already compiled and cannot be fixed.
-; Solution: Remove old uninstall registry key BEFORE uninstallOldVersion runs,
-; so it skips the old uninstaller entirely. New installer overwrites files directly.
-; See: https://github.com/electron-userland/electron-builder/issues/8131
+; Custom NSIS hooks for TaskTrees installer.
+;
+; Fix 1: Install directory name correction.
+;   After repo merge, package.json "name" changed from "tasktrees-electron" to
+;   "tasktree-s", which changed the default install folder (APP_FILENAME).
+;   We override $INSTDIR to maintain the legacy folder name so upgrades work
+;   and existing installs are found correctly.
+;
+; Fix 2: Skip old uninstaller on upgrade.
+;   electron-builder's default upgrade runs the old (already-compiled) uninstaller
+;   which uses PowerShell Get-CimInstance to check ALL processes in $INSTDIR,
+;   causing false positives. We remove UNINSTALL_REGISTRY_KEY before
+;   uninstallOldVersion runs so it returns early, skipping the old uninstaller.
+;   The new installer overwrites files directly.
+;   See: https://github.com/electron-userland/electron-builder/issues/8131
+;
+; Fix 3: Exact process detection with nsProcess.
+;   Replaces default PowerShell-based detection with nsProcess::FindProcess
+;   for exact exe name matching (customCheckAppRunning below).
 
 !include "getProcessInfo.nsh"
 Var /GLOBAL pid
 
-; --- customInit: prevent old uninstaller from running ---
-; Runs in .onInit AFTER initMultiUser (SHELL_CONTEXT is set).
-; uninstallOldVersion checks UNINSTALL_REGISTRY_KEY for UninstallString.
-; If key is missing, it returns early without running old uninstaller.
+; --- customInit: fix install dir + prevent old uninstaller from running ---
+; Runs in .onInit AFTER initMultiUser sets SHELL_CONTEXT and $INSTDIR.
 !macro customInit
+  ; Fix install directory: if no existing InstallLocation in registry,
+  ; initMultiUser defaults to "$LOCALAPPDATA\Programs\${APP_FILENAME}" which
+  ; resolves to "tasktree-s" (wrong). Override to legacy "tasktrees-electron".
+  ReadRegStr $0 SHELL_CONTEXT "${INSTALL_REGISTRY_KEY}" InstallLocation
+  ${if} $0 == ""
+    StrCpy $INSTDIR "$LOCALAPPDATA\Programs\tasktrees-electron"
+  ${endif}
+
+  ; Skip old uninstaller: delete UNINSTALL_REGISTRY_KEY so uninstallOldVersion
+  ; finds no UninstallString and returns early.
   DeleteRegKey SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}"
   !ifdef UNINSTALL_REGISTRY_KEY_2
     DeleteRegKey SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY_2}"
