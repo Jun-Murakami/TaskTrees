@@ -1,4 +1,4 @@
-import { FC, useState, useRef, useCallback, useEffect } from 'react';
+import { FC, useState, useRef, useCallback } from 'react';
 import { DraggableAttributes, DraggableSyntheticListeners, UniqueIdentifier } from '@dnd-kit/core';
 import {
   ListItemText,
@@ -56,7 +56,7 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLines, setPreviewLines] = useState<string[]>([]);
   const [popperAnchor, setPopperAnchor] = useState<{ getBoundingClientRect: () => DOMRect } | null>(null);
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isHoveredRef = useRef(false);
   const listItemRef = useRef<HTMLDivElement>(null);
 
   const handleListItemButtonClick = async () => {
@@ -78,6 +78,7 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
   const handleMouseEnter = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
       if (isMobile) return;
+      isHoveredRef.current = true;
       const mouseY = e.clientY;
       const drawerEl = listItemRef.current?.closest('.MuiDrawer-paper');
       const drawerRight = drawerEl ? drawerEl.getBoundingClientRect().right : 300;
@@ -86,9 +87,10 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
         getBoundingClientRect: () => new DOMRect(drawerRight + 4, mouseY - 10, 0, 0),
       });
 
-      hoverTimerRef.current = setTimeout(async () => {
+      (async () => {
         try {
           const treeData = await idb.treestate.get(item.id);
+          if (!isHoveredRef.current) return;
           if (treeData && treeData.items) {
             const lines = flattenTreeToLines(treeData.items, 0, 10);
             if (lines.length > 0) {
@@ -99,25 +101,14 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
         } catch {
           /* empty */
         }
-      }, 200);
+      })();
     },
     [isMobile, item.id]
   );
 
   const handleMouseLeave = useCallback(() => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
+    isHoveredRef.current = false;
     setPreviewOpen(false);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current) {
-        clearTimeout(hoverTimerRef.current);
-      }
-    };
   }, []);
 
   return (
@@ -272,7 +263,7 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
               maxWidth: 360,
               minWidth: 200,
               maxHeight: 280,
-              overflow: 'hidden',
+              overflow: 'clip',
             }}
           >
             <Typography
@@ -283,6 +274,9 @@ export const SortableSource: FC<SortableSourceProps> = ({ item, handlerProps, ha
                 fontSize: '0.75rem',
                 lineHeight: 1.6,
                 whiteSpace: 'pre',
+                overflow: 'hidden',
+                maxWidth: '100%',
+                maxHeight: `calc(280px - ${1.5 * 8 * 2}px)`,
                 color: theme.palette.text.secondary,
               }}
             >

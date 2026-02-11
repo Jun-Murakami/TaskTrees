@@ -25,13 +25,14 @@ const ArchiveListItem: FC<ArchiveListItemProps> = ({ tree, timestamp, isMobile, 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLines, setPreviewLines] = useState<string[]>([]);
   const [popperAnchor, setPopperAnchor] = useState<{ getBoundingClientRect: () => DOMRect } | null>(null);
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isHoveredRef = useRef(false);
   const itemRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
 
   const handleMouseEnter = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
       if (isMobile) return;
+      isHoveredRef.current = true;
       const mouseY = e.clientY;
       const itemEl = itemRef.current;
       const itemRight = itemEl ? itemEl.getBoundingClientRect().right : 500;
@@ -40,9 +41,10 @@ const ArchiveListItem: FC<ArchiveListItemProps> = ({ tree, timestamp, isMobile, 
         getBoundingClientRect: () => new DOMRect(itemRight + 8, mouseY - 10, 0, 0),
       });
 
-      hoverTimerRef.current = setTimeout(async () => {
+      (async () => {
         try {
           const treeData = await idb.treestate.get(tree.id);
+          if (!isHoveredRef.current) return;
           if (treeData && treeData.items) {
             const lines = flattenTreeToLines(treeData.items, 0, 10);
             if (lines.length > 0) {
@@ -53,25 +55,14 @@ const ArchiveListItem: FC<ArchiveListItemProps> = ({ tree, timestamp, isMobile, 
         } catch {
           /* empty */
         }
-      }, 200);
+      })();
     },
     [isMobile, tree.id]
   );
 
   const handleMouseLeave = useCallback(() => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
+    isHoveredRef.current = false;
     setPreviewOpen(false);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current) {
-        clearTimeout(hoverTimerRef.current);
-      }
-    };
   }, []);
 
   return (
@@ -135,7 +126,7 @@ const ArchiveListItem: FC<ArchiveListItemProps> = ({ tree, timestamp, isMobile, 
               maxWidth: 360,
               minWidth: 200,
               maxHeight: 280,
-              overflow: 'hidden',
+              overflow: 'clip',
             }}
           >
             <Typography
@@ -146,6 +137,9 @@ const ArchiveListItem: FC<ArchiveListItemProps> = ({ tree, timestamp, isMobile, 
                 fontSize: '0.75rem',
                 lineHeight: 1.6,
                 whiteSpace: 'pre',
+                overflow: 'hidden',
+                maxWidth: '100%',
+                maxHeight: `calc(280px - ${1.5 * 8 * 2}px)`,
                 color: theme.palette.text.secondary,
               }}
             >
