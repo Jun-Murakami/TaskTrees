@@ -7,6 +7,7 @@ import WifiOffIcon from '@mui/icons-material/WifiOff';
 import { useTheme } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
 import { useAppStateStore } from '@/store/appStateStore';
+import { useSyncStateStore } from '@/store/syncStateStore';
 
 interface Props {
   id: UniqueIdentifier;
@@ -19,6 +20,7 @@ export function AddTask({ id, ...Props }: Props) {
   const isConnectedDb = useAppStateStore((s) => s.isConnectedDb);
   const isOffline = useAppStateStore((s) => s.isOffline);
   const isLoggedIn = useAppStateStore((s) => s.isLoggedIn);
+  const isSyncing = useSyncStateStore((s) => s.isSyncing);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -78,7 +80,7 @@ export function AddTask({ id, ...Props }: Props) {
               touchAction: 'none',
               cursor: Props ? 'grab' : 'grabbing',
             }}
-            disabled={isDragging}
+            disabled={isDragging || isSyncing}
           >
             タスクを追加
           </Button>

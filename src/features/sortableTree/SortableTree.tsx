@@ -38,6 +38,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { useAppStateStore } from '@/store/appStateStore';
+import { useSyncStateStore } from '@/store/syncStateStore';
 
 const dropAnimationConfig: DropAnimation = {
   keyframes({ transform }) {
@@ -82,6 +83,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   const itemsTreeId = useTreeStateStore((state) => state.itemsTreeId);
   const searchKey = useAppStateStore((state) => state.searchKey);
   const isLoading = useAppStateStore((state) => state.isLoading);
+  const isSyncing = useSyncStateStore((state) => state.isSyncing);
   const hideDoneItems = useAppStateStore((state) => state.hideDoneItems);
   const isQuickMemoExpanded = useAppStateStore((state) => state.isQuickMemoExpanded);
   const setIsQuickMemoExpanded = useAppStateStore((state) => state.setIsQuickMemoExpanded);
@@ -212,7 +214,7 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   );
 
   function handleDragStart({ active: { id: activeId } }: DragStartEvent) {
-    if (isLoading || !itemsTreeId || itemsTreeId !== currentTree) return;
+    if (isLoading || isSyncing || !itemsTreeId || itemsTreeId !== currentTree) return;
     if (activeId === activeNewTaskId || activeId === activeQuickMemoId) {
       const activeNewTaskItem = {
         id: activeId,
