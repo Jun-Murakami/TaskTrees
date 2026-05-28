@@ -6,22 +6,18 @@ const isElectron = navigator.userAgent.includes('Electron');
 
 const updateHistory = [
   {
+    date: '2026.05.29',
+    content:
+      'Linux版をリリースしました。Windows版でコード署名に対応しました。',
+  },
+  {
     date: '2026.02.08',
     content:
       '１．オフライン時や、同期中でも編集できるようになりました。\n' +
       '２．ログイン後に認証方法の追加、解除ができるようになりました。\n' +
       '３．新規ツリーを作成時に、空のタスクを１つ自動で作るようにしました。\n' +
       '４．macOS版でコマンド＋Aで全選択ができるようになりました。\n' +
-      '５．クイックメモを編集してアプリをすぐに終了すると、編集が保存されないことがある問題を修正しました\n' +
-      '６．その他、細かいバグの修正とパフォーマンスの改善を行いました。',
-  },
-  {
-    date: '2025.05.18',
-    content: 'クイックメモをドッキング/切り離しできるようにしました。',
-  },
-  {
-    date: '2024.10.05',
-    content: 'アーカイブ機能を追加しました。',
+      '５．クイックメモを編集してアプリをすぐに終了すると、編集が保存されないことがある問題を修正しました\n'
   },
 ];
 
@@ -95,7 +91,7 @@ export const MessagePaper = () => {
             </Box>
           </Paper>
           <Button
-            href='https://jun-murakami.web.app/#tasktrees'
+            href='https://jun-murakami.web.app/apps/tasktrees'
             size='small'
             variant='outlined'
             sx={{ width: '100%', maxWidth: '90vw', mt: 2 }}
@@ -115,7 +111,7 @@ export const MessagePaper = () => {
               <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
                 {`最新バージョン: ${latestVersion} が利用可能です。`}
                 <br />
-                <a href='https://jun-murakami.web.app/#tasktrees' target='_blank' rel='noreferrer'>
+                <a href='https://jun-murakami.web.app/apps/tasktrees' target='_blank' rel='noreferrer'>
                   ダウンロード
                 </a>
                 <br />

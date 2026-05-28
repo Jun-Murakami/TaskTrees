@@ -25,22 +25,19 @@ const fontFamilySet = [
   '"Segoe UI Symbol"',
 ].join(',');
 
-let typographyStyles = {};
-if (dpi >= 1.5) {
-  typographyStyles = {
-    fontFamily: fontFamilySet,
-  };
-} else {
-  typographyStyles = {
-    fontFamily: fontFamilySet,
-    h3: {
-      fontSize: '35px',
-    },
-    caption: {
-      fontSize: '11px',
-    },
-  };
-}
+const typographyStyles = dpi >= 1.5
+  ? {
+      fontFamily: fontFamilySet,
+    }
+  : {
+      fontFamily: fontFamilySet,
+      h3: {
+        fontSize: '35px',
+      },
+      caption: {
+        fontSize: '11px',
+      },
+    };
 
 const breakpointsValues = {
   xs: 0,
@@ -122,9 +119,11 @@ export const theme = createTheme({
     },
     MuiTextField: {
       defaultProps: {
-        inputProps: {
-          spellCheck: 'false',
-          transform: 'rotate(0.05deg)',
+        slotProps: {
+          htmlInput: {
+            spellCheck: 'false',
+            transform: 'rotate(0.05deg)',
+          },
         },
       },
     },
@@ -176,9 +175,11 @@ export const darkTheme = createTheme({
     },
     MuiTextField: {
       defaultProps: {
-        inputProps: {
-          spellCheck: 'false',
-          transform: 'rotate(0.05deg)',
+        slotProps: {
+          htmlInput: {
+            spellCheck: 'false',
+            transform: 'rotate(0.05deg)',
+          },
         },
       },
     },

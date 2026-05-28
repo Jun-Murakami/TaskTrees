@@ -47,7 +47,7 @@ export const saveTimeStampDb = async (
     }
     return;
   } catch (error) {
-    throw new Error('データベースへのタイムスタンプの保存に失敗しました。\n\n' + error);
+    throw new Error('データベースへのタイムスタンプの保存に失敗しました。\n\n' + error, { cause: error });
   }
 };
 
@@ -98,7 +98,7 @@ export const saveItemsDb = async (targetTree: UniqueIdentifier, newItems: TreeIt
       throw new Error('更新対象のsnapshotが存在しません。ツリー内容の変更は破棄されました。code:4');
     }
   } catch (error) {
-    throw new Error('データベースへのitemsの保存に失敗しました。\n\n' + error);
+    throw new Error('データベースへのitemsの保存に失敗しました。\n\n' + error, { cause: error });
   }
 };
 
@@ -108,7 +108,7 @@ export const saveTreesListDb = async (uid: string, newTreesList: TreesList) => {
     const treeListRef = ref(getDatabase(), `users/${uid}/treeList`);
     await set(treeListRef, newTreesList.map((tree) => tree.id));
   } catch (error) {
-    throw new Error('データベースへのtreesListの保存に失敗しました。\n\n' + error);
+    throw new Error('データベースへのtreesListの保存に失敗しました。\n\n' + error, { cause: error });
   }
 };
 
@@ -118,7 +118,7 @@ export const saveCurrentTreeNameDb = async (targetTree: UniqueIdentifier, newTre
     const treeNameRef = ref(getDatabase(), `trees/${targetTree}/name`);
     await set(treeNameRef, newTreeName);
   } catch (error) {
-    throw new Error('データベースへのツリー名の保存に失敗しました。\n\n' + error + '\n\n' + targetTree);
+    throw new Error('データベースへのツリー名の保存に失敗しました。\n\n' + error + '\n\n' + targetTree, { cause: error });
   }
 };
 
@@ -128,7 +128,9 @@ export const saveIsArchivedDb = async (targetTree: UniqueIdentifier, isArchived:
     const treeRef = ref(getDatabase(), `trees/${targetTree}/isArchived`);
     await set(treeRef, isArchived);
   } catch (error) {
-    throw new Error('データベースへのツリーのアーカイブ属性の保存に失敗しました。\n\n' + error + '\n\n' + targetTree);
+    throw new Error('データベースへのツリーのアーカイブ属性の保存に失敗しました。\n\n' + error + '\n\n' + targetTree, {
+      cause: error,
+    });
   }
 };
 
@@ -138,7 +140,7 @@ export const deleteTreeFromDb = async (targetTree: UniqueIdentifier) => {
     const treeRef = ref(getDatabase(), `trees/${targetTree}`);
     await set(treeRef, null);
   } catch (error) {
-    throw new Error('データベースからのツリーの削除に失敗しました。\n\n' + error + '\n\n' + targetTree);
+    throw new Error('データベースからのツリーの削除に失敗しました。\n\n' + error + '\n\n' + targetTree, { cause: error });
   }
 };
 
@@ -338,7 +340,7 @@ export const saveAppStateToDb = async (uid: string, darkModeNew: boolean, hideDo
     const appStateRef = ref(getDatabase(), `users/${uid}/settings`);
     await set(appStateRef, { darkMode: darkModeNew, hideDoneItems: hideDoneItemsNew });
   } catch (error) {
-    throw new Error('データベースへのAppStateの保存に失敗しました。\n\n' + error);
+    throw new Error('データベースへのAppStateの保存に失敗しました。\n\n' + error, { cause: error });
   }
 };
 
@@ -348,7 +350,7 @@ export const saveQuickMemoToDb = async (uid: string, quickMemoText: string) => {
     const quickMemoRef = ref(getDatabase(), `users/${uid}/quickMemo`);
     await set(quickMemoRef, quickMemoText);
   } catch (error) {
-    throw new Error('データベースへのクイックメモの保存に失敗しました。\n\n' + error);
+    throw new Error('データベースへのクイックメモの保存に失敗しました。\n\n' + error, { cause: error });
   }
 };
 

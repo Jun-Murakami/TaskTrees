@@ -39,7 +39,7 @@ export const Login = ({
         maxWidth: 400,
         width: '100%',
         mx: 'auto',
-        height: '100dvh',
+        height: '100%',
         position: 'relative',
         p: 4,
         display: 'flex',

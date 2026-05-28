@@ -9,7 +9,7 @@ export const loadAppStateFromIdb = async (): Promise<AppStateItem | null> => {
     const appState = await idb.appstate.get(1);
     return appState ?? null;
   } catch (error) {
-    throw new Error('IndexedDBからのAppStateの読み込みに失敗しました。' + error);
+    throw new Error('IndexedDBからのAppStateの読み込みに失敗しました。' + error, { cause: error });
   }
 };
 
@@ -19,7 +19,7 @@ export const loadUidFromIdb = async (): Promise<string | null> => {
     const appState = await idb.appstate.get(1);
     return appState?.uid ?? null;
   } catch (error) {
-    throw new Error('IndexedDBからのユーザーIDの読み込みに失敗しました。' + error);
+    throw new Error('IndexedDBからのユーザーIDの読み込みに失敗しました。' + error, { cause: error });
   }
 };
 
@@ -29,7 +29,7 @@ export const loadQuickMemoFromIdb = async (): Promise<string | null> => {
     const appState = await idb.appstate.get(1);
     return appState?.quickMemo ?? null;
   } catch (error) {
-    throw new Error('IndexedDBからのクイックメモの読み込みに失敗しました。' + error);
+    throw new Error('IndexedDBからのクイックメモの読み込みに失敗しました。' + error, { cause: error });
   }
 };
 
@@ -39,7 +39,7 @@ export const loadTreesListFromIdb = async (): Promise<TreesList | null> => {
     const appState = await idb.appstate.get(1);
     return appState?.treesList ?? null;
   } catch (error) {
-    throw new Error('IndexedDBからのツリーリストの読み込みに失敗しました。' + error);
+    throw new Error('IndexedDBからのツリーリストの読み込みに失敗しました。' + error, { cause: error });
   }
 };
 
@@ -48,7 +48,7 @@ export const saveQuickMemoToIdb = async (quickMemoText: string) => {
   try {
     await idb.appstate.update(1, { quickMemo: quickMemoText });
   } catch (error) {
-    throw new Error('IndexedDBへのクイックメモの保存に失敗しました。' + error);
+    throw new Error('IndexedDBへのクイックメモの保存に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -57,7 +57,7 @@ export const saveAppStateToIdb = async (darkMode: boolean, hideDoneItems: boolea
   try {
     await idb.appstate.update(1, { settings: { darkMode: darkMode, hideDoneItems: hideDoneItems } });
   } catch (error) {
-    throw new Error('IndexedDBへのダークモードと完了済みアイテムの非表示設定の保存に失敗しました。' + error);
+    throw new Error('IndexedDBへのダークモードと完了済みアイテムの非表示設定の保存に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -66,7 +66,7 @@ export const saveTreesListToIdb = async (treesList: TreesList) => {
   try {
     await idb.appstate.update(1, { treesList: treesList });
   } catch (error) {
-    throw new Error('IndexedDBへのツリーリストの保存に失敗しました。' + error);
+    throw new Error('IndexedDBへのツリーリストの保存に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -82,7 +82,7 @@ export const loadCurrentTreeDataFromIdb = async (targetTree: UniqueIdentifier): 
       return null;
     }
   } catch (error) {
-    throw new Error('IndexedDBからのツリーデータの読み込みに失敗しました。' + error);
+    throw new Error('IndexedDBからのツリーデータの読み込みに失敗しました。' + error, { cause: error });
   }
 };
 
@@ -97,7 +97,7 @@ export const saveItemsToIdb = async (targetTree: UniqueIdentifier, newItems: Tre
       throw new Error('IndexedDBのツリーデータが取得できませんでした。');
     }
   } catch (error) {
-    throw new Error('IndexedDBへのツリーデータの保存に失敗しました。' + error);
+    throw new Error('IndexedDBへのツリーデータの保存に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -112,7 +112,7 @@ export const saveCurrentTreeNameToIdb = async (targetTree: UniqueIdentifier, edi
       throw new Error('IndexedDBのツリーデータが取得できませんでした。');
     }
   } catch (error) {
-    throw new Error('IndexedDBへのツリー名の保存に失敗しました。' + error);
+    throw new Error('IndexedDBへのツリー名の保存に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -135,7 +135,7 @@ export const saveIsArchivedToIdb = async (targetTree: UniqueIdentifier, isArchiv
       throw new Error('IndexedDBのツリーデータが取得できませんでした。');
     }
   } catch (error) {
-    throw new Error('IndexedDBへのツリーのアーカイブ属性の保存に失敗しました。' + error);
+    throw new Error('IndexedDBへのツリーのアーカイブ属性の保存に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -144,7 +144,7 @@ export const deleteTreeFromIdb = async (targetTree: UniqueIdentifier) => {
   try {
     await idb.treestate.delete(targetTree);
   } catch (error) {
-    throw new Error('IndexedDBからのツリーの削除に失敗しました。' + error);
+    throw new Error('IndexedDBからのツリーの削除に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -158,7 +158,7 @@ export const loadTimeStampFromIdb = async (): Promise<number | null> => {
       return null;
     }
   } catch (error) {
-    throw new Error('IndexedDBからのタイムスタンプの読み込みに失敗しました。' + error);
+    throw new Error('IndexedDBからのタイムスタンプの読み込みに失敗しました。' + error, { cause: error });
   }
 };
 
@@ -175,7 +175,7 @@ export const saveTimeStampToIdb = async (targetTree: UniqueIdentifier | null, ne
       }
     }
   } catch (error) {
-    throw new Error('IndexedDBへのタイムスタンプの保存に失敗しました。' + error);
+    throw new Error('IndexedDBへのタイムスタンプの保存に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -190,7 +190,7 @@ export const loadTreeTimestampsFromIdb = async (treeIds: UniqueIdentifier[]): Pr
     }
     return result;
   } catch (error) {
-    throw new Error('IndexedDBからのタイムスタンプの一括読み込みに失敗しました。' + error);
+    throw new Error('IndexedDBからのタイムスタンプの一括読み込みに失敗しました。' + error, { cause: error });
   }
 };
 
@@ -210,7 +210,7 @@ export const initializeAppStateIdb = async (uid: string, timestamp: number, quic
       treesList: treesList,
     });
   } catch (error) {
-    throw new Error('IndexedDBのappStateの初期化に失敗しました。' + error);
+    throw new Error('IndexedDBのappStateの初期化に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -219,7 +219,7 @@ export const initializeTreeDataIdb = async () => {
   try {
     await idb.treestate.clear();
   } catch (error) {
-    throw new Error('IndexedDBのツリーデータの初期化に失敗しました。' + error);
+    throw new Error('IndexedDBのツリーデータの初期化に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -236,7 +236,7 @@ export const saveTreeToIdb = async (id: UniqueIdentifier, name: string, members:
       isArchived: isArchived,
     });
   } catch (error) {
-    throw new Error('IndexedDBへのツリーの保存に失敗しました。' + error);
+    throw new Error('IndexedDBへのツリーの保存に失敗しました。' + error, { cause: error });
   }
 };
 
@@ -246,7 +246,7 @@ export const checkDbEmpty = async () => {
     const appState = await idb.appstate.count();
     return appState === 0;
   } catch (error) {
-    throw new Error('IndexedDBのデータベースが空かどうかのチェックに失敗しました。' + error);
+    throw new Error('IndexedDBのデータベースが空かどうかのチェックに失敗しました。' + error, { cause: error });
   }
 };
 
@@ -256,6 +256,6 @@ export const deleteAllDataFromIdb = async () => {
     await idb.appstate.clear();
     await idb.treestate.clear();
   } catch (error) {
-    throw new Error('IndexedDBの全てのデータの削除に失敗しました。' + error);
+    throw new Error('IndexedDBの全てのデータの削除に失敗しました。' + error, { cause: error });
   }
 };

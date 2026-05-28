@@ -28,7 +28,7 @@ export const AuthElectronGoogle = () => {
   }, []);
 
   return (
-    <Box display='flex' justifyContent='center' alignItems='center' height='100dvh' width='100dvw'>
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100dvh', width: '100dvw' }}>
       <CircularProgress />
     </Box>
   );

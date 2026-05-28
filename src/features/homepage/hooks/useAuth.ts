@@ -106,7 +106,7 @@ export const useAuth = () => {
         await observeTimeStamp(user.uid);
       }
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message + error.stack : 'ログイン監視エラー');
+      throw new Error(error instanceof Error ? error.message + error.stack : 'ログイン監視エラー', { cause: error });
     }
   },
     [setIsLoggedIn, setIsLoading, setUid, setEmail, setIsOffline, observeTimeStamp]

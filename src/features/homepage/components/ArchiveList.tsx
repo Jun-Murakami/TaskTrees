@@ -9,7 +9,7 @@ import { useDialogStore } from '@/store/dialogStore';
 import { useAppStateStore } from '@/store/appStateStore';
 import { TreesListItem } from '@/types/types';
 import { indexedDb as idb } from '@/indexedDb';
-import { flattenTreeToLines } from '@/features/sortableList/SortableSource';
+import { flattenTreeToLines } from '@/features/sortableList/flattenTreeToLines';
 import * as idbService from '@/services/indexedDbService';
 
 type ArchiveListItemProps = {

@@ -16,25 +16,10 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { DragHandle, Archive, MoreHoriz, DeleteForever, Unarchive } from '@mui/icons-material';
-import { TreesListItem, TreeItem } from '@/types/types';
+import { TreesListItem } from '@/types/types';
 import { useTreeStateStore } from '@/store/treeStateStore';
 import { indexedDb as idb } from '@/indexedDb';
-
-export function flattenTreeToLines(items: TreeItem[], depth = 0, maxLines = 10): string[] {
-  const lines: string[] = [];
-  for (const item of items) {
-    if (lines.length >= maxLines) break;
-    if (item.id === 'trash') continue;
-    const indent = '  '.repeat(depth);
-    const doneMarker = item.done ? '✓ ' : '';
-    lines.push(`${indent}${doneMarker}${item.value}`);
-    if (item.children && item.children.length > 0 && lines.length < maxLines) {
-      const childLines = flattenTreeToLines(item.children, depth + 1, maxLines - lines.length);
-      lines.push(...childLines);
-    }
-  }
-  return lines.slice(0, maxLines);
-}
+import { flattenTreeToLines } from '@/features/sortableList/flattenTreeToLines';
 
 export type SortableSourceProps = {
   item: TreesListItem;

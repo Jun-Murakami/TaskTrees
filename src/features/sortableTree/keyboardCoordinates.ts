@@ -1,18 +1,20 @@
 import { closestCorners, getFirstCollision, KeyboardCode, KeyboardCoordinateGetter, DroppableContainer } from '@dnd-kit/core';
 
-import type { SensorContext } from '@/types/types';
+import type { FlattenedItem } from '@/types/types';
 import { getProjection } from '@/features/sortableTree/utilities';
 
 const directions: string[] = [KeyboardCode.Down, KeyboardCode.Right, KeyboardCode.Up, KeyboardCode.Left];
 
 const horizontal: string[] = [KeyboardCode.Left, KeyboardCode.Right];
 
+export type SensorContextGetter = () => { items: FlattenedItem[]; offset: number };
+
 export const sortableTreeKeyboardCoordinates: (
-  context: SensorContext,
+  getContext: SensorContextGetter,
   indicator: boolean,
   indentationWidth: number
 ) => KeyboardCoordinateGetter =
-  (context, indicator, indentationWidth) =>
+  (getContext, indicator, indentationWidth) =>
     (event, { currentCoordinates, context: { active, over, collisionRect, droppableRects, droppableContainers } }) => {
       if (directions.includes(event.code)) {
         if (!active || !collisionRect) {
@@ -21,9 +23,7 @@ export const sortableTreeKeyboardCoordinates: (
 
         event.preventDefault();
 
-        const {
-          current: { items, offset },
-        } = context;
+        const { items, offset } = getContext();
 
         if (horizontal.includes(event.code) && over?.id) {
           const { depth, maxDepth, minDepth } = getProjection(items, active.id, over.id, offset, indentationWidth);

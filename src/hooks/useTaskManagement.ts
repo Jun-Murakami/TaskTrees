@@ -23,6 +23,23 @@ import { useDialogStore } from '@/store/dialogStore';
 // タスクの追加、削除、復元、コピー、移動、done状態の変更を行う
 // 一部にデータベースの処理を含む
 
+// 子孫のdone状態を更新する（パラメータのみに依存する純粋関数なのでフック外に配置）
+const updateChildrenDone = (items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems => {
+  return items.map((item) => {
+    if (item.id === targetId) {
+      const updateItemDone = (item: TreeItem): TreeItem => ({
+        ...item,
+        done,
+        children: item.children.map(updateItemDone),
+      });
+      return updateItemDone(item);
+    } else if (item.children) {
+      return { ...item, children: updateChildrenDone(item.children, targetId, done) };
+    }
+    return item;
+  });
+};
+
 export const useTaskManagement = () => {
   const setItems = useTreeStateStore((state) => state.setItems);
   const showDialog = useDialogStore((state) => state.showDialog);
@@ -272,7 +289,7 @@ export const useTaskManagement = () => {
                   try {
                     await copyFileInStorage({ sourcePath, destinationPath });
                   } catch (error) {
-                    throw new Error('添付ファイルのコピーに失敗しました。\n\n' + error);
+                    throw new Error('添付ファイルのコピーに失敗しました。\n\n' + error, { cause: error });
                   }
                 });
               }
@@ -374,7 +391,7 @@ export const useTaskManagement = () => {
                     await copyFileInStorage({ sourcePath, destinationPath });
                     await deleteFile(attachedFile, currentTree, true);
                   } catch (error) {
-                    throw new Error('添付ファイルのコピーに失敗しました。\n\n' + error);
+                    throw new Error('添付ファイルのコピーに失敗しました。\n\n' + error, { cause: error });
                   }
                 });
               }
@@ -416,25 +433,6 @@ export const useTaskManagement = () => {
   }, [showDialog, setItems, updateTimeStamp, copyTreeDataToIdbFromDb, deleteFile]);
 
   // アイテムのdone状態を変更する ------------------------------
-  // 子孫のdone状態を更新する
-  const updateChildrenDone = useCallback((items: TreeItems, targetId: UniqueIdentifier, done: boolean): TreeItems => {
-    return items.map((item) => {
-      // アイテム自体かその子孫が対象のIDと一致する場合、done状態を更新
-      if (item.id === targetId) {
-        const updateItemDone = (item: (typeof items)[number]): typeof item => ({
-          ...item,
-          done,
-          children: item.children.map(updateItemDone),
-        });
-        return updateItemDone(item);
-      } else if (item.children) {
-        return { ...item, children: updateChildrenDone(item.children, targetId, done) };
-      }
-      return item;
-    });
-  }, []);
-
-  // 本編
   const handleDoneChange = useCallback((id: UniqueIdentifier, done: boolean) => {
     const currentItems = useTreeStateStore.getState().items;
     // アイテム自体のdone状態を更新
@@ -442,7 +440,7 @@ export const useTaskManagement = () => {
     // 子要素のdone状態も更新
     const newItems = updateChildrenDone(updatedItems, id, done);
     setItems(newItems);
-  }, [updateChildrenDone, setItems]);
+  }, [setItems]);
 
   // アイテムにファイルを添付する ------------------------------
   const handleAttachFile = useCallback((id: UniqueIdentifier, fileName: string) => {

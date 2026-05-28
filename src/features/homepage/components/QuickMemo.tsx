@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
   useMediaQuery,
@@ -36,7 +36,13 @@ export const QuickMemo = () => {
 
   const [isEditingTextLocal, setIsEditingTextLocal] = useState(false);
   const [quickMemoLocalText, setQuickMemoLocalText] = useState(quickMemoText);
-  const [dynamicRows, setDynamicRows] = useState(3);
+  const [prevQuickMemoText, setPrevQuickMemoText] = useState(quickMemoText);
+
+  // 外部ストアのquickMemoTextが変わった時にローカルテキストも追従させる
+  if (quickMemoText !== prevQuickMemoText) {
+    setPrevQuickMemoText(quickMemoText);
+    setQuickMemoLocalText(quickMemoText);
+  }
 
   const showDialog = useDialogStore((state) => state.showDialog);
   const darkMode = useAppStateStore((state) => state.darkMode);
@@ -76,14 +82,11 @@ export const QuickMemo = () => {
     }
   }, [isQuickMemoDocked, isQuickMemoExpanded, setIsQuickMemoExpanded]);
 
-  // フロート状態のとき、TextFieldのrowsを動的に調整
-  useEffect(() => {
-    if (!isQuickMemoDocked && !isMobile) {
-      const boxHeight = quickMemoSize.height;
-      // ラベルやパディング分を差し引く（例: 48px）
-      const rows = Math.max(1, Math.floor((boxHeight - 80) / ROW_HEIGHT));
-      setDynamicRows(rows);
-    }
+  // フロート状態のとき、TextFieldのrowsを動的に算出（派生値なのでuseMemo）
+  const dynamicRows = useMemo(() => {
+    if (isQuickMemoDocked || isMobile) return 3;
+    // ラベルやパディング分を差し引く（例: 80px）
+    return Math.max(1, Math.floor((quickMemoSize.height - 80) / ROW_HEIGHT));
   }, [quickMemoSize.height, isQuickMemoDocked, isMobile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,10 +100,6 @@ export const QuickMemo = () => {
       setQuickMemoText('');
     }
   };
-
-  useEffect(() => {
-    setQuickMemoLocalText(quickMemoText);
-  }, [quickMemoText]);
 
   // ドック/切り離しトグルボタン（AccordionSummary内で右端に表示するため、Stackに組み込む）
   const dockToggleBtn = !isMobile && (
@@ -163,15 +162,15 @@ export const QuickMemo = () => {
       >
         <Stack
           direction='row'
-          alignItems='center'
-          justifyContent='space-between'
           sx={{
+            alignItems: 'center',
+            justifyContent: 'space-between',
             width: '100%',
             margin: '0 auto',
             marginTop: isQuickMemoExpanded ? -1.5 : -0.25,
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+          <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flex: 1 }}>
             <DriveFileRenameOutlineIcon sx={{ color: theme.palette.primary.main, marginTop: -1 }} />
             {!isQuickMemoExpanded && (
               <Typography variant='body2' sx={{ width: '100%', textAlign: 'center', marginTop: -0.5 }}>

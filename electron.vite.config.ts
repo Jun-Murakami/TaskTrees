@@ -1,6 +1,11 @@
 import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import react from '@vitejs/plugin-react-swc'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
+
+// @rolldown/plugin-babel returns a Promise; electron-vite cannot deep-clone Promises,
+// so resolve it once at module load time and reuse the plugin instance.
+const reactCompilerBabel = await babel({ presets: [reactCompilerPreset()] })
 
 export default defineConfig({
   main: {
@@ -34,6 +39,6 @@ export default defineConfig({
         '@': resolve('src')
       }
     },
-    plugins: [react()]
+    plugins: [react(), reactCompilerBabel]
   }
 })

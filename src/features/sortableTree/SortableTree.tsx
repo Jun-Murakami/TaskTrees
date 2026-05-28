@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import { createPortal } from 'react-dom';
 import {
   DndContext,
@@ -17,6 +18,7 @@ import {
   Modifier,
   defaultDropAnimation,
   UniqueIdentifier,
+  type KeyboardCoordinateGetter,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import {
@@ -29,7 +31,7 @@ import {
   findMaxId,
   isDescendantOfTrash,
 } from '@/features/sortableTree/utilities';
-import type { FlattenedItem, SensorContext, TreeItems } from '@/types/types';
+import type { FlattenedItem, TreeItems } from '@/types/types';
 import { sortableTreeKeyboardCoordinates } from '@/features/sortableTree/keyboardCoordinates';
 import { SortableTreeItem } from '@/features/sortableTree/SortableTreeItem';
 import { AddTask } from '@/features/sortableTree/AddTask';
@@ -135,11 +137,23 @@ export function SortableTree({ collapsible, indicator = false, indentationWidth 
   }, [activeId, items, searchKey]);
 
   const projected = activeId && overId ? getProjection(flattenedItems, activeId, overId, offsetLeft, indentationWidth) : null;
-  const sensorContext: SensorContext = useRef({
+  const sensorContext = useRef<{ items: FlattenedItem[]; offset: number }>({
     items: flattenedItems,
     offset: offsetLeft,
   });
-  const [coordinateGetter] = useState(() => sortableTreeKeyboardCoordinates(sensorContext, indicator, indentationWidth));
+  // keyboardCoordinate getterは一度だけ生成して再利用する。
+  // refはuseCallbackの呼び出し時にのみ読み込まれるため、レンダー中の参照アクセスにはならない。
+  const coordinateGetterImplRef = useRef<KeyboardCoordinateGetter | null>(null);
+  const coordinateGetter = useCallback<KeyboardCoordinateGetter>((event, args) => {
+    if (!coordinateGetterImplRef.current) {
+      coordinateGetterImplRef.current = sortableTreeKeyboardCoordinates(
+        () => sensorContext.current,
+        indicator,
+        indentationWidth
+      );
+    }
+    return coordinateGetterImplRef.current(event, args);
+  }, [indicator, indentationWidth]);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {

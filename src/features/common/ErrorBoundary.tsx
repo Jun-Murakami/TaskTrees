@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Box, Button, Typography } from '@mui/material';
-import { ErrorOutline } from '@mui/icons-material';
+import { ErrorOutlined } from '@mui/icons-material';
 
 interface Props {
   children: ReactNode;
@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<Props, State> {
             textAlign: 'center',
           }}
         >
-          <ErrorOutline sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
+          <ErrorOutlined sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
           <Typography variant='h5' sx={{ mb: 2 }}>
             予期しないエラーが発生しました
           </Typography>

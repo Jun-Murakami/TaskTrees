@@ -36,8 +36,8 @@ export const useObserve = () => {
   const { handleError } = useError();
 
   // デバウンスタイマーの参照を保持
-  const itemsDebounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const memoDebounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const itemsDebounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const memoDebounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
 
   // バックグラウンド移行時の即時保存処理
@@ -365,6 +365,8 @@ export const useObserve = () => {
       setIsLoading,
       setLocalTimestamp,
       setPrevCurrentTree,
+      setItems,
+      showDialog,
     ]
   );
 
