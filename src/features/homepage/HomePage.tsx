@@ -13,8 +13,10 @@ import { Capacitor } from '@capacitor/core';
 
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useUpdateStore } from '@/store/updateStore';
 
 import { useElectron } from '@/hooks/useElectron';
+import { UpdateDialog } from '@/features/common/UpdateDialog';
 
 const isElectron = navigator.userAgent.includes('Electron');
 const isWindows = navigator.userAgent.includes('Windows');
@@ -49,12 +51,31 @@ export function HomePage() {
 
   useElectron();
 
+  // アップデートダイアログ（HomePage の root にマウント）。
+  // useElectron 内で起動時に 1 回チェックし、新バージョン検出時に store 経由で
+  // isDialogOpen が true になる。
+  const updateInfo = useUpdateStore((s) => s.updateInfo);
+  const platform = useUpdateStore((s) => s.platform);
+  const isUpdateDialogOpen = useUpdateStore((s) => s.isDialogOpen);
+  const setIsUpdateDialogOpen = useUpdateStore((s) => s.setIsDialogOpen);
+
   return (
     <>
       <Backdrop open={isCreatingTree} sx={{ zIndex: 1600 }}>
         <CircularProgress color='inherit' />
       </Backdrop>
       {isElectron && isWindows && <Divider sx={{ width: '100%', position: 'fixed', top: 0, zIndex: 1500 }} />}
+      {isElectron && updateInfo && (
+        <UpdateDialog
+          open={isUpdateDialogOpen}
+          onClose={() => setIsUpdateDialogOpen(false)}
+          latestVersion={updateInfo.latestVersion}
+          releaseBody={updateInfo.releaseBody}
+          releaseAssets={updateInfo.releaseAssets}
+          releasePageUrl={updateInfo.releasePageUrl}
+          platform={platform}
+        />
+      )}
       {isLoggedIn ? (
         !isWaitingForDelete ? (
           // ログイン後のメイン画面

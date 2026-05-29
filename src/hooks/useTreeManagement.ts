@@ -10,6 +10,7 @@ import { useSyncStateStore } from '@/store/syncStateStore';
 import { useAttachedFile } from '@/features/sortableTree/hooks/useAttachedFile';
 import { useSync } from '@/hooks/useSync';
 import { hashData } from '@/utils/syncUtils';
+import { buildTreesListAfterAdd } from '@/utils/treesListMerge';
 import * as dbService from '@/services/databaseService';
 import * as idbService from '@/services/indexedDbService';
 import { useDialogStore, useInputDialogStore } from '@/store/dialogStore';
@@ -286,7 +287,11 @@ export const useTreeManagement = () => {
       }
 
       const newTree = { id: newTreeRef as UniqueIdentifier, name: '新しいツリー' };
-      const updatedTreesListWithNewTree = treesList ? [...treesList, newTree] : [newTree];
+      // 初回同期中はメモリ上の treesList がまだ空／古い場合がある。これに追記して
+      // サーバへ書き戻すと、他端末で作成済みの既存ツリーを treeList から上書き消去
+      // してしまう。サーバの権威的リストを読み直したうえで加算する。
+      const { orderedTreesList: serverTreesList } = await dbService.loadTreesListFromDb(uid);
+      const updatedTreesListWithNewTree = buildTreesListAfterAdd(serverTreesList, treesList ?? [], [newTree]);
       setTreesList(updatedTreesListWithNewTree);
 
       // レースコンディション防止: loadAndSetCurrentTreeDataFromIdbの前にcurrentTreeをセットし、
@@ -438,7 +443,7 @@ export const useTreeManagement = () => {
 
         if (isValidTreeListItemIncludingItems(treeStateWithAttachedDFiles)) {
           // 複数のツリーが含まれる場合、TreesListItemIncludingItems[] を反復してツリーをDBに保存
-          let temporaryTreesList = [...treesList];
+          const addedTrees: TreesList = [];
           for (const tree of treeStateWithAttachedDFiles) {
             if (!isValidTreeState(tree) || !tree.name) {
               throw new Error('無効な複数ツリーファイル形式です。');
@@ -461,11 +466,15 @@ export const useTreeManagement = () => {
               id: newTreeRef as UniqueIdentifier,
               name: treeState.name ? treeState.name : '読み込まれたツリー',
             };
-            temporaryTreesList = [...temporaryTreesList, loadedTreeObject];
+            addedTrees.push(loadedTreeObject);
           }
-          setTreesList(temporaryTreesList);
-          await idbService.saveTreesListToIdb(temporaryTreesList);
-          await dbService.saveTreesListDb(uid, temporaryTreesList);
+          // 初回同期中などローカルの treesList が未populatedでも他端末のツリーを
+          // 消さないよう、サーバの権威的リストとマージしてから保存する。
+          const { orderedTreesList: serverTreesList } = await dbService.loadTreesListFromDb(uid);
+          const mergedTreesList = buildTreesListAfterAdd(serverTreesList, treesList, addedTrees);
+          setTreesList(mergedTreesList);
+          await idbService.saveTreesListToIdb(mergedTreesList);
+          await dbService.saveTreesListDb(uid, mergedTreesList);
           await loadAndSetTreesListFromIdb();
           setIsLoading(false);
           await showDialog('複数のツリーが正常に読み込まれました。', 'Information');
@@ -494,7 +503,10 @@ export const useTreeManagement = () => {
             setCurrentTree(newTreeRef as UniqueIdentifier);
             setCurrentTreeName(treeName);
             const loadedTreeObject = { id: newTreeRef as UniqueIdentifier, name: treeName };
-            const updatedTreesListWithLoadedTree = treesList ? [...treesList, loadedTreeObject] : [loadedTreeObject];
+            // 初回同期中などローカルの treesList が未populatedでも他端末のツリーを
+            // 消さないよう、サーバの権威的リストとマージしてから保存する。
+            const { orderedTreesList: serverTreesList } = await dbService.loadTreesListFromDb(uid);
+            const updatedTreesListWithLoadedTree = buildTreesListAfterAdd(serverTreesList, treesList ?? [], [loadedTreeObject]);
             if (email) {
               setCurrentTreeMembers([{ uid: uid, email: email }]);
             } else {

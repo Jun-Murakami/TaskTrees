@@ -1,5 +1,7 @@
 appId: com.tasktrees-electron.app
 productName: TaskTrees
+# 全成果物のビルド後に SHA256SUMS と GPG 署名(.asc)を生成する
+afterAllArtifactBuild: scripts/sign-artifacts.cjs
 directories:
   buildResources: electron/build
 files:
@@ -21,6 +23,12 @@ asarUnpack:
 win:
   executableName: TaskTrees
   icon: resources/icon.ico
+  # Azure Key Vault + AzureSignTool でコード署名（scripts/sign-win.cjs）
+  # electron-builder 26 から sign / signingHashAlgorithms は signtoolOptions 配下に移動
+  signtoolOptions:
+    sign: scripts/sign-win.cjs
+    signingHashAlgorithms:
+      - sha256
 nsis:
   artifactName: ${productName}-${version}-setup_win_${arch}.${ext}
   shortcutName: ${productName}
@@ -42,14 +50,32 @@ mac:
 dmg:
   artifactName: ${productName}-${version}_mac_universal.${ext}
 linux:
+  icon: resources
   target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
+    - target: AppImage
+      arch: x64
+    - target: deb
+      arch: x64
+  maintainer: Jun Murakami <contact@bucketrelay.com>
   category: Utility
+  synopsis: Tree-structured task management app
+  description: TaskTrees is a tree-structured task management application.
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  # electron-builder は AppImage の ${arch} を x86_64 に解決するため、deb と
+  # 表記を揃える目的で amd64 をハードコードする（linux ターゲットは x64 のみ）。
+  artifactName: ${productName}-${version}_linux_amd64.${ext}
+deb:
+  artifactName: ${productName}-${version}_linux_${arch}.${ext}
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+    - libsecret-1-0
 npmRebuild: false
 publish:
   provider: generic

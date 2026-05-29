@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// 添付ファイルは trees/<treeId>/<fileName> に1階層で保存される。
+// 注意: Storage ルールは RTDB のメンバーシップ(trees/$treeId/members)を
+// 参照できないため、ここではツリー単位の分離は行えない（認証必須止まり）。
+// treeId は推測困難な push ID であることが緩和要因。真の分離が必要な場合は
+// メンバーシップを Firestore にミラーして firestore.get() で判定する方式に移行する。
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /trees/{treeId}/{fileName} {
+      // 読み取り・削除は認証済みユーザーのみ
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null;
+      // 作成・更新は認証必須に加え、25MiB 上限をサーバー側で強制
+      // （クライアント側の 25MB チェックは直接 API 呼び出しで迂回可能なため）
+      allow create, update: if request.auth != null
+        && request.resource.size <= 25 * 1024 * 1024;
+    }
+  }
+}

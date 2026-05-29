@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useAppStateStore } from '@/store/appStateStore';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useUpdateStore } from '@/store/updateStore';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
+import { useCheckForUpdates } from '@/hooks/useCheckForUpdates';
 
 const isElectron = navigator.userAgent.includes('Electron');
 
@@ -12,6 +14,41 @@ export const useElectron = () => {
 
   const { handleCreateNewTree, handleLoadedContent, handleDownloadTreeState, handleDownloadAllTrees, saveItems } = useTreeManagement();
   const { saveQuickMemo } = useAppStateManagement();
+
+  // 起動時に 1 回だけアップデートをチェックする
+  // - 新バージョンを検出したら updateStore に格納し、HomePage がダイアログを表示
+  // - hasChecked で多重実行を防止（hooks/store の再評価で再 fetch しない）
+  const checkForUpdates = useCheckForUpdates();
+  useEffect(() => {
+    if (!isElectron || !window.electron) return;
+    if (useUpdateStore.getState().hasChecked) return;
+    const store = useUpdateStore.getState();
+    store.markChecked();
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const [version, platform] = await Promise.all([
+          window.electron!.getAppVersion(),
+          window.electron!.getPlatformInfo(),
+        ]);
+        if (cancelled) return;
+        store.setCurrentVersion(version);
+        store.setPlatform(platform);
+
+        const info = await checkForUpdates(version);
+        if (cancelled || !info) return;
+        store.setUpdateInfo(info);
+        store.setIsDialogOpen(true);
+      } catch (error) {
+        console.error('アップデートチェックに失敗:', error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [checkForUpdates]);
 
   useEffect(() => {
     if (!isElectron || !isLoggedIn) return;

@@ -1,0 +1,30 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$userId": {
+        ".read": "$userId === auth.uid",
+        ".write": "$userId === auth.uid"
+      }
+    },
+    "trees": {
+      "$treeId": {
+        ".read": "auth != null && data.child('members').hasChild(auth.uid)",
+        ".write": "auth != null && data.child('members').hasChild(auth.uid)",
+        "items": {
+          ".read": "auth != null && root.child('trees').child($treeId).child('members').hasChild(auth.uid)",
+          ".write": "auth != null && root.child('trees').child($treeId).child('members').hasChild(auth.uid)"
+        },
+        "name": {
+          ".read": "auth != null && root.child('trees').child($treeId).child('members').hasChild(auth.uid)",
+          ".write": "auth != null && root.child('trees').child($treeId).child('members').hasChild(auth.uid)"
+        },
+        "members": {
+          ".read": "auth != null && root.child('trees').child($treeId).child('members').hasChild(auth.uid)",
+          ".write": "auth != null && root.child('trees').child($treeId).child('members').hasChild(auth.uid)"
+        }
+      }
+    }
+  }
+}

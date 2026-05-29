@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Paper, Typography, Stack, Button, Divider, Box } from '@mui/material';
-import { useAppStateStore } from '@/store/appStateStore';
+import { Paper, Typography, Stack, Button, Divider, Box, Link } from '@mui/material';
+import { useUpdateStore } from '@/store/updateStore';
 
 const isElectron = navigator.userAgent.includes('Electron');
 
@@ -8,7 +7,7 @@ const updateHistory = [
   {
     date: '2026.05.29',
     content:
-      'Linux版をリリースしました。Windows版でコード署名に対応しました。',
+      'Linux版（deb / AppImage）をリリースしました。Windows版でコード署名に対応しました。Windows / macOS / Linux(deb) でアプリ内アップデートに対応しました。',
   },
   {
     date: '2026.02.08',
@@ -22,57 +21,18 @@ const updateHistory = [
 ];
 
 export const MessagePaper = () => {
-  const [currentVersion, setCurrentVersion] = useState('');
-  const [latestVersion, setLatestVersion] = useState('');
-  const [updateMessage, setUpdateMessage] = useState('');
-  const isLoggedIn = useAppStateStore((state) => state.isLoggedIn); // ログイン状態
+  // アップデート情報は useElectron 内で一括チェックされ updateStore に保存される。
+  // 表示するだけ。ダイアログ表示制御は HomePage 側。
+  const currentVersion = useUpdateStore((s) => s.currentVersion);
+  const updateInfo = useUpdateStore((s) => s.updateInfo);
+  const hasChecked = useUpdateStore((s) => s.hasChecked);
+  const setIsDialogOpen = useUpdateStore((s) => s.setIsDialogOpen);
 
   const currentUrl = window.location.href;
   const isWeb =
     currentUrl.startsWith('http://localhost:') ||
     currentUrl.startsWith('https://tasktree-s.web.app') ||
     currentUrl.startsWith('https://tasktrees-fb.web.app');
-
-  // アプリバージョン情報の取得
-  useEffect(() => {
-    if (!isElectron) return;
-
-    // 現在のアプリバージョンを取得
-    const fetchCurrentVersion = async () => {
-      const version = await window.electron!.getAppVersion();
-      setCurrentVersion(version);
-    };
-
-    // 最新バージョン情報を取得
-    const fetchLatestVersion = async () => {
-      try {
-        const repoUrl = 'https://api.github.com/repos/Jun-Murakami/TaskTrees/releases/latest';
-        const response = await fetch(repoUrl);
-        const data = await response.json();
-        if (!data) {
-          console.error('データが見つかりません');
-        }
-        setLatestVersion(data.tag_name.replace('v', ''));
-        setUpdateMessage(data.body);
-      } catch (error) {
-        setLatestVersion('※バージョン情報の取得に失敗しました。' + error);
-      }
-    };
-
-    fetchCurrentVersion();
-    fetchLatestVersion();
-  }, [isLoggedIn]);
-
-  const isNewVersionAvailable = useMemo(() => {
-    if (!isElectron || !currentVersion || !latestVersion) return false;
-    const currentVersionArray = currentVersion.split('.').map((v) => parseInt(v));
-    const latestVersionArray = latestVersion.split('.').map((v) => parseInt(v));
-    if (currentVersionArray[0] < latestVersionArray[0]) return true;
-    if (currentVersionArray[0] > latestVersionArray[0]) return false;
-    if (currentVersionArray[1] < latestVersionArray[1]) return true;
-    if (currentVersionArray[1] > latestVersionArray[1]) return false;
-    return currentVersionArray[2] < latestVersionArray[2];
-  }, [currentVersion, latestVersion]);
 
   return (
     <Stack sx={{ width: '100%', maxWidth: 400, margin: 'auto', marginTop: 4 }}>
@@ -103,45 +63,47 @@ export const MessagePaper = () => {
       {isElectron && (
         <Paper sx={{ width: '100%', maxWidth: 400, margin: 'auto', marginTop: 4 }}>
           <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-            ver{currentVersion}
+            ver{currentVersion ?? ''}
           </Typography>
-          {isNewVersionAvailable ? (
+          {updateInfo ? (
             <>
               <Divider />
-              <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-                {`最新バージョン: ${latestVersion} が利用可能です。`}
-                <br />
-                <a href='https://jun-murakami.web.app/apps/tasktrees' target='_blank' rel='noreferrer'>
-                  ダウンロード
-                </a>
-                <br />
-                <br />＞ {updateMessage}
-              </Typography>
+              <Box sx={{ p: 2 }}>
+                <Typography variant='body2' gutterBottom>
+                  {`最新バージョン: ${updateInfo.latestVersion} が利用可能です。`}
+                </Typography>
+                <Button
+                  size='small'
+                  variant='contained'
+                  sx={{ mt: 1 }}
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  アップデート
+                </Button>
+              </Box>
             </>
           ) : (
             <>
               <Divider />
               <Typography variant='body2' sx={{ textAlign: 'left', p: 2 }} gutterBottom>
-                最新バージョン: {latestVersion}
-                <br />
-                {!latestVersion.includes('※バージョン情報の取得に失敗しました。') && 'お使いのバージョンは最新です。'}
+                {hasChecked ? 'お使いのバージョンは最新です。' : ''}
               </Typography>
             </>
           )}
         </Paper>
       )}
       <Typography variant='caption' sx={{ width: '100%', minWidth: '100%', mt: 1, textAlign: 'center' }}>
-        <a href='https://jun-murakami.web.app/' target='_blank' rel='noreferrer'>
+        <Link href='https://jun-murakami.web.app/' target='_blank' rel='noreferrer' underline='hover'>
           ©{new Date().getFullYear()} Jun Murakami
-        </a>{' '}
-        |{' '}
-        <a href='https://github.com/Jun-Murakami/TaskTrees' target='_blank' rel='noreferrer'>
+        </Link>
+        {' | '}
+        <Link href='https://github.com/Jun-Murakami/TaskTrees' target='_blank' rel='noreferrer' underline='hover'>
           GitHub
-        </a>{' '}
-        |{' '}
-        <a href='https://jun-murakami.web.app/privacy-policy-tasktrees' target='_blank' rel='noreferrer'>
+        </Link>
+        {' | '}
+        <Link href='https://jun-murakami.web.app/privacy-policy-tasktrees' target='_blank' rel='noreferrer' underline='hover'>
           Privacy policy
-        </a>
+        </Link>
       </Typography>
     </Stack>
   );

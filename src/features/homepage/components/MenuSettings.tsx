@@ -23,7 +23,9 @@ import { useAppStateStore } from '@/store/appStateStore';
 import { useAppStateManagement } from '@/hooks/useAppStateManagement';
 import { useTreeManagement } from '@/hooks/useTreeManagement';
 import { useTreeStateStore } from '@/store/treeStateStore';
+import { useSyncStateStore } from '@/store/syncStateStore';
 import { useDialogStore } from '@/store/dialogStore';
+import { getSyncStatus } from '@/utils/syncStatus';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { Capacitor } from '@capacitor/core';
 
@@ -188,8 +190,10 @@ export function MenuSettings({
   const isConnectedDb = useAppStateStore((s) => s.isConnectedDb);
   const isLoggedIn = useAppStateStore((s) => s.isLoggedIn);
   const isLoading = useAppStateStore((s) => s.isLoading);
-  const showOffline = isLoggedIn && !isOffline && !isConnectedDb;
-  const showSyncing = isLoggedIn && isLoading && !showOffline;
+  const isSyncing = useSyncStateStore((s) => s.isSyncing);
+  const syncStatus = getSyncStatus({ isLoggedIn, isOffline, isConnectedDb, isLoading, isSyncing });
+  const showOffline = syncStatus === 'offline';
+  const showSyncing = syncStatus === 'syncing';
 
   return (
     <ListItem disablePadding>

@@ -30,6 +30,26 @@ if (process.contextIsolated) {
       removeBeforeCloseListener: () => ipcRenderer.removeAllListeners('before-close'),
       sendCloseCompleted: (data) => ipcRenderer.send('close-completed', data),
       openOAuthURL: (url: string) => ipcRenderer.invoke('open-oauth-url', url),
+      // プラットフォーム情報の取得（AppImage 判定など）
+      getPlatformInfo: () => ipcRenderer.invoke('get-platform-info'),
+      // 外部 URL を OS の既定ブラウザで開く
+      openExternalLink: (url: string) => ipcRenderer.send('open-external-link', url),
+      // アップデートのダウンロード（メインプロセスでファイルを取得し、完了後に installer を起動）
+      startUpdateDownload: (downloadUrl: string) =>
+        ipcRenderer.invoke('update:download', downloadUrl),
+      cancelUpdateDownload: () => ipcRenderer.send('update:cancel-download'),
+      onUpdateDownloadProgress: (
+        callback: (progress: {
+          receivedBytes: number;
+          totalBytes: number;
+          percent: number;
+        }) => void,
+      ) =>
+        ipcRenderer.on('update:download-progress', (_, progress) =>
+          callback(progress),
+        ),
+      removeUpdateDownloadProgressListener: () =>
+        ipcRenderer.removeAllListeners('update:download-progress'),
     });
     contextBridge.exposeInMainWorld('api', api);
   } catch (error) {

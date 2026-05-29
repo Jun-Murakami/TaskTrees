@@ -2,8 +2,9 @@
   "name": "tasktree-s",
   "description": "A tree-structured task management app",
   "author": "Jun Murakami",
+  "homepage": "https://jun-murakami.web.app/apps/tasktrees",
   "private": true,
-  "version": "1.4.13",
+  "version": "1.5.0",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
@@ -19,6 +20,7 @@
     "build:electron:win": "npm run build:electron && electron-builder --win",
     "build:electron:mac": "electron-vite build && APPLE_API_KEY_ID=\"$APPLE_API_KEY\" APPLE_API_KEY=\"$APPLE_API_KEY_PATH\" electron-builder --mac",
     "build:electron:linux": "electron-vite build && electron-builder --linux",
+    "build:electron:linux:wsl": "bash scripts/build-linux-wsl.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run src/__tests__/unit",

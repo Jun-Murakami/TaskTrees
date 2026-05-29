@@ -16,6 +16,7 @@ import { Preferences } from '@capacitor/preferences';
 import * as idbService from '@/services/indexedDbService';
 import { getClientId, hashData } from '@/utils/syncUtils';
 import { mergeTreeItems } from '@/utils/mergeUtils';
+import { shouldProcessServerSnapshot, shouldPullTreeById } from '@/utils/syncDecision';
 
 export const useObserve = () => {
   const items = useTreeStateStore((state) => state.items);
@@ -116,6 +117,53 @@ export const useObserve = () => {
   const observeTimeStamp = useCallback(
     async (uid: string) => {
       setIsLoading(true);
+
+      // 接続状態の監視を初回同期より前に登録する。
+      // これを後から登録すると、初回同期が完了するまで isConnectedDb が初期値 false の
+      // ままになり、実際にはオンラインで同期中であってもUIが「オフライン」と表示してしまう。
+      let wasConnected = false;
+      const connectedRef = ref(getDatabase(), '.info/connected');
+      const unsubscribeDbConnectionChecker = onValue(connectedRef, async (snap) => {
+        const isNowConnected = snap.val() === true;
+        const setIsConnectedDb = useAppStateStore.getState().setIsConnectedDb;
+        setIsConnectedDb(isNowConnected);
+
+        if (!wasConnected && isNowConnected) {
+          const { dirty: itemsDirty, baseSnapshot } = useSyncStateStore.getState().itemsSync;
+          const currentTree = useTreeStateStore.getState().currentTree;
+
+          if (itemsDirty && baseSnapshot && currentTree) {
+            try {
+              const serverItems = await dbService.loadItemsFromDb(currentTree);
+              if (serverItems) {
+                const localItems = useTreeStateStore.getState().items;
+                const result = mergeTreeItems(baseSnapshot, localItems, serverItems);
+                setItems(result.merged);
+                await dbService.saveItemsDb(currentTree, result.merged);
+                await idbService.saveItemsToIdb(currentTree, result.merged);
+                useSyncStateStore.getState().clearItemsDirty();
+                useSyncStateStore.getState().setItemsServerHash(hashData(result.merged));
+              }
+            } catch {
+              // Merge on reconnect failed — will retry on next timestamp change
+            }
+          }
+
+          const { dirty: memoDirty } = useSyncStateStore.getState().memoSync;
+          if (memoDirty) {
+            try {
+              const currentMemo = useAppStateStore.getState().quickMemoText;
+              await dbService.saveQuickMemoToDb(uid, currentMemo);
+              await idbService.saveQuickMemoToIdb(currentMemo);
+              useSyncStateStore.getState().clearMemoDirty();
+            } catch {
+              // Memo sync on reconnect failed — will retry on next timestamp change
+            }
+          }
+        }
+        wasConnected = isNowConnected;
+      });
+
       await loadAndSetLocalTimeStamp();
       await checkAndSyncDb();
       await loadAppSettingsFromIdb();
@@ -129,7 +177,12 @@ export const useObserve = () => {
       const unsubscribeDbObserver = onValue(timestampRef, async (snapshot) => {
         const serverTimestamp = snapshot.val();
         const currentLocalTimestamp = useAppStateStore.getState().localTimestamp;
-        if (!serverTimestamp || serverTimestamp <= currentLocalTimestamp) {
+        // Fast path: nothing changed since we last processed this value.
+        // NOTE: we intentionally do NOT skip when serverTimestamp < localTimestamp.
+        // Timestamps are per-device Date.now() values and are not comparable as a
+        // logical clock across devices, so a smaller value can still be an unseen
+        // foreign edit (see utils/syncDecision.ts).
+        if (!serverTimestamp || serverTimestamp === currentLocalTimestamp) {
           return;
         }
 
@@ -138,6 +191,10 @@ export const useObserve = () => {
 
         if (remoteClientId === localClientId) {
           setLocalTimestamp(serverTimestamp);
+          return;
+        }
+
+        if (!shouldProcessServerSnapshot({ serverTimestamp, localTimestamp: currentLocalTimestamp, remoteClientId, localClientId })) {
           return;
         }
 
@@ -231,13 +288,17 @@ export const useObserve = () => {
           const { dirty: itemsDirty, baseHash: itemsBaseHash } = useSyncStateStore.getState().itemsSync;
 
           const treeIds = newTreesList.map((tree) => tree.id);
+          // Per-tree local timestamps are compared by equality (not ordering) so
+          // a remote write with a smaller Date.now() value (clock skew) is still
+          // detected as a change to reconcile. See utils/syncDecision.ts.
+          const localTreeTimestamps = await idbService.loadTreeTimestampsFromIdb(treeIds);
           let treeUpdateCount = 0;
           for (const treeId of treeIds) {
             const treeTimestampRef = ref(getDatabase(), `trees/${treeId}/timestamp`);
             const treeSnapshot = await get(treeTimestampRef);
             if (treeSnapshot.exists()) {
               const data = treeSnapshot.val();
-              if (data > currentLocalTimestamp) {
+              if (shouldPullTreeById(treeId, data, localTreeTimestamps)) {
                 if (treeId === currentTreeBeforeSync && itemsDirty) {
                   const serverItems = await dbService.loadItemsFromDb(treeId);
                   const serverItemsHash = hashData(serverItems);
@@ -272,6 +333,10 @@ export const useObserve = () => {
                 } else {
                   await copyTreeDataToIdbFromDb(treeId);
                 }
+                // Keep the local per-tree timestamp in lockstep with the value
+                // we just reconciled, so the next pass doesn't re-detect this
+                // tree as changed (equality comparison in shouldPullTree).
+                await idbService.saveTimeStampToIdb(treeId, data);
                 treeUpdateCount++;
               }
             }
@@ -299,49 +364,6 @@ export const useObserve = () => {
           useSyncStateStore.getState().setIsSyncing(false);
           setIsLoading(false);
         }
-      });
-
-      let wasConnected = false;
-      const connectedRef = ref(getDatabase(), '.info/connected');
-      const unsubscribeDbConnectionChecker = onValue(connectedRef, async (snap) => {
-        const isNowConnected = snap.val() === true;
-        const setIsConnectedDb = useAppStateStore.getState().setIsConnectedDb;
-        setIsConnectedDb(isNowConnected);
-
-        if (!wasConnected && isNowConnected) {
-          const { dirty: itemsDirty, baseSnapshot } = useSyncStateStore.getState().itemsSync;
-          const currentTree = useTreeStateStore.getState().currentTree;
-
-          if (itemsDirty && baseSnapshot && currentTree) {
-            try {
-              const serverItems = await dbService.loadItemsFromDb(currentTree);
-              if (serverItems) {
-                const localItems = useTreeStateStore.getState().items;
-                const result = mergeTreeItems(baseSnapshot, localItems, serverItems);
-                setItems(result.merged);
-                await dbService.saveItemsDb(currentTree, result.merged);
-                await idbService.saveItemsToIdb(currentTree, result.merged);
-                useSyncStateStore.getState().clearItemsDirty();
-                useSyncStateStore.getState().setItemsServerHash(hashData(result.merged));
-              }
-            } catch {
-              // Merge on reconnect failed — will retry on next timestamp change
-            }
-          }
-
-          const { dirty: memoDirty } = useSyncStateStore.getState().memoSync;
-          if (memoDirty) {
-            try {
-              const currentMemo = useAppStateStore.getState().quickMemoText;
-              await dbService.saveQuickMemoToDb(uid, currentMemo);
-              await idbService.saveQuickMemoToIdb(currentMemo);
-              useSyncStateStore.getState().clearMemoDirty();
-            } catch {
-              // Memo sync on reconnect failed — will retry on next timestamp change
-            }
-          }
-        }
-        wasConnected = isNowConnected;
       });
 
       return () => {
